@@ -1,160 +1,90 @@
-# Deployment Guide - Kocaeli İSM Görev Yönetim Sistemi
+# Deployment Guide - Kongre Yönetim Sistemi
 
-## Test Environment Deployment (test.fokusistatistik.com)
+Bu döküman projeyi `test.fokusistatistik.com/kongreai` adresine deploy etmek için gerekli adımları içerir.
 
-### Pre-deployment Checklist
+## 📋 Gereksinimler
 
-- [ ] Database backup yapıldı
-- [ ] Environment variables hazırlandı (.env dosyası)
-- [ ] n8n webhook endpoints test edildi
-- [ ] Build test yapıldı (npm run build)
-- [ ] Prisma migrations hazır
-- [ ] Admin credentials belirlendi
+- Node.js 18+
+- npm veya yarn
+- PM2 (production process manager)
+- Nginx (reverse proxy)
 
-### Environment Variables
+## 🚀 Quick Start (Production Deployment)
 
-Aşağıdaki environment variables dosyayı `.env.example`'dan `.env`'ye kopyalayarak oluşturun:
+### 1. Repository'yi Klonlayın
 
 ```bash
-cp .env.example .env
+cd /var/www/
+git clone <repo-url> kongreai
+cd kongreai
+git checkout claude/congress-management-system-MulSF
 ```
 
-**MUTLAKA DEĞİŞTİRİLMESİ GEREKENLER:**
+### 2. Environment Ayarları
 
 ```bash
-# Database
-DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE"
+# .env.production dosyasını düzenleyin
+nano .env.production
 
-# NextAuth
-NEXTAUTH_SECRET="<openssl rand -base64 32 ile üret>"
-NEXTAUTH_URL="https://test.fokusistatistik.com"
-
-# JWT
-JWT_SECRET="<openssl rand -base64 32 ile üret>"
-
-# n8n Webhook
-N8N_WEBHOOK_URL="https://n8n.fokusistatistik.com"
-
-# App URL
-NEXT_PUBLIC_APP_URL="https://test.fokusistatistik.com"
-NODE_ENV="production"
+# NEXTAUTH_SECRET değerini değiştirin:
+openssl rand -base64 32
 ```
 
-### Installation Steps
+**Önemli:** `.env.production` dosyasında şu değerleri kontrol edin:
+- `NEXTAUTH_SECRET` - Güvenli bir secret key
+- `NEXTAUTH_URL` - https://test.fokusistatistik.com/kongreai
+- `DATABASE_URL` - file:./production.db
 
-#### 1. Dependencies Kurulumu
+### 3. Dependencies Yükleyin
 
 ```bash
 npm install
 ```
 
-#### 2. Database Setup
+### 4. Production Database Oluşturun
 
 ```bash
-# Prisma client oluştur
-npx prisma generate
-
-# Veritabanı migrations
-npx prisma migrate deploy
-
-# Seed data (ilk kurulum için)
-npx prisma db seed
+npm run db:setup:prod
 ```
 
-**NOT:** Seed işlemi aşağıdaki verileri oluşturur:
-- 5 rol (ADMIN, BASKAN, ISTATISTIKCI, BIRIM_YONETICISI, SHM_GOREVLISI)
-- Tüm yetkiler (CRUD permissions)
-- Admin kullanıcı (TC: 17422776208, Şifre: Eb0302174.)
-- Test birimleri (İzmit SHM, Örnek ASM)
-- 11 SHM alt birimi
+Bu komut:
+- ✅ Yeni `production.db` oluşturur
+- ✅ Tüm tabloları oluşturur
+- ✅ Admin kullanıcısı ekler (admin@kongreai.com / admin123)
 
-#### 3. Build
+### 5. Production Build
 
 ```bash
-npm run build
+npm run build:prod
 ```
 
-Build işlemi başarılı olmalı. Herhangi bir TypeScript veya lint hatası varsa düzeltin.
-
-#### 4. Start Production Server
-
-**Option A: PM2 ile (Önerilen)**
+### 6. PM2 ile Başlatın
 
 ```bash
-# PM2 yükle (global)
+# PM2 kurulu değilse
 npm install -g pm2
 
 # Uygulamayı başlat
-pm2 start npm --name "halksagligi" -- start
+pm2 start npm --name "kongreai" -- start
 
-# Otomatik restart ayarla
+# Otomatik başlatma
 pm2 startup
 pm2 save
 ```
 
-**Option B: Docker ile**
+### 7. Nginx Yapılandırması
 
-```bash
-# Docker image build
-docker build -t halksagligi:latest .
-
-# Container çalıştır
-docker run -d \
-  --name halksagligi \
-  -p 3000:3000 \
-  --env-file .env \
-  halksagligi:latest
-```
-
-**Option C: Standalone**
-
-```bash
-npm start
-```
-
-### Post-deployment Verification
-
-#### 1. Health Check
-
-```bash
-curl https://test.fokusistatistik.com
-```
-
-Ana sayfa yüklenmeli ve login sayfasına redirect etmeli.
-
-#### 2. Database Connection
-
-```bash
-curl https://test.fokusistatistik.com/api/health
-```
-
-(Not: Health check endpoint eklenirse)
-
-#### 3. Login Test
-
-- URL: `https://test.fokusistatistik.com/login`
-- TC: `17422776208`
-- Şifre: `Eb0302174.`
-
-Başarılı giriş yapabilmeli.
-
-#### 4. Webhook Test
-
-Login yaptıktan sonra n8n'de aşağıdaki webhook'ların tetiklendiğini kontrol edin:
-- `/webhook/login` - Login proxy
-- `/webhook/login-success` - Başarılı giriş detayları
-
-### Nginx Configuration (Reverse Proxy)
+`/etc/nginx/sites-available/test.fokusistatistik.com` dosyasına ekleyin:
 
 ```nginx
 server {
-    listen 443 ssl http2;
+    listen 80;
     server_name test.fokusistatistik.com;
 
-    ssl_certificate /path/to/ssl/cert.pem;
-    ssl_certificate_key /path/to/ssl/key.pem;
+    # Mevcut site ayarları...
 
-    location / {
+    # Kongre AI için location block
+    location /kongreai {
         proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
@@ -164,199 +94,56 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_cache_bypass $http_upgrade;
-
-        # Timeout settings
-        proxy_connect_timeout 60s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
     }
 }
 ```
 
-### n8n Webhook Setup
-
-n8n'de aşağıdaki webhook'ları oluşturun:
-
-#### Authentication Webhooks
-
-1. **Login Proxy** - `/webhook/login`
-   - Method: POST
-   - Response: Personel bilgileri + token
-
-2. **Login Success** - `/webhook/login-success`
-   - Method: POST
-   - Payload includes full auth details
-
-#### SHM Webhooks
-
-3. **SHM Veri Giriş** - `/webhook/shm-veri-giris`
-   - Method: POST
-   - Payload: veri_giris + full auth
-
-4. **SHM Veri Güncelle** - `/webhook/shm-veri-guncelle`
-   - Method: POST
-
-5. **SHM Veri Sil** - `/webhook/shm-veri-sil`
-   - Method: POST
-
-6. **SHM Veri Onay** - `/webhook/shm-veri-onay`
-   - Method: POST
-
-#### Birim Webhooks
-
-7. **Birim Oluştur** - `/webhook/birim-olustur`
-   - Method: POST
-
-8. **Birim Güncelle** - `/webhook/birim-guncelle`
-   - Method: POST
-
-9. **Birim Sil** - `/webhook/birim-sil`
-   - Method: POST
-
-### Monitoring
-
-#### PM2 Monitoring
+Nginx'i yeniden başlatın:
 
 ```bash
-# Process listesi
-pm2 list
-
-# Logları göster
-pm2 logs halksagligi
-
-# Restart
-pm2 restart halksagligi
-
-# Stop
-pm2 stop halksagligi
+sudo nginx -t
+sudo systemctl reload nginx
 ```
 
-#### Database Monitoring
+## 🔐 İlk Giriş
+
+1. Tarayıcıda açın: https://test.fokusistatistik.com/kongreai
+2. Giriş yapın:
+   - Email: `admin@kongreai.com`
+   - Şifre: `admin123`
+3. **ÖNEMLİ:** İlk girişte şifrenizi değiştirin!
+
+## 📊 Veritabanı Yönetimi
+
+### Prisma Studio (GUI)
 
 ```bash
-# Prisma Studio (development only)
-npx prisma studio
+npm run db:studio
+# http://localhost:5555
 ```
 
-### Backup Strategy
-
-#### Database Backup
+### Backup Alma
 
 ```bash
-# PostgreSQL backup
-pg_dump -h HOST -U USER -d DATABASE > backup_$(date +%Y%m%d_%H%M%S).sql
-
-# Restore
-psql -h HOST -U USER -d DATABASE < backup_YYYYMMDD_HHMMSS.sql
+# Manual backup
+cp prisma/production.db prisma/production.db.backup-$(date +%Y%m%d-%H%M%S)
 ```
 
-#### Application Backup
+## 🔄 Güncelleme (Update)
 
 ```bash
-# Code + environment
-tar -czf app_backup_$(date +%Y%m%d).tar.gz \
-  --exclude=node_modules \
-  --exclude=.next \
-  --exclude=.git \
-  .
-```
-
-### Troubleshooting
-
-#### Build Failures
-
-```bash
-# Clean install
-rm -rf node_modules package-lock.json .next
+cd /var/www/kongreai
+git pull origin claude/congress-management-system-MulSF
 npm install
-npm run build
+npm run build:prod
+pm2 restart kongreai
 ```
 
-#### Database Connection Issues
+## 📝 Environment Variables
 
-```bash
-# Test connection
-npx prisma db pull
-
-# Check migrations
-npx prisma migrate status
-```
-
-#### Port Already in Use
-
-```bash
-# Find process using port 3000
-lsof -i :3000
-
-# Kill process
-kill -9 <PID>
-```
-
-### Security Notes
-
-1. **Never commit `.env` file** - It contains sensitive credentials
-2. **Use strong secrets** - Generate with `openssl rand -base64 32`
-3. **Enable HTTPS** - Always use SSL in production
-4. **Rate Limiting** - Already implemented in code
-5. **Audit Logging** - All operations logged to `aktivite_log` table
-6. **Webhook Security** - Consider adding webhook signature verification
-
-### Unit-Based Permissions
-
-The system enforces strict unit-based permissions:
-
-- **Admin / Başkan / İstatistikçi**: Can access all units and data
-- **SHM Görevlisi**: Only their own SHM unit and its sub-units
-- **ASM Görevlisi**: Only their own ASM unit
-- **Birim Yöneticisi**: Only their own unit
-
-This is enforced at:
-- API level (permissions functions)
-- Database query level (where clauses)
-- Frontend level (UI filtering)
-
-### Webhook Payload Structure
-
-All operational webhooks include complete auth context:
-
-```json
-{
-  "event": "shm_veri_giris_olusturuldu",
-  "auth": {
-    "user_id": "uuid",
-    "user_email": "email@example.com",
-    "user_name": "Ad Soyad",
-    "user_tc": "12345678901",
-    "role_code": "SHM_GOREVLISI",
-    "role_name": "SHM Görevlisi",
-    "role_level": 3,
-    "birim_id": "uuid",
-    "birim_ad": "İzmit SHM",
-    "birim_kod": "SHM-IZMIT",
-    "birim_tip": "SHM",
-    "permissions": [
-      {
-        "kod": "shm.veri_giris",
-        "ad": "SHM Veri Girişi",
-        "kategori": "SHM"
-      }
-    ]
-  },
-  "ip_adresi": "192.168.1.1",
-  "user_agent": "Mozilla/5.0...",
-  "timestamp": "2025-12-16T10:30:00.000Z",
-  "data": { /* operation specific data */ }
-}
-```
-
-### Support
-
-For issues or questions:
-- Technical Lead: [Contact Info]
-- n8n Webhook Issues: [Webhook Admin]
-- Database Issues: [DBA Contact]
-
----
-
-Last Updated: 2025-12-16
-Version: 1.0.0
+| Variable | Açıklama | Örnek |
+|----------|----------|-------|
+| `NEXT_PUBLIC_BASE_PATH` | Subdirectory path | `/kongreai` |
+| `NEXTAUTH_URL` | Full app URL | `https://test.fokusistatistik.com/kongreai` |
+| `NEXTAUTH_SECRET` | Secret key | (use openssl rand -base64 32) |
+| `DATABASE_URL` | SQLite DB path | `file:./production.db` |

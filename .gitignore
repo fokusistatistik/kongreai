@@ -40,3 +40,9 @@ next-env.d.ts
 # Prisma
 # prisma/.env
 # prisma/dev.db - Keeping this if it's meant to be shared for test
+prisma/production.db
+prisma/production.db-journal
+prisma/*.db.backup-*
+
+# Production environment (should be on server only)
+.env.production
