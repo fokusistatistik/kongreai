@@ -1,22 +1,67 @@
 import { withAuth } from 'next-auth/middleware';
+import { NextResponse } from 'next/server';
 
 /**
- * Next.js Middleware with NextAuth
+ * Next.js Middleware with NextAuth - Congress Management System
  *
  * Bu middleware:
- * 1. NextAuth ile authentication kontrolü yapar
- * 2. Public sayfaları korumadan geçirir
- * 3. Unauthorized kullanıcıları /login'e yönlendirir
+ * 1. Public sayfaları herkese açık bırakır (/, /events/*, /auth/register)
+ * 2. /dashboard rotalarını tüm giriş yapmış kullanıcılara açar
+ * 3. /admin rotalarını sadece ADMIN rolüne sahip kullanıcılara açar
+ * 4. Yetkisiz erişim denemelerinde uygun sayfaya yönlendirir
  */
 
-export default withAuth({
-  callbacks: {
-    authorized: ({ token }) => !!token,
+export default withAuth(
+  function middleware(req) {
+    const token = req.nextauth.token;
+    const path = req.nextUrl.pathname;
+
+    // Admin sayfalarına erişim kontrolü
+    if (path.startsWith('/admin')) {
+      if (token?.role !== 'ADMIN') {
+        // ADMIN değilse dashboard'a yönlendir
+        return NextResponse.redirect(new URL('/dashboard', req.url));
+      }
+    }
+
+    return NextResponse.next();
   },
-  pages: {
-    signIn: '/login',
-  },
-});
+  {
+    callbacks: {
+      authorized: ({ token, req }) => {
+        const path = req.nextUrl.pathname;
+
+        // Public paths - authentication gerektirmez
+        const publicPaths = [
+          '/',
+          '/login',
+          '/auth/register',
+        ];
+
+        // Exact match için kontrol
+        if (publicPaths.includes(path)) {
+          return true;
+        }
+
+        // Pattern match için kontrol
+        if (path.startsWith('/events/')) {
+          return true;
+        }
+
+        // API routes
+        if (path.startsWith('/api/auth') || path === '/api/auth/register') {
+          return true;
+        }
+
+        // Diğer tüm rotalar için authentication gerekli
+        return !!token;
+      },
+    },
+    pages: {
+      signIn: '/login',
+    },
+  }
+);
 
 export const config = {
   matcher: [
@@ -24,15 +69,9 @@ export const config = {
      * Match all request paths except for the ones starting with:
      * - _next/static (static files)
      * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
+     * - favicon.ico, *.png, *.jpg, *.svg (image files)
      * - manifest.json (PWA manifest)
-     * - api/auth (NextAuth endpoints)
-     * - api/sifre-sifirla (public password reset API)
-     * - api/sifre-yenile (public password renew API)
-     * - login (login page)
-     * - sifre-sifirla (password reset page)
-     * - sifre-yenile (password renew page)
      */
-    '/((?!_next/static|_next/image|favicon.ico|manifest.json|api/auth|api/sifre-sifirla|api/sifre-yenile|login|sifre-sifirla|sifre-yenile).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.svg|.*\\.ico|manifest.json).*)',
   ],
 };

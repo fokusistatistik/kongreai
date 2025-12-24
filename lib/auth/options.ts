@@ -8,66 +8,51 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        tc_kimlik_no: { label: "TC Kimlik No", type: "text", placeholder: "11 haneli TC Kimlik No" },
+        email: { label: "E-posta", type: "email", placeholder: "ornek@email.com" },
         password: { label: "Şifre", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.tc_kimlik_no || !credentials?.password) {
-          throw new Error("TC Kimlik No ve şifre gereklidir");
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("E-posta ve şifre gereklidir");
         }
 
         try {
           // Kullanıcıyı veritabanından bul
-          const personel = await prisma.personel.findUnique({
-            where: { tc_kimlik_no: credentials.tc_kimlik_no },
-            include: {
-              rol: true,
-              birim: true
-            }
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email.toLowerCase() },
           });
 
-          if (!personel) {
-            throw new Error("Geçersiz TC Kimlik No veya şifre");
+          if (!user) {
+            throw new Error("Geçersiz e-posta veya şifre");
           }
 
           // Aktif mi kontrol et
-          if (!personel.aktif) {
+          if (!user.aktif) {
             throw new Error("Hesabınız pasif durumda. Lütfen yöneticinizle iletişime geçin.");
           }
 
           // Şifre kontrolü
-          const isPasswordValid = await bcrypt.compare(credentials.password, personel.password);
+          const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
 
           if (!isPasswordValid) {
-            throw new Error("Geçersiz TC Kimlik No veya şifre");
+            throw new Error("Geçersiz e-posta veya şifre");
           }
 
           // Son giriş tarihini güncelle
-          await prisma.personel.update({
-            where: { id: personel.id },
+          await prisma.user.update({
+            where: { id: user.id },
             data: { son_giris_tarihi: new Date() }
           });
 
-          // Return flat object for NextAuth serialization
+          // Return user object for NextAuth serialization
           return {
-            id: personel.id,
-            tc_kimlik_no: personel.tc_kimlik_no,
-            email: personel.email,
-            name: `${personel.ad} ${personel.soyad}`,
-            ilk_giris: personel.ilk_giris,
-            profil_foto_url: personel.profil_foto_url,
-            rol: {
-              id: personel.rol.id,
-              kod: personel.rol.kod,
-              ad: personel.rol.ad,
-              seviye: personel.rol.seviye,
-            },
-            birim: {
-              id: personel.birim.id,
-              ad: personel.birim.ad,
-              kod: personel.birim.kod,
-              tip: personel.birim.tip,
-            },
+            id: user.id,
+            email: user.email,
+            name: `${user.ad} ${user.soyad}`,
+            role: user.role,
+            unvan: user.unvan,
+            kurum: user.kurum,
+            ilk_giris: user.ilk_giris,
           };
         } catch (error) {
           // Re-throw without logging sensitive data
@@ -80,26 +65,24 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.tc_kimlik_no = (user as any).tc_kimlik_no;
         token.email = user.email;
         token.name = user.name;
+        token.role = (user as any).role;
+        token.unvan = (user as any).unvan;
+        token.kurum = (user as any).kurum;
         token.ilk_giris = (user as any).ilk_giris;
-        token.profil_foto_url = (user as any).profil_foto_url;
-        token.rol = (user as any).rol;
-        token.birim = (user as any).birim;
       }
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
         (session.user as any).id = token.id;
-        (session.user as any).tc_kimlik_no = token.tc_kimlik_no;
         (session.user as any).email = token.email;
         (session.user as any).name = token.name;
+        (session.user as any).role = token.role;
+        (session.user as any).unvan = token.unvan;
+        (session.user as any).kurum = token.kurum;
         (session.user as any).ilk_giris = token.ilk_giris;
-        (session.user as any).profil_foto_url = token.profil_foto_url;
-        (session.user as any).rol = token.rol;
-        (session.user as any).birim = token.birim;
       }
 
       return session;

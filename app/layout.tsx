@@ -9,27 +9,27 @@ import SiteFooter from '@/components/site-footer';
 import MobileNav from '@/components/mobile-nav';
 
 export const metadata: Metadata = {
-  title: 'SAHA - Sağlık Hizmetleri Analitiği',
-  description: 'Kocaeli İl Sağlık Müdürlüğü Sağlık Hizmetleri Analitiği Sistemi',
+  title: 'Kongre Yönetim Sistemi',
+  description: 'Bilimsel Kongre ve Etkinlik Yönetim Platformu - Online başvuru, bildiri gönderimi ve etkinlik takibi',
   keywords: [
-    'SAHA',
-    'Sağlık Hizmetleri Analitiği',
-    'Kocaeli',
-    'İl Sağlık Müdürlüğü',
-    'KISM',
-    'Sağlık',
+    'kongre',
+    'bilimsel etkinlik',
+    'sempozyum',
+    'bildiri',
+    'akademik kongre',
+    'etkinlik yönetimi',
   ],
-  authors: [{ name: 'FOKUS İstatistik' }],
-  creator: 'FOKUS İstatistik',
-  publisher: 'Kocaeli İl Sağlık Müdürlüğü',
+  authors: [{ name: 'Congress Management Team' }],
+  creator: 'Congress Management System',
+  publisher: 'Congress Management Platform',
   robots: {
-    index: false,
-    follow: false,
+    index: true,
+    follow: true,
   },
   icons: {
-    icon: 'https://static.fokusistatistik.com/resimler/favicon.png',
-    shortcut: 'https://static.fokusistatistik.com/resimler/favicon.png',
-    apple: 'https://static.fokusistatistik.com/resimler/favicon.png',
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
   },
 };
 
@@ -45,25 +45,25 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
 
         {/* PWA Meta Tags */}
-        <meta name="application-name" content="SAHA" />
+        <meta name="application-name" content="Kongre Yönetim Sistemi" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="SAHA" />
+        <meta name="apple-mobile-web-app-title" content="KongreAI" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="theme-color" content="#14a0b5" />
+        <meta name="theme-color" content="#2563eb" />
 
         {/* Apple Touch Icons */}
-        <link rel="apple-touch-icon" href="https://static.fokusistatistik.com/resimler/favicon.png" />
-        <link rel="apple-touch-icon" sizes="152x152" href="https://static.fokusistatistik.com/resimler/favicon.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="https://static.fokusistatistik.com/resimler/favicon.png" />
-        <link rel="apple-touch-icon" sizes="167x167" href="https://static.fokusistatistik.com/resimler/favicon.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" sizes="167x167" href="/apple-touch-icon.png" />
 
         {/* Manifest */}
         <link rel="manifest" href="/manifest.json" />
 
         {/* Favicon */}
-        <link rel="icon" href="https://static.fokusistatistik.com/resimler/favicon.png" />
-        <link rel="shortcut icon" href="https://static.fokusistatistik.com/resimler/favicon.png" />
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="shortcut icon" href="/favicon.ico" />
       </head>
       <body className="font-sans min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
         <Providers>

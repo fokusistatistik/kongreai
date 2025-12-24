@@ -1,0 +1,312 @@
+import { notFound } from 'next/navigation';
+import { getServerSession } from 'next-auth';
+import Link from 'next/link';
+import { Calendar, MapPin, Users, Clock, DollarSign, FileText, CheckCircle, Globe } from 'lucide-react';
+import prisma from '@/lib/prisma';
+import { authOptions } from '@/lib/auth/options';
+
+async function getEvent(slug: string) {
+  const event = await prisma.event.findUnique({
+    where: { slug },
+    include: {
+      applications: {
+        select: {
+          id: true,
+          user_id: true,
+        },
+      },
+    },
+  });
+
+  return event;
+}
+
+export default async function EventDetailPage({ params }: { params: { slug: string } }) {
+  const event = await getEvent(params.slug);
+  const session = await getServerSession(authOptions);
+
+  if (!event) {
+    notFound();
+  }
+
+  const baslangic = new Date(event.baslangic_tarihi);
+  const bitis = new Date(event.bitis_tarihi);
+  const sonBasvuru = new Date(event.son_basvuru_tarihi);
+  const today = new Date();
+
+  const hasApplied = session?.user
+    ? event.applications.some((app) => app.user_id === session.user.id)
+    : false;
+
+  const isDeadlinePassed = sonBasvuru < today;
+  const canApply = event.basvuru_aktif && !isDeadlinePassed && !hasApplied;
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header Image */}
+      <div className="relative h-64 md:h-80 bg-gradient-to-br from-blue-600 to-indigo-700">
+        {event.gorsel_url ? (
+          <img src={event.gorsel_url} alt={event.baslik} className="w-full h-full object-cover" />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center text-white">
+              <FileText className="w-20 h-20 mx-auto mb-4 opacity-50" />
+            </div>
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+
+        {/* Breadcrumb */}
+        <div className="absolute top-6 left-0 right-0 container mx-auto px-4">
+          <nav className="text-sm text-white/90">
+            <Link href="/" className="hover:text-white">Ana Sayfa</Link>
+            <span className="mx-2">/</span>
+            <span className="text-white font-medium">Etkinlik Detayı</span>
+          </nav>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="container mx-auto px-4 -mt-20 pb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Event Card */}
+            <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 relative z-10">
+              <div className="flex items-start justify-between mb-4">
+                <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-semibold rounded-full">
+                  {event.tip}
+                </span>
+                {event.durum === 'YAYINDA' && (
+                  <span className="px-3 py-1 bg-green-100 text-green-700 text-sm font-semibold rounded-full flex items-center gap-1">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    Başvurular Açık
+                  </span>
+                )}
+              </div>
+
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{event.baslik}</h1>
+              {event.alt_baslik && (
+                <p className="text-lg text-gray-600 mb-6">{event.alt_baslik}</p>
+              )}
+
+              {/* Quick Info Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <InfoItem
+                  icon={<Calendar className="w-5 h-5" />}
+                  label="Etkinlik Tarihi"
+                  value={`${baslangic.toLocaleDateString('tr-TR')} - ${bitis.toLocaleDateString('tr-TR')}`}
+                />
+                <InfoItem
+                  icon={<MapPin className="w-5 h-5" />}
+                  label="Mekan"
+                  value={event.yer}
+                />
+                <InfoItem
+                  icon={<Clock className="w-5 h-5" />}
+                  label="Son Başvuru"
+                  value={sonBasvuru.toLocaleDateString('tr-TR')}
+                  highlight={!isDeadlinePassed}
+                />
+                <InfoItem
+                  icon={<DollarSign className="w-5 h-5" />}
+                  label="Katılım Ücreti"
+                  value={event.ucretsiz ? 'Ücretsiz' : `${event.ucret} ₺`}
+                />
+              </div>
+
+              {/* Online Event Info */}
+              {event.online && (
+                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-3">
+                  <Globe className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium text-blue-900">Online / Hybrid Etkinlik</p>
+                    <p className="text-sm text-blue-700 mt-1">
+                      Bu etkinliğe online olarak da katılabilirsiniz.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Description */}
+              {event.aciklama && (
+                <div className="prose max-w-none mb-8">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Etkinlik Hakkında</h2>
+                  <div
+                    className="text-gray-700 leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: event.aciklama }}
+                  />
+                </div>
+              )}
+
+              {/* Objectives */}
+              {event.amaclar_hedefler && (
+                <div className="mb-8">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Amaçlar ve Hedefler</h2>
+                  <div
+                    className="text-gray-700 leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: event.amaclar_hedefler }}
+                  />
+                </div>
+              )}
+
+              {/* Target Audience */}
+              {event.hedef_kitle && (
+                <div className="mb-8">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Hedef Kitle</h2>
+                  <div
+                    className="text-gray-700 leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: event.hedef_kitle }}
+                  />
+                </div>
+              )}
+
+              {/* Scientific Program */}
+              {event.bilimsel_program && (
+                <div className="mb-8">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Bilimsel Program</h2>
+                  <div
+                    className="text-gray-700 leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: event.bilimsel_program }}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-6 space-y-6">
+              {/* CTA Card */}
+              <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-4">Başvuru</h3>
+
+                {!session ? (
+                  <div className="space-y-3">
+                    <p className="text-gray-600 text-sm mb-4">
+                      Başvuru yapmak için giriş yapmanız gerekmektedir.
+                    </p>
+                    <Link
+                      href="/login"
+                      className="block w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center"
+                    >
+                      Giriş Yap
+                    </Link>
+                    <Link
+                      href="/auth/register"
+                      className="block w-full py-3 px-4 border-2 border-blue-600 text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-colors text-center"
+                    >
+                      Üye Ol
+                    </Link>
+                  </div>
+                ) : hasApplied ? (
+                  <div className="text-center py-4">
+                    <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
+                    <p className="font-medium text-gray-900 mb-2">Başvurunuz Alındı</p>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Bu etkinliğe daha önce başvuru yaptınız.
+                    </p>
+                    <Link
+                      href="/dashboard"
+                      className="text-blue-600 hover:text-blue-700 font-medium text-sm"
+                    >
+                      Başvurularımı Görüntüle →
+                    </Link>
+                  </div>
+                ) : isDeadlinePassed ? (
+                  <div className="text-center py-4">
+                    <Clock className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                    <p className="font-medium text-gray-900 mb-2">Başvuru Süresi Doldu</p>
+                    <p className="text-sm text-gray-600">
+                      Son başvuru tarihi geçmiştir.
+                    </p>
+                  </div>
+                ) : canApply ? (
+                  <div className="space-y-4">
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-800">
+                      Başvuru yapabilirsiniz!
+                    </div>
+                    <Link
+                      href={`/dashboard/apply/${event.id}`}
+                      className="block w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center"
+                    >
+                      Başvuru Yap
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-gray-600">Başvurular şu anda kapalıdır.</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Important Dates */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Önemli Tarihler</h3>
+                <div className="space-y-3 text-sm">
+                  <DateItem label="Son Başvuru Tarihi" date={sonBasvuru} />
+                  {event.erken_kayit_tarihi && (
+                    <DateItem label="Erken Kayıt Son Tarih" date={new Date(event.erken_kayit_tarihi)} />
+                  )}
+                  <DateItem label="Etkinlik Başlangıç" date={baslangic} />
+                  <DateItem label="Etkinlik Bitiş" date={bitis} />
+                </div>
+              </div>
+
+              {/* Pricing */}
+              {!event.ucretsiz && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Ücretlendirme</h3>
+                  <div className="space-y-2 text-sm">
+                    <PriceItem label="Standart Kayıt" price={event.ucret} />
+                    {event.erken_kayit_ucret && (
+                      <PriceItem label="Erken Kayıt" price={event.erken_kayit_ucret} highlight />
+                    )}
+                    {event.ogrenci_ucret && (
+                      <PriceItem label="Öğrenci" price={event.ogrenci_ucret} />
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Helper Components
+function InfoItem({ icon, label, value, highlight = false }: any) {
+  return (
+    <div className={`flex items-start gap-3 p-3 rounded-lg ${highlight ? 'bg-blue-50' : 'bg-gray-50'}`}>
+      <div className={`${highlight ? 'text-blue-600' : 'text-gray-600'} mt-0.5`}>{icon}</div>
+      <div>
+        <p className="text-xs text-gray-500 mb-1">{label}</p>
+        <p className={`font-semibold ${highlight ? 'text-blue-900' : 'text-gray-900'}`}>{value}</p>
+      </div>
+    </div>
+  );
+}
+
+function DateItem({ label, date }: { label: string; date: Date }) {
+  return (
+    <div className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
+      <span className="text-gray-600">{label}</span>
+      <span className="font-semibold text-gray-900">{date.toLocaleDateString('tr-TR')}</span>
+    </div>
+  );
+}
+
+function PriceItem({ label, price, highlight = false }: any) {
+  return (
+    <div
+      className={`flex justify-between items-center py-2 px-3 rounded ${
+        highlight ? 'bg-green-50 border border-green-200' : ''
+      }`}
+    >
+      <span className={highlight ? 'text-green-900 font-medium' : 'text-gray-600'}>{label}</span>
+      <span className={`font-bold ${highlight ? 'text-green-700' : 'text-gray-900'}`}>{price} ₺</span>
+    </div>
+  );
+}

@@ -1,4 +1,4 @@
-// Kocaeli İl Sağlık Müdürlüğü - Database Schema
+// Congress Management System - Database Schema
 
 generator client {
   provider = "prisma-client-js"
@@ -10,269 +10,275 @@ datasource db {
 }
 
 // ============================================
-// 1. PERSONEL TABLOSU
+// 1. USER TABLE (Kullanıcılar)
 // ============================================
-model Personel {
-  id String @id @default(uuid())
+model User {
+  id       String @id @default(uuid())
+  email    String @unique
+  password String // bcrypt hash
 
-  // ZORUNLU KİŞİSEL BİLGİLER
-  tc_kimlik_no String @unique
-  ad           String
-  soyad        String
-  email        String @unique
-  password     String // bcrypt hash
-  telefon      String
+  // KİŞİSEL BİLGİLER
+  ad      String
+  soyad   String
+  unvan   String? // Prof. Dr., Doç. Dr., Uzm., vb.
+  kurum   String? // Çalıştığı kurum
+  telefon String?
+
+  // ROL SİSTEMİ
+  role String @default("KATILIMCI") // ADMIN, HAKEM, KATILIMCI
+
+  // HESAP DURUMU
+  aktif            Boolean   @default(true)
+  email_verified   Boolean   @default(false)
+  ilk_giris        Boolean   @default(true)
+  son_giris_tarihi DateTime?
 
   // İLİŞKİLER
-  rol_id          String
-  rol             Rol        @relation(fields: [rol_id], references: [id])
-  birim_id        String
-  birim           Birim      @relation(fields: [birim_id], references: [id])
-  yonetici_id     String?
-  yonetici        Personel?  @relation("YoneticiAlt", fields: [yonetici_id], references: [id], onDelete: SetNull)
-  alt_personeller Personel[] @relation("YoneticiAlt")
+  applications Application[] // Kullanıcının yaptığı başvurular
+  reviews      Review[] // Hakem ise yaptığı değerlendirmeler
 
-  // OPSİYONEL BİLGİLER
-  profil_foto_url String?
-  sicil_no        String?
-  unvan           String?
-  dogum_tarihi    DateTime?
-  cinsiyet        String? // Enum: Cinsiyet
-  adres           String?
-  il              String?   @default("Kocaeli")
-  ilce            String?
+  // ZAMAN DAMGALARI
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
-  // İŞ BİLGİLERİ
-  ise_baslama_tarihi DateTime?
-  sozlesme_turu      String? // Enum: SozlesmeTuru
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
 
-  // ACİL DURUM
-  acil_durum_kisi    String?
-  acil_durum_telefon String?
+// ============================================
+// 2. EVENT TABLE (Kongre/Etkinlik)
+// ============================================
+model Event {
+  id   String @id @default(uuid())
+  slug String @unique // URL-friendly identifier
 
-  // SİSTEM BİLGİLERİ
-  aktif            Boolean   @default(true)
-  ilk_giris        Boolean   @default(true) // Şifre değişimi için
-  notlar           String?
-  son_giris_tarihi DateTime?
-  son_giris_ip     String?
+  // TEMEL BİLGİLER
+  baslik   String
+  alt_baslik String? // Opsiyonel alt başlık
+  tip      String  @default("KONGRE") // KONGRE, SEMPOZYUM, PANEL, CALISTAY
+  aciklama String? // Rich text (HTML veya Markdown)
+
+  // TARİHLER
+  baslangic_tarihi    DateTime
+  bitis_tarihi        DateTime
+  son_basvuru_tarihi  DateTime
+  erken_kayit_tarihi  DateTime? // Erken kayıt için son tarih
+
+  // MEKAN
+  yer           String // Örn: "İstanbul Kongre Merkezi"
+  adres         String? // Detaylı adres
+  online        Boolean @default(false) // Online/Hybrid mi?
+  online_link   String? // Zoom, Teams linki
+
+  // FİYATLANDIRMA
+  ucret             Float   @default(0) // Katılım ücreti (TL)
+  erken_kayit_ucret Float?  // Erken kayıt ücreti
+  ogrenci_ucret     Float?  // Öğrenci ücreti
+  ucretsiz          Boolean @default(false)
+
+  // GÖRSEL VE MEDYA
+  gorsel_url String? // Ana banner/poster
+  logo_url   String? // Etkinlik logosu
+
+  // İÇERİK ALANLARI (Rich Content)
+  amaclar_hedefler String? // Amaçlar ve hedefler
+  hedef_kitle      String? // Hedef katılımcı profili
+  bilimsel_program String? // Program detayları
+  kurullar         String? // Düzenleme, bilim, danışma kurulları (JSON)
+  sponsor_bilgileri String? // Sponsorlar (JSON)
+
+  // DURUM
+  durum String @default("TASLAK") // TASLAK, YAYINDA, TAMAMLANDI, IPTAL
+
+  // AYARLAR
+  basvuru_aktif       Boolean @default(true)
+  max_katilimci       Int?    // Katılımcı limiti
+  sertifika_aktif     Boolean @default(true)
+  katilim_sertifikasi String? // Sertifika şablonu URL
+
+  // İLİŞKİLER
+  applications Application[]
 
   // ZAMAN DAMGALARI
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
-  created_by_id String?
-  updated_by_id String?
+  created_by_id String? // Admin ID
 
-  @@index([email])
-  @@index([tc_kimlik_no])
-  @@index([rol_id])
-  @@index([birim_id])
-  @@map("personel")
+  @@index([slug])
+  @@index([durum])
+  @@index([baslangic_tarihi])
+  @@index([son_basvuru_tarihi])
+  @@map("events")
 }
 
 // ============================================
-// 2. ROLLER TABLOSU
+// 3. APPLICATION TABLE (Başvuru/Bildiri)
 // ============================================
-model Rol {
+model Application {
   id String @id @default(uuid())
 
-  // TEMEL BİLGİLER
-  kod      String  @unique // Sistem kodu
-  ad       String  // Görünen ad
-  aciklama String?
-  seviye   Int     // 1-10 arası
-  renk     String  @default("#64748b") // Hex renk kodu
-  icon     String? // Lucide icon adı
+  // İLİŞKİLER
+  user_id  String
+  user     User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  event_id String
+  event    Event  @relation(fields: [event_id], references: [id], onDelete: Cascade)
+
+  // BAŞVURU TİPİ
+  tip String // SOZLU_BILDIRI, POSTER, DINLEYICI
+
+  // BİLDİRİ BİLGİLERİ (Eğer tip Dinleyici değilse)
+  baslik       String? // Bildiri başlığı
+  ozet         String? // Abstract (max 300 kelime)
+  anahtar_kelimeler String? // Virgülle ayrılmış
+  kategori     String? // Alan/kategori
+
+  // YAZARLAR (JSON Array)
+  yazarlar     String? // [{"ad": "X", "soyad": "Y", "kurum": "Z", "email": "e"}]
+
+  // DOSYALAR
+  dosya_url       String? // PDF bildiri
+  ek_dosya_url    String? // Ek dosya (grafik, vb.)
+  poster_url      String? // Poster sunumu için
+
+  // SUNUM TERCİHİ
+  sunum_tercihi String? // SOZLU, POSTER (kullanıcı tercihi)
+
+  // DURUM YÖNETİMİ
+  durum             String   @default("BEKLEMEDE") // BEKLEMEDE, HAKEMDE, KABUL, RED, REVIZYON
+  hakem_notu        String? // Hakemin değerlendirme notu
+  revizyon_talep    String? // Revizyon talepleri
+  yonetici_notu     String? // Admin notu
+
+  // SUNUM BİLGİLERİ (Kabul edildikten sonra)
+  sunum_tarihi String? // Atanan sunum günü/saati
+  sunum_salonu String? // Salon bilgisi
+  oturum       String? // Hangi oturum
+
+  // İLİŞKİLER
+  payment Payment? // Ödeme bilgisi
+  reviews Review[] // Hakem değerlendirmeleri
+
+  // ZAMAN DAMGALARI
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+  karar_tarihi  DateTime? // Kabul/Red tarihi
+
+  @@unique([user_id, event_id]) // Bir kullanıcı bir etkinliğe sadece 1 başvuru yapabilir
+  @@index([event_id])
+  @@index([user_id])
+  @@index([durum])
+  @@map("applications")
+}
+
+// ============================================
+// 4. PAYMENT TABLE (Ödeme)
+// ============================================
+model Payment {
+  id String @id @default(uuid())
+
+  // İLİŞKİLER
+  application_id String      @unique
+  application    Application @relation(fields: [application_id], references: [id], onDelete: Cascade)
+
+  // ÖDEME BİLGİLERİ
+  tutar        Float // TL
+  odeme_tipi   String @default("IYZICO") // IYZICO, HAVALE, NAKIT, UCRETSIZ
+
+  // IYZICO BİLGİLERİ
+  islem_kodu   String? // Transaction/Payment ID
+  iyzico_token String? // Iyzico conversation ID
+
+  // HAVALE BİLGİLERİ
+  havale_dekont_url String? // Dekont yükleme
 
   // DURUM
-  aktif Boolean @default(true)
+  durum            String   @default("BEKLIYOR") // BEKLIYOR, ODENDI, IPTAL, RED
+  odeme_tarihi     DateTime?
+  onaylayan_admin  String? // Admin ID
+  onay_tarihi      DateTime?
 
-  // İLİŞKİLER
-  personeller Personel[]
-  yetkiler    RolYetki[]
-
-  // ZAMAN DAMGALARI
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  @@index([kod])
-  @@index([seviye])
-  @@map("roller")
-}
-
-// ============================================
-// 3. YETKİLER TABLOSU
-// ============================================
-model Yetki {
-  id String @id @default(uuid())
-
-  // TEMEL BİLGİLER
-  kod      String  @unique // Örn: gorev.olustur
-  ad       String
-  kategori String  // GOREV, PERSONEL, BIRIM, vb.
+  // NOTLAR
   aciklama String?
 
-  // İLİŞKİLER
-  roller RolYetki[]
-
   // ZAMAN DAMGALARI
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  @@index([kod])
-  @@index([kategori])
-  @@map("yetkiler")
+  @@index([durum])
+  @@map("payments")
 }
 
 // ============================================
-// 4. ROL-YETKİ İLİŞKİ TABLOSU
+// 5. REVIEW TABLE (Hakem Değerlendirme)
 // ============================================
-model RolYetki {
-  rol_id   String
-  rol      Rol    @relation(fields: [rol_id], references: [id], onDelete: Cascade)
-  yetki_id String
-  yetki    Yetki  @relation(fields: [yetki_id], references: [id], onDelete: Cascade)
-
-  created_at DateTime @default(now())
-
-  @@id([rol_id, yetki_id])
-  @@map("rol_yetki")
-}
-
-// ============================================
-// 5. BİRİMLER TABLOSU
-// ============================================
-model Birim {
+model Review {
   id String @id @default(uuid())
 
-  // TEMEL BİLGİLER
-  ad            String
-  kod           String       @unique // Örn: KORFEZ-ASM
-  tip           String       // Enum: BirimTip
-  dis_birim_tip String?      // Enum: DisBirimTip
+  // İLİŞKİLER
+  application_id String
+  application    Application @relation(fields: [application_id], references: [id], onDelete: Cascade)
+  hakem_id       String
+  hakem          User        @relation(fields: [hakem_id], references: [id], onDelete: Cascade)
 
-  // HİYERARŞİ
-  // Dış birimler için zorunlu - Müdürlük birimlerine bağlı olmalı
-  ust_birim_id String?
-  ust_birim    Birim?  @relation("BirimHiyerarsi", fields: [ust_birim_id], references: [id], onDelete: SetNull)
-  alt_birimler Birim[] @relation("BirimHiyerarsi")
-
-  // SORUMLU
-  sorumlu_kisi_id String?
-
-  // İLETİŞİM
-  adres   String?
-  telefon String?
-  email   String?
+  // DEĞERLENDİRME
+  puan         Int? // 1-5 veya 1-10 arası
+  karar        String? // KABUL, RED, REVIZYON
+  yorum        String? // Hakem yorumu
+  gizli_yorum  String? // Sadece admin görebilir
 
   // DURUM
-  aktif         Boolean   @default(true)
-  acilis_tarihi DateTime?
-  notlar        String?
-
-  // İLİŞKİLER
-  personeller    Personel[]
-  veri_girisleri SHMVeriGiris[] @relation("BirimVeriGiris") // Dış birimlerin verilerini takip eder
+  tamamlandi      Boolean   @default(false)
+  tamamlanma_tarihi DateTime?
 
   // ZAMAN DAMGALARI
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  @@index([kod])
-  @@index([tip])
-  @@index([dis_birim_tip])
-  @@index([ust_birim_id])
-  @@map("birimler")
+  @@unique([application_id, hakem_id])
+  @@index([hakem_id])
+  @@map("reviews")
 }
 
 // ============================================
-// 6. AKTİVİTE LOGLARI (Audit Trail)
+// 6. PASSWORD RESET TOKEN
 // ============================================
-model AktiviteLog {
+model PasswordResetToken {
+  id         String   @id @default(uuid())
+  user_id    String
+  email      String
+  token      String   @unique @default(uuid())
+  expires_at DateTime
+  kullanildi Boolean  @default(false)
+  ip_adresi  String?
+  created_at DateTime @default(now())
+
+  @@index([token])
+  @@index([user_id])
+  @@map("password_reset_tokens")
+}
+
+// ============================================
+// 7. ACTIVITY LOG (Audit Trail)
+// ============================================
+model ActivityLog {
   id String @id @default(uuid())
 
   // KULLANICI BİLGİSİ
-  personel_id    String?
-  personel_email String?
+  user_id    String?
+  user_email String?
 
   // İŞLEM BİLGİSİ
-  islem    String  // personel.ekle, rol.guncelle, veri.onayla vb.
-  tablo    String  // personel, rol, birim, veri_giris
-  kayit_id String? // İşlem yapılan kaydın ID'si
-  aciklama String?
+  islem      String // event.create, application.approve, vb.
+  tablo      String // events, applications, users
+  kayit_id   String? // İşlem yapılan kaydın ID'si
+  aciklama   String?
+  ip_adresi  String?
 
   created_at DateTime @default(now())
 
-  @@index([personel_id])
+  @@index([user_id])
   @@index([islem])
   @@index([created_at])
-  @@map("aktivite_log")
-}
-
-// ============================================
-// 7. VERİ GİRİŞLERİ (DIŞ BİRİMLER İÇİN)
-// ============================================
-
-// Dış Birim Veri Girişleri (ASM, HSM, VSD, İlçe Sağlık)
-model SHMVeriGiris {
-  id String @id @default(uuid())
-
-  // İLİŞKİLER
-  birim_id    String // Dış birim ID'si
-  birim       Birim  @relation("BirimVeriGiris", fields: [birim_id], references: [id], onDelete: Cascade)
-  personel_id String
-
-  // TARİH BİLGİSİ
-  tarih DateTime
-
-  // VERİ ALANLARI (JSON olarak esnek tutulacak - her birim tipine göre değişir)
-  veri String? // Esnek veri yapısı: { "alan": "değer", ... } (SQLite JSON desteği yok, string olarak saklayacağız)
-
-  // NOTLAR VE AÇIKLAMALAR
-  aciklama String?
-  notlar   String?
-
-  // WEBHOOK SENKRONİZASYONU
-  webhook_gonderildi      Boolean   @default(false)
-  webhook_gonderim_tarihi DateTime?
-  webhook_yanit           String?   // JSON string
-
-  // ONAY DURUMU
-  onay_durumu           String @default("BEKLEMEDE") // Enum: OnayDurumu
-  onaylayan_personel_id String?
-  onay_tarihi           DateTime?
-  onay_notu             String?
-  red_gerekce           String? // Red gerekçesi
-
-  // ZAMAN DAMGALARI
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
-  created_by_id String?
-  updated_by_id String?
-
-  @@unique([birim_id, tarih, personel_id]) // Aynı gün aynı kişi aynı birimde tek kayıt
-  @@index([birim_id])
-  @@index([personel_id])
-  @@index([tarih])
-  @@index([onay_durumu])
-  @@map("shm_veri_giris")
-}
-
-// ============================================
-// 8. ŞİFRE SIFIRLAMA TOKEN
-// ============================================
-model PasswordResetToken {
-  id           String   @id @default(uuid())
-  personel_id  String
-  tc_kimlik_no String
-  email        String
-  token        String   @unique @default(uuid())
-  expires_at   DateTime
-  kullanildi   Boolean  @default(false)
-  ip_adresi    String?
-  created_at   DateTime @default(now())
-
-  @@index([token])
-  @@index([personel_id])
-  @@map("password_reset_tokens")
+  @@map("activity_logs")
 }
