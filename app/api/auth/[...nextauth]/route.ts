@@ -1,5 +1,5 @@
 import NextAuth from 'next-auth';
-import { authOptions } from '@/lib/auth/options';
+import { authOptions } from '@/app/lib/auth/options';
 
 /**
  * NextAuth.js API Route Handler

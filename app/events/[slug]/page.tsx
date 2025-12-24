@@ -2,8 +2,8 @@ import { notFound } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import Link from 'next/link';
 import { Calendar, MapPin, Users, Clock, DollarSign, FileText, CheckCircle, Globe } from 'lucide-react';
-import prisma from '@/lib/prisma';
-import { authOptions } from '@/lib/auth/options';
+import prisma from '@/app/lib/prisma';
+import { authOptions } from '@/app/lib/auth/options';
 
 async function getEvent(slug: string) {
   const event = await prisma.event.findUnique({

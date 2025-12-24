@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, GraduationCap } from 'lucide-react';
 
 export default function SiteFooter() {
     const currentYear = 2025;
@@ -10,22 +10,20 @@ export default function SiteFooter() {
         <footer className="w-full border-t bg-gradient-to-r from-gray-50 to-white py-4 md:py-8 mt-auto">
             <div className="container mx-auto px-3 md:px-4">
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
-                    {/* Sağlık Müdürlüğü Tarafı */}
+                    {/* Kongre Sistemi Tarafı */}
                     <div className="flex items-center gap-3 md:gap-4">
-                        <img
-                            src="https://static.fokusistatistik.com/resimler/kism.png"
-                            alt="Kocaeli İSM"
-                            className="h-10 md:h-12 w-auto"
-                        />
+                        <div className="h-10 md:h-12 w-10 md:w-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+                            <GraduationCap className="h-6 md:h-7 w-6 md:w-7 text-white" />
+                        </div>
                         <div className="text-left">
                             <p className="text-xs md:text-sm font-semibold text-gray-900">
-                                Kocaeli İl Sağlık Müdürlüğü
+                                Bilimsel Kongre Yönetim Sistemi
                             </p>
                             <p className="text-[10px] md:text-xs text-gray-500">
-                                Halk Sağlığı Yönetim Sistemi
+                                Congress Management System
                             </p>
                             <p className="text-[10px] md:text-xs text-gray-400 mt-0.5 md:mt-1">
-                                v1.0 Beta • &copy; {currentYear}
+                                v1.0 • &copy; {currentYear}
                             </p>
                         </div>
                     </div>

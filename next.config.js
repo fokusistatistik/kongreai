@@ -2,7 +2,7 @@ const path = require('path');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Base path for subdirectory deployment (e.g., /kongreai)
+  // Base path for subdirectory deployment
   basePath: process.env.NEXT_PUBLIC_BASE_PATH || '',
 
   // Asset prefix for CDN or subdirectory
@@ -16,6 +16,7 @@ const nextConfig = {
       },
     ],
   },
+
   experimental: {
     serverActions: {
       bodySizeLimit: '5mb',
@@ -30,11 +31,12 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
 
-  // Webpack configuration
+  // Webpack configuration for module resolution
   webpack: (config, { isServer }) => {
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': path.resolve(__dirname),
+      '@/app': path.resolve(__dirname, 'app'),
     };
     return config;
   },

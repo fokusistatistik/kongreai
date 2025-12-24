@@ -2,8 +2,8 @@ import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Calendar, FileText, Clock, CheckCircle, XCircle, AlertCircle, Plus, CreditCard } from 'lucide-react';
-import prisma from '@/lib/prisma';
-import { authOptions } from '@/lib/auth/options';
+import prisma from '@/app/lib/prisma';
+import { authOptions } from '@/app/lib/auth/options';
 
 async function getUserApplications(userId: string) {
   return await prisma.application.findMany({

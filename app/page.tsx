@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { Calendar, MapPin, Users, ChevronRight, GraduationCap } from 'lucide-react';
-import prisma from '@/lib/prisma';
-import { formatTarih } from '@/lib/utils';
+import prisma from '@/app/lib/prisma';
 
 async function getUpcomingEvents() {
   const today = new Date();
