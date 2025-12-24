@@ -63,6 +63,14 @@ export default function SiteFooter() {
                         <Link href="/gizlilik" className="hover:text-gray-600 transition-colors">
                             Gizlilik Politikası
                         </Link>
+                        <span className="hidden md:inline">•</span>
+                        <Link
+                            href="/admin/login"
+                            className="hover:text-blue-600 transition-colors font-medium"
+                            title="Yönetici ve Hakem Girişi"
+                        >
+                            Admin Paneli
+                        </Link>
                     </div>
                 </div>
             </div>

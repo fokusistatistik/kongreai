@@ -72,7 +72,8 @@ model Event {
   online_link   String? // Zoom, Teams linki
 
   // FİYATLANDIRMA
-  ucret             Float   @default(0) // Katılım ücreti (TL)
+  ucret             Float   @default(0) // Katılım ücreti
+  para_birimi       String  @default("TRY") // TRY, USD, EUR
   erken_kayit_ucret Float?  // Erken kayıt ücreti
   ogrenci_ucret     Float?  // Öğrenci ücreti
   ucretsiz          Boolean @default(false)
@@ -182,7 +183,8 @@ model Payment {
   application    Application @relation(fields: [application_id], references: [id], onDelete: Cascade)
 
   // ÖDEME BİLGİLERİ
-  tutar        Float // TL
+  tutar        Float // Ödeme tutarı
+  para_birimi  String @default("TRY") // TRY, USD, EUR
   odeme_tipi   String @default("IYZICO") // IYZICO, HAVALE, NAKIT, UCRETSIZ
 
   // IYZICO BİLGİLERİ
