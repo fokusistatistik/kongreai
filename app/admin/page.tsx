@@ -12,7 +12,8 @@ import {
   CheckCircle,
   Clock,
   XCircle,
-  UserCheck
+  UserCheck,
+  User
 } from 'lucide-react';
 import { authOptions } from '@/app/lib/auth/options';
 import prisma from '@/app/lib/prisma';
@@ -68,7 +69,7 @@ export default async function AdminDashboard() {
   const user = session.user as any;
 
   // Check if user has admin or reviewer role
-  if (user.role !== 'ADMIN' && user.role !== 'HAKEM') {
+  if (user.role !== 'ADMIN' && user.role !== 'HAKEM' && user.role !== 'SUPER_ADMIN' && user.role !== 'ORGANIZATOR') {
     redirect('/dashboard');
   }
 
@@ -87,12 +88,21 @@ export default async function AdminDashboard() {
               {user.role === 'HAKEM' && ' (Hakem)'}
             </p>
           </div>
-          <Link
-            href="/"
-            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-          >
-            Ana Siteye Dön
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/admin/profile"
+              className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+            >
+              <User className="w-4 h-4" />
+              Profil Ayarları
+            </Link>
+            <Link
+              href="/"
+              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+            >
+              Ana Siteye Dön
+            </Link>
+          </div>
         </div>
 
         {/* Stats Grid */}
@@ -131,7 +141,7 @@ export default async function AdminDashboard() {
         <div>
           <h2 className="text-xl font-bold text-gray-900 mb-4">Hızlı Erişim</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {user.role === 'ADMIN' && (
+            {(user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'ORGANIZATOR') && (
               <>
                 <QuickActionCard
                   title="Etkinlik Yönetimi"
@@ -156,7 +166,7 @@ export default async function AdminDashboard() {
               icon={<FileText className="w-8 h-8" />}
               color="bg-purple-500"
             />
-            {user.role === 'ADMIN' && (
+            {(user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'ORGANIZATOR') && (
               <>
                 <QuickActionCard
                   title="Ödeme Yönetimi"
