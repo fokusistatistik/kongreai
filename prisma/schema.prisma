@@ -25,7 +25,7 @@ model User {
   telefon String?
 
   // ROL SİSTEMİ
-  role String @default("KATILIMCI") // ADMIN, HAKEM, KATILIMCI
+  role String @default("KATILIMCI") // SUPER_ADMIN, ADMIN, ORGANIZATOR, HAKEM, KATILIMCI
 
   // HESAP DURUMU
   aktif            Boolean   @default(true)
@@ -34,8 +34,9 @@ model User {
   son_giris_tarihi DateTime?
 
   // İLİŞKİLER
-  applications Application[] // Kullanıcının yaptığı başvurular
-  reviews      Review[] // Hakem ise yaptığı değerlendirmeler
+  applications  Application[] // Kullanıcının yaptığı başvurular
+  reviews       Review[] // Hakem ise yaptığı değerlendirmeler
+  accommodations Accommodation[] // Konaklama rezervasyonları
 
   // ZAMAN DAMGALARI
   created_at DateTime @default(now())
@@ -99,7 +100,9 @@ model Event {
   katilim_sertifikasi String? // Sertifika şablonu URL
 
   // İLİŞKİLER
-  applications Application[]
+  applications  Application[]
+  accommodations Accommodation[] // Konaklama seçenekleri
+  announcements Announcement[] // Etkinlik duyuruları
 
   // ZAMAN DAMGALARI
   created_at    DateTime @default(now())
@@ -283,4 +286,84 @@ model ActivityLog {
   @@index([islem])
   @@index([created_at])
   @@map("activity_logs")
+}
+
+// ============================================
+// 8. ACCOMMODATION TABLE (Konaklama)
+// ============================================
+model Accommodation {
+  id String @id @default(uuid())
+
+  // İLİŞKİLER
+  event_id String
+  event    Event  @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  user_id  String?
+  user     User?  @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  // OTEL BİLGİLERİ
+  otel_adi      String
+  otel_yildiz   Int?    // 3, 4, 5 yıldız
+  oda_tipi      String  // TEK, CIFT, SUIT
+  giris_tarihi  DateTime
+  cikis_tarihi  DateTime
+  gece_sayisi   Int
+
+  // FİYATLANDIRMA
+  fiyat        Float
+  para_birimi  String @default("TRY")
+
+  // REZERVASYON BİLGİLERİ
+  durum            String @default("BEKLEMEDE") // BEKLEMEDE, ONAYLANDI, IPTAL
+  rezervasyon_kodu String?
+  ozel_istek       String? // Sigara içilmeyen oda, vb.
+
+  // ÖDEME
+  odeme_durumu String  @default("BEKLENIYOR") // BEKLENIYOR, ODENDI, IPTAL
+  odeme_tarihi DateTime?
+
+  // NOTLAR
+  aciklama String?
+
+  // ZAMAN DAMGALARI
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([event_id])
+  @@index([user_id])
+  @@index([durum])
+  @@map("accommodations")
+}
+
+// ============================================
+// 9. ANNOUNCEMENT TABLE (Duyurular)
+// ============================================
+model Announcement {
+  id String @id @default(uuid())
+
+  // İLİŞKİ (Etkinliğe özel veya genel)
+  event_id String?
+  event    Event?  @relation(fields: [event_id], references: [id], onDelete: Cascade)
+
+  // DUYURU İÇERİĞİ
+  baslik   String
+  icerik   String // Rich text (HTML veya Markdown)
+  tip      String @default("BILGI") // BILGI, UYARI, ONEMLI, ACIL
+  oncelik  Int    @default(0) // Sıralama için (yüksek = önce göster)
+
+  // YAYINLAMA
+  yayinlandi Boolean  @default(false)
+  yayin_baslangic DateTime?
+  yayin_bitis     DateTime?
+
+  // KİM YARATTTI
+  created_by_email String?
+
+  // ZAMAN DAMGALARI
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([event_id])
+  @@index([yayinlandi])
+  @@index([yayin_baslangic])
+  @@map("announcements")
 }
