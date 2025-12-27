@@ -49,9 +49,12 @@ export const authOptions: NextAuthOptions = {
             id: user.id,
             email: user.email,
             name: `${user.ad} ${user.soyad}`,
+            ad: user.ad,
+            soyad: user.soyad,
             role: user.role,
             unvan: user.unvan,
             kurum: user.kurum,
+            telefon: user.telefon,
             ilk_giris: user.ilk_giris,
           };
         } catch (error) {
@@ -72,6 +75,9 @@ export const authOptions: NextAuthOptions = {
         token.unvan = (user as any).unvan;
         token.kurum = (user as any).kurum;
         token.ilk_giris = (user as any).ilk_giris;
+        token.ad = (user as any).ad;
+        token.soyad = (user as any).soyad;
+        token.telefon = (user as any).telefon;
       }
 
       // Session update - refresh from database
@@ -95,6 +101,8 @@ export const authOptions: NextAuthOptions = {
           token.id = updatedUser.id;
           token.email = updatedUser.email;
           token.name = `${updatedUser.ad} ${updatedUser.soyad}`;
+          token.ad = updatedUser.ad;
+          token.soyad = updatedUser.soyad;
           token.role = updatedUser.role;
           token.unvan = updatedUser.unvan;
           token.kurum = updatedUser.kurum;
@@ -110,6 +118,8 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).id = token.id;
         (session.user as any).email = token.email;
         (session.user as any).name = token.name;
+        (session.user as any).ad = token.ad;
+        (session.user as any).soyad = token.soyad;
         (session.user as any).role = token.role;
         (session.user as any).unvan = token.unvan;
         (session.user as any).kurum = token.kurum;

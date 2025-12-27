@@ -36,6 +36,7 @@ export default withAuth(
           '/',
           '/login',
           '/auth/register',
+          '/admin/login',
           '/hakkimizda',
           '/gizlilik-politikasi',
         ];
