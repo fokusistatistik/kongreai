@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
-import { sifreGucuHesapla } from '@/lib/validations/password';
+import { sifreGucuHesapla } from '@/app/lib/validations/password';
 
 interface PasswordInputProps {
   id: string;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { confirmDialog, ConfirmDialog } from '@/lib/confirm-dialog';
+import { confirmDialog, ConfirmDialog } from '@/app/lib/confirm-dialog';
 import { AlertTriangle, AlertCircle, Info, X } from 'lucide-react';
 
 export function ConfirmDialogContainer() {

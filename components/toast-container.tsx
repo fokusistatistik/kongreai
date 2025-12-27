@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { toast, Toast } from '@/lib/toast';
+import { toast, Toast } from '@/app/lib/toast';
 import { CheckCircle2, XCircle, AlertTriangle, Info, X } from 'lucide-react';
 
 export function ToastContainer() {
