@@ -16,7 +16,12 @@ export default withAuth(
     const token = req.nextauth.token;
     const path = req.nextUrl.pathname;
 
-    // Admin sayfalarına erişim kontrolü
+    // Admin login sayfası herkese açık - kontrol etme
+    if (path === '/admin/login') {
+      return NextResponse.next();
+    }
+
+    // Admin sayfalarına erişim kontrolü (admin/login hariç)
     if (path.startsWith('/admin')) {
       if (token?.role !== 'ADMIN') {
         // ADMIN değilse dashboard'a yönlendir
