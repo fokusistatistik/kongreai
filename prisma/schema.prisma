@@ -103,6 +103,10 @@ model Event {
   applications  Application[]
   accommodations Accommodation[] // Konaklama seçenekleri
   announcements Announcement[] // Etkinlik duyuruları
+  documents     CongressDocument[] // Dokümanlar (programlar, şablonlar, vb.)
+  results       CongressResult[] // Sonuçlar ve raporlar
+  gallery       CongressGallery[] // Galeri (fotoğraflar, videolar)
+  schedule      CongressSchedule[] // Program/Ajanda
 
   // ZAMAN DAMGALARI
   created_at    DateTime @default(now())
@@ -392,4 +396,162 @@ model PasswordReset {
   @@index([token])
   @@index([expires_at])
   @@map("password_resets")
+}
+
+// ============================================
+// 8. CONGRESS DOCUMENT TABLE (Kongre Dokümanları)
+// ============================================
+model CongressDocument {
+  id String @id @default(uuid())
+
+  // İLİŞKİ
+  event_id String
+  event    Event  @relation(fields: [event_id], references: [id], onDelete: Cascade)
+
+  // DÖKÜMAN BİLGİLERİ
+  baslik      String
+  aciklama    String? // Döküman açıklaması
+  dosya_url   String // Döküman dosyasının URL'i
+  dosya_tipi  String // PDF, DOCX, XLSX, PPT, vb.
+  dosya_boyut Int? // Byte cinsinden
+
+  // KATEGORİ
+  kategori String @default("GENEL") // GENEL, PROGRAM, SABLONLAR, BILDIRILER, RAPORLAR, SERTIFIKALAR
+
+  // GÖRÜNÜRLÜK
+  yayinlandi Boolean @default(true)
+  sira       Int     @default(0) // Sıralama için
+
+  // KİM OLUŞTURDU
+  created_by_email String?
+
+  // ZAMAN DAMGALARI
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([event_id])
+  @@index([kategori])
+  @@index([yayinlandi])
+  @@map("congress_documents")
+}
+
+// ============================================
+// 9. CONGRESS RESULT TABLE (Kongre Sonuçları)
+// ============================================
+model CongressResult {
+  id String @id @default(uuid())
+
+  // İLİŞKİ
+  event_id String
+  event    Event  @relation(fields: [event_id], references: [id], onDelete: Cascade)
+
+  // SONUÇ BİLGİLERİ
+  baslik   String
+  icerik   String // Rich text (HTML veya Markdown)
+  tip      String @default("SONUC") // SONUC, RAPOR, KABUL_EDILEN_BILDIRILER, ISTATISTIK
+
+  // DOSYALAR
+  dosya_url String? // Rapor PDF'i vb.
+
+  // YAYINLAMA
+  yayinlandi Boolean  @default(false)
+  yayin_tarihi DateTime?
+
+  // SIRA
+  sira Int @default(0)
+
+  // KİM OLUŞTURDU
+  created_by_email String?
+
+  // ZAMAN DAMGALARI
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([event_id])
+  @@index([tip])
+  @@index([yayinlandi])
+  @@map("congress_results")
+}
+
+// ============================================
+// 10. CONGRESS GALLERY TABLE (Kongre Galerisi)
+// ============================================
+model CongressGallery {
+  id String @id @default(uuid())
+
+  // İLİŞKİ
+  event_id String
+  event    Event  @relation(fields: [event_id], references: [id], onDelete: Cascade)
+
+  // MEDYA BİLGİLERİ
+  baslik      String?
+  aciklama    String?
+  medya_url   String // Fotoğraf veya video URL
+  medya_tipi  String // IMAGE, VIDEO
+  thumbnail_url String? // Küçük resim URL
+
+  // KATEGORİ
+  kategori String @default("GENEL") // GENEL, OTURUM, GALA, POSTER, SOSYAL
+
+  // GÖRÜNÜRLÜK
+  yayinlandi Boolean @default(true)
+  sira       Int     @default(0)
+
+  // KİM YÜKLEDİ
+  uploaded_by_email String?
+
+  // ZAMAN DAMGALARI
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([event_id])
+  @@index([medya_tipi])
+  @@index([kategori])
+  @@map("congress_gallery")
+}
+
+// ============================================
+// 11. CONGRESS SCHEDULE TABLE (Kongre Programı)
+// ============================================
+model CongressSchedule {
+  id String @id @default(uuid())
+
+  // İLİŞKİ
+  event_id String
+  event    Event  @relation(fields: [event_id], references: [id], onDelete: Cascade)
+
+  // PROGRAM BİLGİLERİ
+  gun       String // Örn: "1. Gün", "2. Gün", "2024-12-27"
+  baslik    String // Oturum/Etkinlik başlığı
+  aciklama  String? // Detaylı açıklama
+
+  // ZAMAN
+  baslangic_saati String // Örn: "09:00"
+  bitis_saati     String // Örn: "10:30"
+
+  // MEKAN
+  salon String? // Salon/Oda bilgisi
+
+  // TİP
+  tip String @default("OTURUM") // OTURUM, PANEL, KAHVE_ARASI, YEMEK, SOSYAL, ACILIS, KAPANIS
+
+  // KONUŞMACILAR/BAŞKANLAR
+  konusmacilar String? // JSON array: [{"ad": "X", "unvan": "Y", "konu": "Z"}]
+  oturum_baskani String? // Oturum başkanı
+
+  // GÖRÜNÜRLÜK
+  yayinlandi Boolean @default(true)
+  sira       Int     @default(0) // Günlük sıralama için
+
+  // KİM OLUŞTURDU
+  created_by_email String?
+
+  // ZAMAN DAMGALARI
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([event_id])
+  @@index([gun])
+  @@index([tip])
+  @@map("congress_schedule")
 }

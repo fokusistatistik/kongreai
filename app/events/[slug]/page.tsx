@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Calendar, MapPin, Users, Clock, DollarSign, FileText, CheckCircle, Globe } from 'lucide-react';
 import prisma from '@/app/lib/prisma';
 import { authOptions } from '@/app/lib/auth/options';
+import EventSubsectionsTabs from '@/components/event-subsections-tabs';
 
 async function getEvent(slug: string) {
   const event = await prisma.event.findUnique({
@@ -172,6 +173,9 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
                 </div>
               )}
             </div>
+
+            {/* Event Subsections (Documents, Results, Gallery, Schedule) */}
+            <EventSubsectionsTabs eventId={event.id} />
           </div>
 
           {/* Sidebar */}
