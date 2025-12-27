@@ -3,14 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { FileText, Award, Image, Calendar, Plus, Pencil, Trash2, Save, X } from 'lucide-react';
+import { FileText, Award, Image, Calendar, Plus, Pencil, Trash2, Save, X, Bell, Download } from 'lucide-react';
 
 export default function ManageEventSubsectionsPage() {
   const params = useParams();
   const { data: session } = useSession();
   const eventId = params?.eventId as string;
 
-  const [activeTab, setActiveTab] = useState<'documents' | 'results' | 'gallery' | 'schedule'>('documents');
+  const [activeTab, setActiveTab] = useState<'documents' | 'results' | 'gallery' | 'schedule' | 'announcements'>('documents');
   const [loading, setLoading] = useState(false);
   const [event, setEvent] = useState<any>(null);
 
@@ -33,6 +33,11 @@ export default function ManageEventSubsectionsPage() {
   const [schedule, setSchedule] = useState<any[]>([]);
   const [editingSchedule, setEditingSchedule] = useState<any>(null);
   const [newSchedule, setNewSchedule] = useState<any>(null);
+
+  // Announcements state
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [editingAnnouncement, setEditingAnnouncement] = useState<any>(null);
+  const [newAnnouncement, setNewAnnouncement] = useState<any>(null);
 
   // Check authorization
   useEffect(() => {
@@ -88,6 +93,12 @@ export default function ManageEventSubsectionsPage() {
           if (res.ok) {
             const data = await res.json();
             setSchedule(data.scheduleItems || []);
+          }
+        } else if (activeTab === 'announcements') {
+          const res = await fetch(`/api/admin/announcements?eventId=${eventId}`);
+          if (res.ok) {
+            const data = await res.json();
+            setAnnouncements(data.announcements || []);
           }
         }
       } catch (error) {
@@ -175,6 +186,287 @@ export default function ManageEventSubsectionsPage() {
     }
   };
 
+  // Result handlers
+  const handleCreateResult = async () => {
+    if (!newResult?.baslik || !newResult?.icerik) {
+      alert('Başlık ve içerik zorunludur');
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/admin/events/${eventId}/results`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newResult),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setResults([...results, data.result]);
+        setNewResult(null);
+        alert('Sonuç başarıyla oluşturuldu');
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Bir hata oluştu');
+      }
+    } catch (error) {
+      console.error('Result creation error:', error);
+      alert('Bir hata oluştu');
+    }
+  };
+
+  const handleUpdateResult = async (resultId: string) => {
+    try {
+      const res = await fetch(`/api/admin/events/${eventId}/results/${resultId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editingResult),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setResults(results.map((r) => (r.id === resultId ? data.result : r)));
+        setEditingResult(null);
+        alert('Sonuç başarıyla güncellendi');
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Bir hata oluştu');
+      }
+    } catch (error) {
+      console.error('Result update error:', error);
+      alert('Bir hata oluştu');
+    }
+  };
+
+  const handleDeleteResult = async (resultId: string) => {
+    if (!confirm('Bu sonucu silmek istediğinizden emin misiniz?')) return;
+
+    try {
+      const res = await fetch(`/api/admin/events/${eventId}/results/${resultId}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        setResults(results.filter((r) => r.id !== resultId));
+        alert('Sonuç başarıyla silindi');
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Bir hata oluştu');
+      }
+    } catch (error) {
+      console.error('Result deletion error:', error);
+      alert('Bir hata oluştu');
+    }
+  };
+
+  // Gallery handlers
+  const handleCreateGallery = async () => {
+    if (!newGallery?.medya_url || !newGallery?.medya_tipi) {
+      alert('Medya URL ve medya tipi zorunludur');
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/admin/events/${eventId}/gallery`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newGallery),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setGallery([...gallery, data.galleryItem]);
+        setNewGallery(null);
+        alert('Galeri öğesi başarıyla oluşturuldu');
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Bir hata oluştu');
+      }
+    } catch (error) {
+      console.error('Gallery creation error:', error);
+      alert('Bir hata oluştu');
+    }
+  };
+
+  const handleUpdateGallery = async (galleryId: string) => {
+    try {
+      const res = await fetch(`/api/admin/events/${eventId}/gallery/${galleryId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editingGallery),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setGallery(gallery.map((g) => (g.id === galleryId ? data.galleryItem : g)));
+        setEditingGallery(null);
+        alert('Galeri öğesi başarıyla güncellendi');
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Bir hata oluştu');
+      }
+    } catch (error) {
+      console.error('Gallery update error:', error);
+      alert('Bir hata oluştu');
+    }
+  };
+
+  const handleDeleteGallery = async (galleryId: string) => {
+    if (!confirm('Bu galeri öğesini silmek istediğinizden emin misiniz?')) return;
+
+    try {
+      const res = await fetch(`/api/admin/events/${eventId}/gallery/${galleryId}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        setGallery(gallery.filter((g) => g.id !== galleryId));
+        alert('Galeri öğesi başarıyla silindi');
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Bir hata oluştu');
+      }
+    } catch (error) {
+      console.error('Gallery deletion error:', error);
+      alert('Bir hata oluştu');
+    }
+  };
+
+  // Schedule handlers
+  const handleCreateSchedule = async () => {
+    if (!newSchedule?.gun || !newSchedule?.baslik || !newSchedule?.baslangic_saati || !newSchedule?.bitis_saati) {
+      alert('Gün, başlık, başlangıç ve bitiş saati zorunludur');
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/admin/events/${eventId}/schedule`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newSchedule),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setSchedule([...schedule, data.scheduleItem]);
+        setNewSchedule(null);
+        alert('Program öğesi başarıyla oluşturuldu');
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Bir hata oluştu');
+      }
+    } catch (error) {
+      console.error('Schedule creation error:', error);
+      alert('Bir hata oluştu');
+    }
+  };
+
+  const handleUpdateSchedule = async (scheduleId: string) => {
+    try {
+      const res = await fetch(`/api/admin/events/${eventId}/schedule/${scheduleId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editingSchedule),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setSchedule(schedule.map((s) => (s.id === scheduleId ? data.scheduleItem : s)));
+        setEditingSchedule(null);
+        alert('Program öğesi başarıyla güncellendi');
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Bir hata oluştu');
+      }
+    } catch (error) {
+      console.error('Schedule update error:', error);
+      alert('Bir hata oluştu');
+    }
+  };
+
+  const handleDeleteSchedule = async (scheduleId: string) => {
+    if (!confirm('Bu program öğesini silmek istediğinizden emin misiniz?')) return;
+
+    try {
+      const res = await fetch(`/api/admin/events/${eventId}/schedule/${scheduleId}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        setSchedule(schedule.filter((s) => s.id !== scheduleId));
+        alert('Program öğesi başarıyla silindi');
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Bir hata oluştu');
+      }
+    } catch (error) {
+      console.error('Schedule deletion error:', error);
+      alert('Bir hata oluştu');
+    }
+  };
+
+  // Export schedule to PDF
+  const handleExportSchedulePDF = () => {
+    if (schedule.length === 0) {
+      alert('Program boş, PDF oluşturulamaz');
+      return;
+    }
+
+    // Group by day
+    const dayGroups = schedule.reduce((acc: any, item: any) => {
+      if (!acc[item.gun]) {
+        acc[item.gun] = [];
+      }
+      acc[item.gun].push(item);
+      return acc;
+    }, {});
+
+    // Create HTML content
+    let htmlContent = `
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>${event?.baslik || 'Kongre'} - Program</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 40px; }
+            h1 { color: #1e40af; border-bottom: 3px solid #1e40af; padding-bottom: 10px; }
+            h2 { color: #3b82f6; margin-top: 30px; }
+            .schedule-item { margin: 15px 0; padding: 15px; border-left: 4px solid #3b82f6; background: #f3f4f6; }
+            .time { font-weight: bold; color: #1e40af; }
+            .type { background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+            .salon { color: #6b7280; }
+          </style>
+        </head>
+        <body>
+          <h1>${event?.baslik || 'Kongre'} - Program</h1>
+    `;
+
+    Object.keys(dayGroups).sort().forEach((gun) => {
+      htmlContent += `<h2>${gun}</h2>`;
+      dayGroups[gun].sort((a: any, b: any) => a.baslangic_saati.localeCompare(b.baslangic_saati)).forEach((item: any) => {
+        htmlContent += `
+          <div class="schedule-item">
+            <div class="time">${item.baslangic_saati} - ${item.bitis_saati}</div>
+            <h3>${item.baslik} <span class="type">${item.tip}</span></h3>
+            ${item.salon ? `<div class="salon">📍 ${item.salon}</div>` : ''}
+            ${item.aciklama ? `<p>${item.aciklama}</p>` : ''}
+            ${item.oturum_baskani ? `<p><strong>Oturum Başkanı:</strong> ${item.oturum_baskani}</p>` : ''}
+          </div>
+        `;
+      });
+    });
+
+    htmlContent += `</body></html>`;
+
+    // Open in new window for printing
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      printWindow.print();
+    }
+  };
+
   if (!session) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -198,10 +490,10 @@ export default function ManageEventSubsectionsPage() {
 
       {/* Tabs */}
       <div className="border-b border-gray-200 mb-6">
-        <nav className="flex space-x-4">
+        <nav className="flex space-x-4 overflow-x-auto">
           <button
             onClick={() => setActiveTab('documents')}
-            className={`pb-4 px-4 font-medium text-sm border-b-2 transition-colors ${
+            className={`pb-4 px-4 font-medium text-sm border-b-2 transition-colors whitespace-nowrap ${
               activeTab === 'documents'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -211,8 +503,19 @@ export default function ManageEventSubsectionsPage() {
             Dokümanlar
           </button>
           <button
+            onClick={() => setActiveTab('schedule')}
+            className={`pb-4 px-4 font-medium text-sm border-b-2 transition-colors whitespace-nowrap ${
+              activeTab === 'schedule'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <Calendar className="inline-block w-5 h-5 mr-2" />
+            Program
+          </button>
+          <button
             onClick={() => setActiveTab('results')}
-            className={`pb-4 px-4 font-medium text-sm border-b-2 transition-colors ${
+            className={`pb-4 px-4 font-medium text-sm border-b-2 transition-colors whitespace-nowrap ${
               activeTab === 'results'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -223,7 +526,7 @@ export default function ManageEventSubsectionsPage() {
           </button>
           <button
             onClick={() => setActiveTab('gallery')}
-            className={`pb-4 px-4 font-medium text-sm border-b-2 transition-colors ${
+            className={`pb-4 px-4 font-medium text-sm border-b-2 transition-colors whitespace-nowrap ${
               activeTab === 'gallery'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -233,15 +536,15 @@ export default function ManageEventSubsectionsPage() {
             Galeri
           </button>
           <button
-            onClick={() => setActiveTab('schedule')}
-            className={`pb-4 px-4 font-medium text-sm border-b-2 transition-colors ${
-              activeTab === 'schedule'
+            onClick={() => setActiveTab('announcements')}
+            className={`pb-4 px-4 font-medium text-sm border-b-2 transition-colors whitespace-nowrap ${
+              activeTab === 'announcements'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
-            <Calendar className="inline-block w-5 h-5 mr-2" />
-            Program
+            <Bell className="inline-block w-5 h-5 mr-2" />
+            Duyurular
           </button>
         </nav>
       </div>
@@ -255,57 +558,211 @@ export default function ManageEventSubsectionsPage() {
         <div>
           {/* Documents Tab */}
           {activeTab === 'documents' && (
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">Dokümanlar</h2>
-                <button
-                  onClick={() =>
-                    setNewDoc({
-                      baslik: '',
-                      aciklama: '',
-                      dosya_url: '',
-                      dosya_tipi: 'PDF',
-                      kategori: 'GENEL',
-                      yayinlandi: true,
-                      sira: 0,
-                    })
-                  }
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
-                >
-                  <Plus className="w-5 h-5" />
-                  Yeni Döküman
-                </button>
-              </div>
+            <DocumentsTab
+              documents={documents}
+              newDoc={newDoc}
+              setNewDoc={setNewDoc}
+              editingDoc={editingDoc}
+              setEditingDoc={setEditingDoc}
+              handleCreate={handleCreateDocument}
+              handleUpdate={handleUpdateDocument}
+              handleDelete={handleDeleteDocument}
+            />
+          )}
 
-              {/* New Document Form */}
-              {newDoc && (
-                <div className="bg-gray-50 p-4 rounded-lg mb-4 border border-gray-200">
-                  <h3 className="font-bold mb-3">Yeni Döküman</h3>
+          {/* Results Tab */}
+          {activeTab === 'results' && (
+            <ResultsTab
+              results={results}
+              newResult={newResult}
+              setNewResult={setNewResult}
+              editingResult={editingResult}
+              setEditingResult={setEditingResult}
+              handleCreate={handleCreateResult}
+              handleUpdate={handleUpdateResult}
+              handleDelete={handleDeleteResult}
+            />
+          )}
+
+          {/* Gallery Tab */}
+          {activeTab === 'gallery' && (
+            <GalleryTab
+              gallery={gallery}
+              newGallery={newGallery}
+              setNewGallery={setNewGallery}
+              editingGallery={editingGallery}
+              setEditingGallery={setEditingGallery}
+              handleCreate={handleCreateGallery}
+              handleUpdate={handleUpdateGallery}
+              handleDelete={handleDeleteGallery}
+            />
+          )}
+
+          {/* Schedule Tab */}
+          {activeTab === 'schedule' && (
+            <ScheduleTab
+              schedule={schedule}
+              newSchedule={newSchedule}
+              setNewSchedule={setNewSchedule}
+              editingSchedule={editingSchedule}
+              setEditingSchedule={setEditingSchedule}
+              handleCreate={handleCreateSchedule}
+              handleUpdate={handleUpdateSchedule}
+              handleDelete={handleDeleteSchedule}
+              handleExportPDF={handleExportSchedulePDF}
+            />
+          )}
+
+          {/* Announcements Tab - Coming soon */}
+          {activeTab === 'announcements' && (
+            <div className="text-center py-8">
+              <Bell className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">Duyuru yönetimi yakında eklenecek</p>
+              <p className="text-sm text-gray-500 mt-2">Announcement API entegrasyonu devam ediyor</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Documents Tab Component
+function DocumentsTab({ documents, newDoc, setNewDoc, editingDoc, setEditingDoc, handleCreate, handleUpdate, handleDelete }: any) {
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">Dokümanlar</h2>
+        <button
+          onClick={() =>
+            setNewDoc({
+              baslik: '',
+              aciklama: '',
+              dosya_url: '',
+              dosya_tipi: 'PDF',
+              kategori: 'GENEL',
+              yayinlandi: true,
+              sira: 0,
+            })
+          }
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+        >
+          <Plus className="w-5 h-5" />
+          Yeni Döküman
+        </button>
+      </div>
+
+      {/* New Document Form */}
+      {newDoc && (
+        <div className="bg-gray-50 p-4 rounded-lg mb-4 border border-gray-200">
+          <h3 className="font-bold mb-3">Yeni Döküman</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <input
+              type="text"
+              placeholder="Başlık *"
+              value={newDoc.baslik}
+              onChange={(e) => setNewDoc({ ...newDoc, baslik: e.target.value })}
+              className="px-3 py-2 border rounded"
+            />
+            <input
+              type="text"
+              placeholder="Dosya URL *"
+              value={newDoc.dosya_url}
+              onChange={(e) => setNewDoc({ ...newDoc, dosya_url: e.target.value })}
+              className="px-3 py-2 border rounded"
+            />
+            <input
+              type="text"
+              placeholder="Dosya Tipi (PDF, DOCX...)"
+              value={newDoc.dosya_tipi}
+              onChange={(e) => setNewDoc({ ...newDoc, dosya_tipi: e.target.value })}
+              className="px-3 py-2 border rounded"
+            />
+            <select
+              value={newDoc.kategori}
+              onChange={(e) => setNewDoc({ ...newDoc, kategori: e.target.value })}
+              className="px-3 py-2 border rounded"
+            >
+              <option value="GENEL">Genel</option>
+              <option value="PROGRAM">Program</option>
+              <option value="SABLONLAR">Şablonlar</option>
+              <option value="BILDIRILER">Bildiriler</option>
+              <option value="RAPORLAR">Raporlar</option>
+              <option value="SERTIFIKALAR">Sertifikalar</option>
+            </select>
+            <textarea
+              placeholder="Açıklama"
+              value={newDoc.aciklama}
+              onChange={(e) => setNewDoc({ ...newDoc, aciklama: e.target.value })}
+              className="px-3 py-2 border rounded col-span-2"
+              rows={2}
+            />
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={newDoc.yayinlandi}
+                onChange={(e) => setNewDoc({ ...newDoc, yayinlandi: e.target.checked })}
+              />
+              Yayınla
+            </label>
+            <input
+              type="number"
+              placeholder="Sıra"
+              value={newDoc.sira}
+              onChange={(e) => setNewDoc({ ...newDoc, sira: parseInt(e.target.value) || 0 })}
+              className="px-3 py-2 border rounded"
+            />
+          </div>
+          <div className="flex gap-2 mt-4">
+            <button
+              onClick={handleCreate}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center gap-2"
+            >
+              <Save className="w-4 h-4" />
+              Kaydet
+            </button>
+            <button
+              onClick={() => setNewDoc(null)}
+              className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 flex items-center gap-2"
+            >
+              <X className="w-4 h-4" />
+              İptal
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Documents List */}
+      <div className="space-y-3">
+        {documents.length === 0 ? (
+          <p className="text-gray-500 text-center py-8">Henüz döküman eklenmemiş</p>
+        ) : (
+          documents.map((doc: any) => (
+            <div key={doc.id} className="bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+              {editingDoc?.id === doc.id ? (
+                <div>
                   <div className="grid grid-cols-2 gap-4">
                     <input
                       type="text"
-                      placeholder="Başlık *"
-                      value={newDoc.baslik}
-                      onChange={(e) => setNewDoc({ ...newDoc, baslik: e.target.value })}
+                      value={editingDoc.baslik}
+                      onChange={(e) => setEditingDoc({ ...editingDoc, baslik: e.target.value })}
                       className="px-3 py-2 border rounded"
                     />
                     <input
                       type="text"
-                      placeholder="Dosya URL *"
-                      value={newDoc.dosya_url}
-                      onChange={(e) => setNewDoc({ ...newDoc, dosya_url: e.target.value })}
+                      value={editingDoc.dosya_url}
+                      onChange={(e) => setEditingDoc({ ...editingDoc, dosya_url: e.target.value })}
                       className="px-3 py-2 border rounded"
                     />
                     <input
                       type="text"
-                      placeholder="Dosya Tipi (PDF, DOCX...)"
-                      value={newDoc.dosya_tipi}
-                      onChange={(e) => setNewDoc({ ...newDoc, dosya_tipi: e.target.value })}
+                      value={editingDoc.dosya_tipi}
+                      onChange={(e) => setEditingDoc({ ...editingDoc, dosya_tipi: e.target.value })}
                       className="px-3 py-2 border rounded"
                     />
                     <select
-                      value={newDoc.kategori}
-                      onChange={(e) => setNewDoc({ ...newDoc, kategori: e.target.value })}
+                      value={editingDoc.kategori}
+                      onChange={(e) => setEditingDoc({ ...editingDoc, kategori: e.target.value })}
                       className="px-3 py-2 border rounded"
                     >
                       <option value="GENEL">Genel</option>
@@ -315,99 +772,693 @@ export default function ManageEventSubsectionsPage() {
                       <option value="RAPORLAR">Raporlar</option>
                       <option value="SERTIFIKALAR">Sertifikalar</option>
                     </select>
-                    <textarea
-                      placeholder="Açıklama"
-                      value={newDoc.aciklama}
-                      onChange={(e) => setNewDoc({ ...newDoc, aciklama: e.target.value })}
-                      className="px-3 py-2 border rounded col-span-2"
-                      rows={2}
-                    />
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={newDoc.yayinlandi}
-                        onChange={(e) => setNewDoc({ ...newDoc, yayinlandi: e.target.checked })}
-                      />
-                      Yayınla
-                    </label>
-                    <input
-                      type="number"
-                      placeholder="Sıra"
-                      value={newDoc.sira}
-                      onChange={(e) => setNewDoc({ ...newDoc, sira: parseInt(e.target.value) || 0 })}
-                      className="px-3 py-2 border rounded"
-                    />
                   </div>
                   <div className="flex gap-2 mt-4">
                     <button
-                      onClick={handleCreateDocument}
-                      className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center gap-2"
+                      onClick={() => handleUpdate(doc.id)}
+                      className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm flex items-center gap-1"
                     >
                       <Save className="w-4 h-4" />
                       Kaydet
                     </button>
                     <button
-                      onClick={() => setNewDoc(null)}
-                      className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 flex items-center gap-2"
+                      onClick={() => setEditingDoc(null)}
+                      className="bg-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-400 text-sm flex items-center gap-1"
                     >
                       <X className="w-4 h-4" />
                       İptal
                     </button>
                   </div>
                 </div>
+              ) : (
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-bold text-lg">{doc.baslik}</h3>
+                    <p className="text-sm text-gray-600">{doc.aciklama}</p>
+                    <div className="flex gap-4 mt-2 text-sm">
+                      <span className="text-gray-500">Tip: {doc.dosya_tipi}</span>
+                      <span className="text-gray-500">Kategori: {doc.kategori}</span>
+                      <span className={doc.yayinlandi ? 'text-green-600' : 'text-red-600'}>
+                        {doc.yayinlandi ? 'Yayında' : 'Taslak'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setEditingDoc(doc)}
+                      className="text-blue-600 hover:text-blue-800 p-2"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(doc.id)}
+                      className="text-red-600 hover:text-red-800 p-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
               )}
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
 
-              {/* Documents List */}
-              <div className="space-y-3">
-                {documents.length === 0 ? (
-                  <p className="text-gray-500 text-center py-8">Henüz döküman eklenmemiş</p>
-                ) : (
-                  documents.map((doc) => (
-                    <div key={doc.id} className="bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
-                      {editingDoc?.id === doc.id ? (
-                        <div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <input
-                              type="text"
-                              value={editingDoc.baslik}
-                              onChange={(e) => setEditingDoc({ ...editingDoc, baslik: e.target.value })}
-                              className="px-3 py-2 border rounded"
-                            />
-                            <input
-                              type="text"
-                              value={editingDoc.dosya_url}
-                              onChange={(e) => setEditingDoc({ ...editingDoc, dosya_url: e.target.value })}
-                              className="px-3 py-2 border rounded"
-                            />
-                            <input
-                              type="text"
-                              value={editingDoc.dosya_tipi}
-                              onChange={(e) => setEditingDoc({ ...editingDoc, dosya_tipi: e.target.value })}
-                              className="px-3 py-2 border rounded"
-                            />
-                            <select
-                              value={editingDoc.kategori}
-                              onChange={(e) => setEditingDoc({ ...editingDoc, kategori: e.target.value })}
-                              className="px-3 py-2 border rounded"
-                            >
-                              <option value="GENEL">Genel</option>
-                              <option value="PROGRAM">Program</option>
-                              <option value="SABLONLAR">Şablonlar</option>
-                              <option value="BILDIRILER">Bildiriler</option>
-                              <option value="RAPORLAR">Raporlar</option>
-                              <option value="SERTIFIKALAR">Sertifikalar</option>
-                            </select>
-                          </div>
-                          <div className="flex gap-2 mt-4">
+// Results Tab Component
+function ResultsTab({ results, newResult, setNewResult, editingResult, setEditingResult, handleCreate, handleUpdate, handleDelete }: any) {
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">Sonuçlar</h2>
+        <button
+          onClick={() =>
+            setNewResult({
+              baslik: '',
+              icerik: '',
+              tip: 'SONUC',
+              dosya_url: '',
+              yayinlandi: false,
+              yayin_tarihi: '',
+              sira: 0,
+            })
+          }
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+        >
+          <Plus className="w-5 h-5" />
+          Yeni Sonuç
+        </button>
+      </div>
+
+      {/* New Result Form */}
+      {newResult && (
+        <div className="bg-gray-50 p-4 rounded-lg mb-4 border border-gray-200">
+          <h3 className="font-bold mb-3">Yeni Sonuç</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <input
+              type="text"
+              placeholder="Başlık *"
+              value={newResult.baslik}
+              onChange={(e) => setNewResult({ ...newResult, baslik: e.target.value })}
+              className="px-3 py-2 border rounded col-span-2"
+            />
+            <select
+              value={newResult.tip}
+              onChange={(e) => setNewResult({ ...newResult, tip: e.target.value })}
+              className="px-3 py-2 border rounded"
+            >
+              <option value="SONUC">Sonuç</option>
+              <option value="RAPOR">Rapor</option>
+              <option value="KABUL_EDILEN_BILDIRILER">Kabul Edilen Bildiriler</option>
+              <option value="ISTATISTIK">İstatistik</option>
+            </select>
+            <input
+              type="text"
+              placeholder="Dosya URL (opsiyonel)"
+              value={newResult.dosya_url}
+              onChange={(e) => setNewResult({ ...newResult, dosya_url: e.target.value })}
+              className="px-3 py-2 border rounded"
+            />
+            <textarea
+              placeholder="İçerik * (HTML desteklenir)"
+              value={newResult.icerik}
+              onChange={(e) => setNewResult({ ...newResult, icerik: e.target.value })}
+              className="px-3 py-2 border rounded col-span-2"
+              rows={4}
+            />
+            <input
+              type="datetime-local"
+              placeholder="Yayın Tarihi"
+              value={newResult.yayin_tarihi}
+              onChange={(e) => setNewResult({ ...newResult, yayin_tarihi: e.target.value })}
+              className="px-3 py-2 border rounded"
+            />
+            <input
+              type="number"
+              placeholder="Sıra"
+              value={newResult.sira}
+              onChange={(e) => setNewResult({ ...newResult, sira: parseInt(e.target.value) || 0 })}
+              className="px-3 py-2 border rounded"
+            />
+            <label className="flex items-center gap-2 col-span-2">
+              <input
+                type="checkbox"
+                checked={newResult.yayinlandi}
+                onChange={(e) => setNewResult({ ...newResult, yayinlandi: e.target.checked })}
+              />
+              Yayınla
+            </label>
+          </div>
+          <div className="flex gap-2 mt-4">
+            <button
+              onClick={handleCreate}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center gap-2"
+            >
+              <Save className="w-4 h-4" />
+              Kaydet
+            </button>
+            <button
+              onClick={() => setNewResult(null)}
+              className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 flex items-center gap-2"
+            >
+              <X className="w-4 h-4" />
+              İptal
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Results List */}
+      <div className="space-y-3">
+        {results.length === 0 ? (
+          <p className="text-gray-500 text-center py-8">Henüz sonuç eklenmemiş</p>
+        ) : (
+          results.map((result: any) => (
+            <div key={result.id} className="bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+              {editingResult?.id === result.id ? (
+                <div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <input
+                      type="text"
+                      value={editingResult.baslik}
+                      onChange={(e) => setEditingResult({ ...editingResult, baslik: e.target.value })}
+                      className="px-3 py-2 border rounded col-span-2"
+                    />
+                    <select
+                      value={editingResult.tip}
+                      onChange={(e) => setEditingResult({ ...editingResult, tip: e.target.value })}
+                      className="px-3 py-2 border rounded"
+                    >
+                      <option value="SONUC">Sonuç</option>
+                      <option value="RAPOR">Rapor</option>
+                      <option value="KABUL_EDILEN_BILDIRILER">Kabul Edilen Bildiriler</option>
+                      <option value="ISTATISTIK">İstatistik</option>
+                    </select>
+                    <input
+                      type="text"
+                      value={editingResult.dosya_url}
+                      onChange={(e) => setEditingResult({ ...editingResult, dosya_url: e.target.value })}
+                      className="px-3 py-2 border rounded"
+                    />
+                    <textarea
+                      value={editingResult.icerik}
+                      onChange={(e) => setEditingResult({ ...editingResult, icerik: e.target.value })}
+                      className="px-3 py-2 border rounded col-span-2"
+                      rows={4}
+                    />
+                  </div>
+                  <div className="flex gap-2 mt-4">
+                    <button
+                      onClick={() => handleUpdate(result.id)}
+                      className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm flex items-center gap-1"
+                    >
+                      <Save className="w-4 h-4" />
+                      Kaydet
+                    </button>
+                    <button
+                      onClick={() => setEditingResult(null)}
+                      className="bg-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-400 text-sm flex items-center gap-1"
+                    >
+                      <X className="w-4 h-4" />
+                      İptal
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="font-bold text-lg">{result.baslik}</h3>
+                      <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">{result.tip}</span>
+                      <span className={result.yayinlandi ? 'text-green-600 text-xs' : 'text-red-600 text-xs'}>
+                        {result.yayinlandi ? '✓ Yayında' : '✗ Taslak'}
+                      </span>
+                    </div>
+                    <div
+                      className="text-sm text-gray-600 mb-2 line-clamp-2"
+                      dangerouslySetInnerHTML={{ __html: result.icerik }}
+                    />
+                    {result.dosya_url && (
+                      <p className="text-xs text-gray-500">📎 Dosya: {result.dosya_url}</p>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setEditingResult(result)}
+                      className="text-blue-600 hover:text-blue-800 p-2"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(result.id)}
+                      className="text-red-600 hover:text-red-800 p-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Gallery Tab Component
+function GalleryTab({ gallery, newGallery, setNewGallery, editingGallery, setEditingGallery, handleCreate, handleUpdate, handleDelete }: any) {
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">Galeri</h2>
+        <button
+          onClick={() =>
+            setNewGallery({
+              baslik: '',
+              aciklama: '',
+              medya_url: '',
+              medya_tipi: 'IMAGE',
+              thumbnail_url: '',
+              kategori: 'GENEL',
+              yayinlandi: true,
+              sira: 0,
+            })
+          }
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+        >
+          <Plus className="w-5 h-5" />
+          Yeni Medya
+        </button>
+      </div>
+
+      {/* New Gallery Form */}
+      {newGallery && (
+        <div className="bg-gray-50 p-4 rounded-lg mb-4 border border-gray-200">
+          <h3 className="font-bold mb-3">Yeni Galeri Öğesi</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <input
+              type="text"
+              placeholder="Başlık"
+              value={newGallery.baslik}
+              onChange={(e) => setNewGallery({ ...newGallery, baslik: e.target.value })}
+              className="px-3 py-2 border rounded"
+            />
+            <select
+              value={newGallery.medya_tipi}
+              onChange={(e) => setNewGallery({ ...newGallery, medya_tipi: e.target.value })}
+              className="px-3 py-2 border rounded"
+            >
+              <option value="IMAGE">Resim</option>
+              <option value="VIDEO">Video</option>
+            </select>
+            <input
+              type="text"
+              placeholder="Medya URL *"
+              value={newGallery.medya_url}
+              onChange={(e) => setNewGallery({ ...newGallery, medya_url: e.target.value })}
+              className="px-3 py-2 border rounded"
+            />
+            <input
+              type="text"
+              placeholder="Thumbnail URL (opsiyonel)"
+              value={newGallery.thumbnail_url}
+              onChange={(e) => setNewGallery({ ...newGallery, thumbnail_url: e.target.value })}
+              className="px-3 py-2 border rounded"
+            />
+            <select
+              value={newGallery.kategori}
+              onChange={(e) => setNewGallery({ ...newGallery, kategori: e.target.value })}
+              className="px-3 py-2 border rounded"
+            >
+              <option value="GENEL">Genel</option>
+              <option value="OTURUM">Oturum</option>
+              <option value="GALA">Gala</option>
+              <option value="POSTER">Poster</option>
+              <option value="SOSYAL">Sosyal</option>
+            </select>
+            <input
+              type="number"
+              placeholder="Sıra"
+              value={newGallery.sira}
+              onChange={(e) => setNewGallery({ ...newGallery, sira: parseInt(e.target.value) || 0 })}
+              className="px-3 py-2 border rounded"
+            />
+            <textarea
+              placeholder="Açıklama"
+              value={newGallery.aciklama}
+              onChange={(e) => setNewGallery({ ...newGallery, aciklama: e.target.value })}
+              className="px-3 py-2 border rounded col-span-2"
+              rows={2}
+            />
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={newGallery.yayinlandi}
+                onChange={(e) => setNewGallery({ ...newGallery, yayinlandi: e.target.checked })}
+              />
+              Yayınla
+            </label>
+          </div>
+          <div className="flex gap-2 mt-4">
+            <button
+              onClick={handleCreate}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center gap-2"
+            >
+              <Save className="w-4 h-4" />
+              Kaydet
+            </button>
+            <button
+              onClick={() => setNewGallery(null)}
+              className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 flex items-center gap-2"
+            >
+              <X className="w-4 h-4" />
+              İptal
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Gallery Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {gallery.length === 0 ? (
+          <div className="col-span-full text-gray-500 text-center py-8">Henüz galeri öğesi eklenmemiş</div>
+        ) : (
+          gallery.map((item: any) => (
+            <div key={item.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+              {editingGallery?.id === item.id ? (
+                <div className="p-4">
+                  <input
+                    type="text"
+                    value={editingGallery.baslik}
+                    onChange={(e) => setEditingGallery({ ...editingGallery, baslik: e.target.value })}
+                    className="px-3 py-2 border rounded w-full mb-2"
+                    placeholder="Başlık"
+                  />
+                  <input
+                    type="text"
+                    value={editingGallery.medya_url}
+                    onChange={(e) => setEditingGallery({ ...editingGallery, medya_url: e.target.value })}
+                    className="px-3 py-2 border rounded w-full mb-2"
+                    placeholder="Medya URL"
+                  />
+                  <select
+                    value={editingGallery.kategori}
+                    onChange={(e) => setEditingGallery({ ...editingGallery, kategori: e.target.value })}
+                    className="px-3 py-2 border rounded w-full mb-2"
+                  >
+                    <option value="GENEL">Genel</option>
+                    <option value="OTURUM">Oturum</option>
+                    <option value="GALA">Gala</option>
+                    <option value="POSTER">Poster</option>
+                    <option value="SOSYAL">Sosyal</option>
+                  </select>
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={() => handleUpdate(item.id)}
+                      className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm flex items-center gap-1 flex-1"
+                    >
+                      <Save className="w-4 h-4" />
+                      Kaydet
+                    </button>
+                    <button
+                      onClick={() => setEditingGallery(null)}
+                      className="bg-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-400 text-sm flex items-center gap-1"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="relative">
+                    {item.medya_tipi === 'IMAGE' ? (
+                      <img src={item.medya_url} alt={item.baslik || 'Galeri'} className="w-full h-48 object-cover" />
+                    ) : (
+                      <video src={item.medya_url} className="w-full h-48 object-cover" controls />
+                    )}
+                    <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+                      {item.kategori}
+                    </div>
+                    <div className="absolute top-2 left-2">
+                      <span className={`text-xs px-2 py-1 rounded ${item.yayinlandi ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
+                        {item.yayinlandi ? 'Yayında' : 'Taslak'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-3">
+                    {item.baslik && <h4 className="font-semibold text-sm mb-1">{item.baslik}</h4>}
+                    {item.aciklama && <p className="text-xs text-gray-600 mb-2">{item.aciklama}</p>}
+                    <div className="flex gap-2 justify-end">
+                      <button
+                        onClick={() => setEditingGallery(item)}
+                        className="text-blue-600 hover:text-blue-800 p-1"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        className="text-red-600 hover:text-red-800 p-1"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Schedule Tab Component
+function ScheduleTab({ schedule, newSchedule, setNewSchedule, editingSchedule, setEditingSchedule, handleCreate, handleUpdate, handleDelete, handleExportPDF }: any) {
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">Program</h2>
+        <div className="flex gap-2">
+          <button
+            onClick={handleExportPDF}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"
+          >
+            <Download className="w-5 h-5" />
+            PDF İndir
+          </button>
+          <button
+            onClick={() =>
+              setNewSchedule({
+                gun: '',
+                baslik: '',
+                aciklama: '',
+                baslangic_saati: '',
+                bitis_saati: '',
+                salon: '',
+                tip: 'OTURUM',
+                konusmacilar: '',
+                oturum_baskani: '',
+                yayinlandi: true,
+                sira: 0,
+              })
+            }
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+          >
+            <Plus className="w-5 h-5" />
+            Yeni Program Öğesi
+          </button>
+        </div>
+      </div>
+
+      {/* New Schedule Form */}
+      {newSchedule && (
+        <div className="bg-gray-50 p-4 rounded-lg mb-4 border border-gray-200">
+          <h3 className="font-bold mb-3">Yeni Program Öğesi</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <input
+              type="text"
+              placeholder="Gün * (örn: 1. Gün, 2024-12-27)"
+              value={newSchedule.gun}
+              onChange={(e) => setNewSchedule({ ...newSchedule, gun: e.target.value })}
+              className="px-3 py-2 border rounded"
+            />
+            <select
+              value={newSchedule.tip}
+              onChange={(e) => setNewSchedule({ ...newSchedule, tip: e.target.value })}
+              className="px-3 py-2 border rounded"
+            >
+              <option value="OTURUM">Oturum</option>
+              <option value="PANEL">Panel</option>
+              <option value="KAHVE_ARASI">Kahve Arası</option>
+              <option value="YEMEK">Yemek</option>
+              <option value="SOSYAL">Sosyal</option>
+              <option value="ACILIS">Açılış</option>
+              <option value="KAPANIS">Kapanış</option>
+            </select>
+            <input
+              type="text"
+              placeholder="Başlık *"
+              value={newSchedule.baslik}
+              onChange={(e) => setNewSchedule({ ...newSchedule, baslik: e.target.value })}
+              className="px-3 py-2 border rounded col-span-2"
+            />
+            <input
+              type="time"
+              placeholder="Başlangıç Saati *"
+              value={newSchedule.baslangic_saati}
+              onChange={(e) => setNewSchedule({ ...newSchedule, baslangic_saati: e.target.value })}
+              className="px-3 py-2 border rounded"
+            />
+            <input
+              type="time"
+              placeholder="Bitiş Saati *"
+              value={newSchedule.bitis_saati}
+              onChange={(e) => setNewSchedule({ ...newSchedule, bitis_saati: e.target.value })}
+              className="px-3 py-2 border rounded"
+            />
+            <input
+              type="text"
+              placeholder="Salon (opsiyonel)"
+              value={newSchedule.salon}
+              onChange={(e) => setNewSchedule({ ...newSchedule, salon: e.target.value })}
+              className="px-3 py-2 border rounded"
+            />
+            <input
+              type="text"
+              placeholder="Oturum Başkanı (opsiyonel)"
+              value={newSchedule.oturum_baskani}
+              onChange={(e) => setNewSchedule({ ...newSchedule, oturum_baskani: e.target.value })}
+              className="px-3 py-2 border rounded"
+            />
+            <textarea
+              placeholder="Açıklama"
+              value={newSchedule.aciklama}
+              onChange={(e) => setNewSchedule({ ...newSchedule, aciklama: e.target.value })}
+              className="px-3 py-2 border rounded col-span-2"
+              rows={2}
+            />
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={newSchedule.yayinlandi}
+                onChange={(e) => setNewSchedule({ ...newSchedule, yayinlandi: e.target.checked })}
+              />
+              Yayınla
+            </label>
+            <input
+              type="number"
+              placeholder="Sıra"
+              value={newSchedule.sira}
+              onChange={(e) => setNewSchedule({ ...newSchedule, sira: parseInt(e.target.value) || 0 })}
+              className="px-3 py-2 border rounded"
+            />
+          </div>
+          <div className="flex gap-2 mt-4">
+            <button
+              onClick={handleCreate}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center gap-2"
+            >
+              <Save className="w-4 h-4" />
+              Kaydet
+            </button>
+            <button
+              onClick={() => setNewSchedule(null)}
+              className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 flex items-center gap-2"
+            >
+              <X className="w-4 h-4" />
+              İptal
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Schedule List */}
+      <div className="space-y-6">
+        {schedule.length === 0 ? (
+          <p className="text-gray-500 text-center py-8">Henüz program öğesi eklenmemiş</p>
+        ) : (
+          // Group by day
+          Array.from(new Set(schedule.map((s: any) => s.gun))).map((gun: any) => (
+            <div key={gun}>
+              <h3 className="text-lg font-bold text-gray-900 mb-3 pb-2 border-b-2 border-blue-500">
+                {gun}
+              </h3>
+              <div className="space-y-2">
+                {schedule
+                  .filter((s: any) => s.gun === gun)
+                  .sort((a: any, b: any) => a.baslangic_saati.localeCompare(b.baslangic_saati))
+                  .map((item: any) => (
+                    <div
+                      key={item.id}
+                      className="border-l-4 border-blue-500 bg-gray-50 p-4 rounded-r-lg hover:bg-gray-100 transition-colors"
+                    >
+                      {editingSchedule?.id === item.id ? (
+                        <div className="grid grid-cols-2 gap-4">
+                          <input
+                            type="text"
+                            value={editingSchedule.gun}
+                            onChange={(e) => setEditingSchedule({ ...editingSchedule, gun: e.target.value })}
+                            className="px-3 py-2 border rounded"
+                          />
+                          <select
+                            value={editingSchedule.tip}
+                            onChange={(e) => setEditingSchedule({ ...editingSchedule, tip: e.target.value })}
+                            className="px-3 py-2 border rounded"
+                          >
+                            <option value="OTURUM">Oturum</option>
+                            <option value="PANEL">Panel</option>
+                            <option value="KAHVE_ARASI">Kahve Arası</option>
+                            <option value="YEMEK">Yemek</option>
+                            <option value="SOSYAL">Sosyal</option>
+                            <option value="ACILIS">Açılış</option>
+                            <option value="KAPANIS">Kapanış</option>
+                          </select>
+                          <input
+                            type="text"
+                            value={editingSchedule.baslik}
+                            onChange={(e) => setEditingSchedule({ ...editingSchedule, baslik: e.target.value })}
+                            className="px-3 py-2 border rounded col-span-2"
+                          />
+                          <input
+                            type="time"
+                            value={editingSchedule.baslangic_saati}
+                            onChange={(e) => setEditingSchedule({ ...editingSchedule, baslangic_saati: e.target.value })}
+                            className="px-3 py-2 border rounded"
+                          />
+                          <input
+                            type="time"
+                            value={editingSchedule.bitis_saati}
+                            onChange={(e) => setEditingSchedule({ ...editingSchedule, bitis_saati: e.target.value })}
+                            className="px-3 py-2 border rounded"
+                          />
+                          <input
+                            type="text"
+                            value={editingSchedule.salon}
+                            onChange={(e) => setEditingSchedule({ ...editingSchedule, salon: e.target.value })}
+                            className="px-3 py-2 border rounded"
+                            placeholder="Salon"
+                          />
+                          <input
+                            type="text"
+                            value={editingSchedule.oturum_baskani}
+                            onChange={(e) => setEditingSchedule({ ...editingSchedule, oturum_baskani: e.target.value })}
+                            className="px-3 py-2 border rounded"
+                            placeholder="Oturum Başkanı"
+                          />
+                          <div className="col-span-2 flex gap-2">
                             <button
-                              onClick={() => handleUpdateDocument(doc.id)}
+                              onClick={() => handleUpdate(item.id)}
                               className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm flex items-center gap-1"
                             >
                               <Save className="w-4 h-4" />
                               Kaydet
                             </button>
                             <button
-                              onClick={() => setEditingDoc(null)}
+                              onClick={() => setEditingSchedule(null)}
                               className="bg-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-400 text-sm flex items-center gap-1"
                             >
                               <X className="w-4 h-4" />
@@ -416,27 +1467,41 @@ export default function ManageEventSubsectionsPage() {
                           </div>
                         </div>
                       ) : (
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="font-bold text-lg">{doc.baslik}</h3>
-                            <p className="text-sm text-gray-600">{doc.aciklama}</p>
-                            <div className="flex gap-4 mt-2 text-sm">
-                              <span className="text-gray-500">Tip: {doc.dosya_tipi}</span>
-                              <span className="text-gray-500">Kategori: {doc.kategori}</span>
-                              <span className={doc.yayinlandi ? 'text-green-600' : 'text-red-600'}>
-                                {doc.yayinlandi ? 'Yayında' : 'Taslak'}
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <span className="bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-1 rounded">
+                                {item.baslangic_saati} - {item.bitis_saati}
+                              </span>
+                              {item.salon && (
+                                <span className="text-xs text-gray-600">📍 {item.salon}</span>
+                              )}
+                              <span className="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded">
+                                {item.tip}
+                              </span>
+                              <span className={item.yayinlandi ? 'text-green-600 text-xs' : 'text-red-600 text-xs'}>
+                                {item.yayinlandi ? '✓ Yayında' : '✗ Taslak'}
                               </span>
                             </div>
+                            <h4 className="font-bold text-gray-900">{item.baslik}</h4>
+                            {item.aciklama && (
+                              <p className="text-sm text-gray-600 mt-1">{item.aciklama}</p>
+                            )}
+                            {item.oturum_baskani && (
+                              <p className="text-sm text-gray-700 mt-2">
+                                <span className="font-medium">Oturum Başkanı:</span> {item.oturum_baskani}
+                              </p>
+                            )}
                           </div>
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 ml-4">
                             <button
-                              onClick={() => setEditingDoc(doc)}
+                              onClick={() => setEditingSchedule(item)}
                               className="text-blue-600 hover:text-blue-800 p-2"
                             >
                               <Pencil className="w-4 h-4" />
                             </button>
                             <button
-                              onClick={() => handleDeleteDocument(doc.id)}
+                              onClick={() => handleDelete(item.id)}
                               className="text-red-600 hover:text-red-800 p-2"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -445,32 +1510,12 @@ export default function ManageEventSubsectionsPage() {
                         </div>
                       )}
                     </div>
-                  ))
-                )}
+                  ))}
               </div>
             </div>
-          )}
-
-          {/* Other tabs - Placeholder for now */}
-          {activeTab === 'results' && (
-            <div className="text-center py-8">
-              <p className="text-gray-600">Sonuçlar yönetimi yakında eklenecek</p>
-            </div>
-          )}
-
-          {activeTab === 'gallery' && (
-            <div className="text-center py-8">
-              <p className="text-gray-600">Galeri yönetimi yakında eklenecek</p>
-            </div>
-          )}
-
-          {activeTab === 'schedule' && (
-            <div className="text-center py-8">
-              <p className="text-gray-600">Program yönetimi yakında eklenecek</p>
-            </div>
-          )}
-        </div>
-      )}
+          ))
+        )}
+      </div>
     </div>
   );
 }
