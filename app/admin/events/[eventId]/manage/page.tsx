@@ -3,14 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { FileText, Award, Image, Calendar, Plus, Pencil, Trash2, Save, X, Bell, Download } from 'lucide-react';
+import { FileText, Award, Image, Calendar, Clock, Plus, Pencil, Trash2, Save, X, Bell, Download } from 'lucide-react';
 
 export default function ManageEventSubsectionsPage() {
   const params = useParams();
   const { data: session } = useSession();
   const eventId = params?.eventId as string;
 
-  const [activeTab, setActiveTab] = useState<'documents' | 'results' | 'gallery' | 'schedule' | 'announcements'>('documents');
+  const [activeTab, setActiveTab] = useState<'documents' | 'results' | 'gallery' | 'schedule' | 'timeline' | 'announcements'>('documents');
   const [loading, setLoading] = useState(false);
   const [event, setEvent] = useState<any>(null);
 
@@ -33,6 +33,11 @@ export default function ManageEventSubsectionsPage() {
   const [schedule, setSchedule] = useState<any[]>([]);
   const [editingSchedule, setEditingSchedule] = useState<any>(null);
   const [newSchedule, setNewSchedule] = useState<any>(null);
+
+  // Timeline state
+  const [timeline, setTimeline] = useState<any[]>([]);
+  const [editingTimeline, setEditingTimeline] = useState<any>(null);
+  const [newTimeline, setNewTimeline] = useState<any>(null);
 
   // Announcements state
   const [announcements, setAnnouncements] = useState<any[]>([]);
@@ -93,6 +98,12 @@ export default function ManageEventSubsectionsPage() {
           if (res.ok) {
             const data = await res.json();
             setSchedule(data.scheduleItems || []);
+          }
+        } else if (activeTab === 'timeline') {
+          const res = await fetch(`/api/admin/events/${eventId}/timeline`);
+          if (res.ok) {
+            const data = await res.json();
+            setTimeline(data.timeline || []);
           }
         } else if (activeTab === 'announcements') {
           const res = await fetch(`/api/admin/announcements?eventId=${eventId}`);
@@ -405,6 +416,79 @@ export default function ManageEventSubsectionsPage() {
     }
   };
 
+  // Timeline handlers
+  const handleCreateTimeline = async () => {
+    if (!newTimeline?.baslik || !newTimeline?.tarih || !newTimeline?.tip) {
+      alert('Başlık, tarih ve tip zorunludur');
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/admin/events/${eventId}/timeline`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTimeline),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setTimeline([...timeline, data.timelineItem]);
+        setNewTimeline(null);
+        alert('Timeline öğesi başarıyla oluşturuldu');
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Bir hata oluştu');
+      }
+    } catch (error) {
+      console.error('Timeline creation error:', error);
+      alert('Bir hata oluştu');
+    }
+  };
+
+  const handleUpdateTimeline = async (timelineId: string) => {
+    try {
+      const res = await fetch(`/api/admin/events/${eventId}/timeline/${timelineId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editingTimeline),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setTimeline(timeline.map((t) => (t.id === timelineId ? data.timelineItem : t)));
+        setEditingTimeline(null);
+        alert('Timeline öğesi başarıyla güncellendi');
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Bir hata oluştu');
+      }
+    } catch (error) {
+      console.error('Timeline update error:', error);
+      alert('Bir hata oluştu');
+    }
+  };
+
+  const handleDeleteTimeline = async (timelineId: string) => {
+    if (!confirm('Bu timeline öğesini silmek istediğinizden emin misiniz?')) return;
+
+    try {
+      const res = await fetch(`/api/admin/events/${eventId}/timeline/${timelineId}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        setTimeline(timeline.filter((t) => t.id !== timelineId));
+        alert('Timeline öğesi başarıyla silindi');
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Bir hata oluştu');
+      }
+    } catch (error) {
+      console.error('Timeline deletion error:', error);
+      alert('Bir hata oluştu');
+    }
+  };
+
   // Export schedule to PDF
   const handleExportSchedulePDF = () => {
     if (schedule.length === 0) {
@@ -514,6 +598,17 @@ export default function ManageEventSubsectionsPage() {
             Program
           </button>
           <button
+            onClick={() => setActiveTab('timeline')}
+            className={`pb-4 px-4 font-medium text-sm border-b-2 transition-colors whitespace-nowrap ${
+              activeTab === 'timeline'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <Clock className="inline-block w-5 h-5 mr-2" />
+            Önemli Tarihler
+          </button>
+          <button
             onClick={() => setActiveTab('results')}
             className={`pb-4 px-4 font-medium text-sm border-b-2 transition-colors whitespace-nowrap ${
               activeTab === 'results'
@@ -610,6 +705,20 @@ export default function ManageEventSubsectionsPage() {
               handleUpdate={handleUpdateSchedule}
               handleDelete={handleDeleteSchedule}
               handleExportPDF={handleExportSchedulePDF}
+            />
+          )}
+
+          {/* Timeline Tab */}
+          {activeTab === 'timeline' && (
+            <TimelineTab
+              timeline={timeline}
+              newTimeline={newTimeline}
+              setNewTimeline={setNewTimeline}
+              editingTimeline={editingTimeline}
+              setEditingTimeline={setEditingTimeline}
+              handleCreate={handleCreateTimeline}
+              handleUpdate={handleUpdateTimeline}
+              handleDelete={handleDeleteTimeline}
             />
           )}
 
@@ -1281,7 +1390,7 @@ function ScheduleTab({ schedule, newSchedule, setNewSchedule, editingSchedule, s
           <div className="grid grid-cols-2 gap-4">
             <input
               type="text"
-              placeholder="Gün * (örn: 1. Gün, 2024-12-27)"
+              placeholder="Gün * (örn: 1. Gün, 2025-12-27)"
               value={newSchedule.gun}
               onChange={(e) => setNewSchedule({ ...newSchedule, gun: e.target.value })}
               className="px-3 py-2 border rounded"
@@ -1512,6 +1621,232 @@ function ScheduleTab({ schedule, newSchedule, setNewSchedule, editingSchedule, s
                     </div>
                   ))}
               </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Timeline Tab Component
+function TimelineTab({ timeline, newTimeline, setNewTimeline, editingTimeline, setEditingTimeline, handleCreate, handleUpdate, handleDelete }: any) {
+  return (
+    <div>
+      {/* Create New Timeline Item */}
+      {newTimeline && (
+        <div className="bg-gray-50 p-4 rounded-lg mb-4 border border-gray-200">
+          <h3 className="font-bold mb-3">Yeni Önemli Tarih</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <input
+              type="text"
+              placeholder="Başlık * (örn: Bildiri Gönderme Son Tarihi)"
+              value={newTimeline.baslik}
+              onChange={(e) => setNewTimeline({ ...newTimeline, baslik: e.target.value })}
+              className="px-3 py-2 border rounded col-span-2"
+            />
+            <input
+              type="date"
+              placeholder="Tarih *"
+              value={newTimeline.tarih}
+              onChange={(e) => setNewTimeline({ ...newTimeline, tarih: e.target.value })}
+              className="px-3 py-2 border rounded"
+            />
+            <select
+              value={newTimeline.tip}
+              onChange={(e) => setNewTimeline({ ...newTimeline, tip: e.target.value })}
+              className="px-3 py-2 border rounded"
+            >
+              <option value="">Tip Seçin *</option>
+              <option value="ONEMLI">Önemli</option>
+              <option value="BASVURU">Başvuru</option>
+              <option value="BILDIRI">Bildiri</option>
+              <option value="SONUC">Sonuç</option>
+              <option value="ETKINLIK">Etkinlik</option>
+              <option value="DUYURU">Duyuru</option>
+            </select>
+            <textarea
+              placeholder="Açıklama (opsiyonel)"
+              value={newTimeline.aciklama || ''}
+              onChange={(e) => setNewTimeline({ ...newTimeline, aciklama: e.target.value })}
+              className="px-3 py-2 border rounded col-span-2"
+              rows={2}
+            />
+            <select
+              value={newTimeline.ikon || ''}
+              onChange={(e) => setNewTimeline({ ...newTimeline, ikon: e.target.value })}
+              className="px-3 py-2 border rounded"
+            >
+              <option value="">İkon (opsiyonel)</option>
+              <option value="calendar">📅 Takvim</option>
+              <option value="file">📄 Dosya</option>
+              <option value="award">🏆 Ödül</option>
+              <option value="bell">🔔 Duyuru</option>
+              <option value="clock">⏰ Saat</option>
+              <option value="check">✅ Onay</option>
+            </select>
+            <label className="flex items-center gap-2 px-3 py-2 border rounded bg-white">
+              <input
+                type="checkbox"
+                checked={newTimeline.yayinlandi}
+                onChange={(e) => setNewTimeline({ ...newTimeline, yayinlandi: e.target.checked })}
+              />
+              <span className="text-sm">Yayınlansın mı?</span>
+            </label>
+          </div>
+          <div className="flex gap-2 mt-4">
+            <button
+              onClick={handleCreate}
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-2"
+            >
+              <Save className="w-4 h-4" />
+              Kaydet
+            </button>
+            <button
+              onClick={() => setNewTimeline(null)}
+              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 flex items-center gap-2"
+            >
+              <X className="w-4 h-4" />
+              İptal
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Add New Button */}
+      {!newTimeline && !editingTimeline && (
+        <button
+          onClick={() => setNewTimeline({ baslik: '', tarih: '', tip: 'ONEMLI', aciklama: '', ikon: '', yayinlandi: true, sira: 0 })}
+          className="mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" />
+          Yeni Önemli Tarih Ekle
+        </button>
+      )}
+
+      {/* Timeline List */}
+      <div className="space-y-3">
+        {timeline.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            Henüz önemli tarih eklenmemiş
+          </div>
+        ) : (
+          timeline.map((item: any) => (
+            <div key={item.id} className="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow">
+              {editingTimeline?.id === item.id ? (
+                <div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <input
+                      type="text"
+                      value={editingTimeline.baslik}
+                      onChange={(e) => setEditingTimeline({ ...editingTimeline, baslik: e.target.value })}
+                      className="px-3 py-2 border rounded col-span-2"
+                    />
+                    <input
+                      type="date"
+                      value={editingTimeline.tarih}
+                      onChange={(e) => setEditingTimeline({ ...editingTimeline, tarih: e.target.value })}
+                      className="px-3 py-2 border rounded"
+                    />
+                    <select
+                      value={editingTimeline.tip}
+                      onChange={(e) => setEditingTimeline({ ...editingTimeline, tip: e.target.value })}
+                      className="px-3 py-2 border rounded"
+                    >
+                      <option value="ONEMLI">Önemli</option>
+                      <option value="BASVURU">Başvuru</option>
+                      <option value="BILDIRI">Bildiri</option>
+                      <option value="SONUC">Sonuç</option>
+                      <option value="ETKINLIK">Etkinlik</option>
+                      <option value="DUYURU">Duyuru</option>
+                    </select>
+                    <textarea
+                      value={editingTimeline.aciklama || ''}
+                      onChange={(e) => setEditingTimeline({ ...editingTimeline, aciklama: e.target.value })}
+                      className="px-3 py-2 border rounded col-span-2"
+                      rows={2}
+                    />
+                    <select
+                      value={editingTimeline.ikon || ''}
+                      onChange={(e) => setEditingTimeline({ ...editingTimeline, ikon: e.target.value })}
+                      className="px-3 py-2 border rounded"
+                    >
+                      <option value="">İkon (opsiyonel)</option>
+                      <option value="calendar">📅 Takvim</option>
+                      <option value="file">📄 Dosya</option>
+                      <option value="award">🏆 Ödül</option>
+                      <option value="bell">🔔 Duyuru</option>
+                      <option value="clock">⏰ Saat</option>
+                      <option value="check">✅ Onay</option>
+                    </select>
+                    <label className="flex items-center gap-2 px-3 py-2 border rounded bg-white">
+                      <input
+                        type="checkbox"
+                        checked={editingTimeline.yayinlandi}
+                        onChange={(e) => setEditingTimeline({ ...editingTimeline, yayinlandi: e.target.checked })}
+                      />
+                      <span className="text-sm">Yayınlansın mı?</span>
+                    </label>
+                  </div>
+                  <div className="flex gap-2 mt-4">
+                    <button
+                      onClick={() => handleUpdate(item.id)}
+                      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm flex items-center gap-2"
+                    >
+                      <Save className="w-4 h-4" />
+                      Güncelle
+                    </button>
+                    <button
+                      onClick={() => setEditingTimeline(null)}
+                      className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm flex items-center gap-2"
+                    >
+                      <X className="w-4 h-4" />
+                      İptal
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="font-bold text-lg">{item.baslik}</h3>
+                      <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded">
+                        {item.tip}
+                      </span>
+                      {!item.yayinlandi && (
+                        <span className="px-2 py-1 bg-gray-200 text-gray-600 text-xs rounded">
+                          Taslak
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-600 mb-2">
+                      📅 {new Date(item.tarih).toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </p>
+                    {item.aciklama && (
+                      <p className="text-sm text-gray-700">{item.aciklama}</p>
+                    )}
+                    {item.ikon && (
+                      <p className="text-xs text-gray-500 mt-1">İkon: {item.ikon}</p>
+                    )}
+                  </div>
+                  <div className="flex gap-2 ml-4">
+                    <button
+                      onClick={() => setEditingTimeline(item)}
+                      className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm flex items-center gap-1"
+                    >
+                      <Pencil className="w-4 h-4" />
+                      Düzenle
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm flex items-center gap-1"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Sil
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ))
         )}

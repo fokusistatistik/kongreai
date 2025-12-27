@@ -65,7 +65,7 @@ N8N_WEBHOOK_URL="https://n8n.fokusistatistik.com/webhook/password-reset"
   "token": "abc123...",
   "name": "Ahmet Yılmaz",
   "resetUrl": "https://kongreai.com/auth/reset-password?token=abc123...",
-  "expiresAt": "2024-12-27T15:30:00Z"
+  "expiresAt": "2025-12-27T15:30:00Z"
 }
 ```
 
@@ -118,7 +118,7 @@ N8N_WEBHOOK_URL="https://n8n.fokusistatistik.com/webhook/password-reset"
   </div>
 
   <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
-    <p>© 2024 Kongre Yönetim Sistemi</p>
+    <p>© 2025 Kongre Yönetim Sistemi</p>
   </div>
 </body>
 </html>
@@ -359,6 +359,6 @@ Email template'ini branding'inize göre özelleştirin.
 
 ---
 
-**Son Güncelleme**: 2024-12-27
+**Son Güncelleme**: 2025-12-27
 **Versiyon**: 1.0.0
 **Dokümantasyon**: Emre Bostanoğlu

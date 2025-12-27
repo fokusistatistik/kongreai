@@ -107,6 +107,7 @@ model Event {
   results       CongressResult[] // Sonuçlar ve raporlar
   gallery       CongressGallery[] // Galeri (fotoğraflar, videolar)
   schedule      CongressSchedule[] // Program/Ajanda
+  timeline      EventTimeline[] // Önemli tarihler timeline'ı
 
   // ZAMAN DAMGALARI
   created_at    DateTime @default(now())
@@ -554,4 +555,42 @@ model CongressSchedule {
   @@index([gun])
   @@index([tip])
   @@map("congress_schedule")
+}
+
+// ============================================
+// 12. EVENT TIMELINE TABLE (Etkinlik Önemli Tarihleri)
+// ============================================
+model EventTimeline {
+  id String @id @default(uuid())
+
+  // İLİŞKİ
+  event_id String
+  event    Event  @relation(fields: [event_id], references: [id], onDelete: Cascade)
+
+  // TIMELINE BİLGİLERİ
+  baslik   String // Örn: "Bildiri Gönderme Son Tarihi", "Sonuçların Açıklanması"
+  aciklama String? // Detaylı açıklama (opsiyonel)
+  tarih    String // ISO format tarih (YYYY-MM-DD)
+
+  // KATEGORİ/TİP
+  tip String @default("ONEMLI") // ONEMLI, BASVURU, BILDIRI, SONUC, ETKINLIK, DUYURU
+
+  // İKON (UI için opsiyonel)
+  ikon String? // Örn: "calendar", "file", "award", "bell"
+
+  // GÖRÜNÜRLÜK
+  yayinlandi Boolean @default(true)
+  sira       Int     @default(0) // Görüntüleme sırası
+
+  // KİM OLUŞTURDU
+  created_by_email String?
+
+  // ZAMAN DAMGALARI
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([event_id])
+  @@index([tip])
+  @@index([tarih])
+  @@map("event_timeline")
 }

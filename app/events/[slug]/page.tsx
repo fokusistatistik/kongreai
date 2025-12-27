@@ -6,6 +6,7 @@ import prisma from '@/app/lib/prisma';
 import { authOptions } from '@/app/lib/auth/options';
 import EventSubsectionsTabs from '@/components/event-subsections-tabs';
 import EventAnnouncementsBanner from '@/components/event-announcements-banner';
+import EventTimeline from '@/components/event-timeline';
 
 async function getEvent(slug: string) {
   const event = await prisma.event.findUnique({
@@ -179,6 +180,9 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
                 </div>
               )}
             </div>
+
+            {/* Event Timeline (Important Dates) */}
+            <EventTimeline eventId={event.id} />
 
             {/* Event Subsections (Documents, Results, Gallery, Schedule) */}
             <EventSubsectionsTabs eventId={event.id} />

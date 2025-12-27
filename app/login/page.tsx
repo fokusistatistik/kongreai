@@ -74,7 +74,7 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 px-4 py-12">
+    <div className="flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
@@ -203,7 +203,7 @@ function LoginForm() {
         {/* Footer */}
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
-            © 2024 Kongre Yönetim Sistemi
+            © 2025 Kongre Yönetim Sistemi
           </p>
         </div>
       </div>
@@ -214,7 +214,7 @@ function LoginForm() {
 // Loading fallback component
 function LoginLoading() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+    <div className="flex items-center justify-center py-20">
       <div className="flex flex-col items-center gap-4">
         <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
         <p className="text-gray-600">Yükleniyor...</p>

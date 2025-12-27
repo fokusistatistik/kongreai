@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
  * Next.js Middleware with NextAuth - Congress Management System
  *
  * Bu middleware:
- * 1. Public sayfaları herkese açık bırakır (/, /events/*, /auth/register)
+ * 1. Public sayfaları herkese açık bırakır (/, /events/*, /auth/register, /hakkimizda, /gizlilik-politikasi)
  * 2. /dashboard rotalarını tüm giriş yapmış kullanıcılara açar
  * 3. /admin rotalarını sadece ADMIN rolüne sahip kullanıcılara açar
  * 4. Yetkisiz erişim denemelerinde uygun sayfaya yönlendirir
@@ -36,6 +36,8 @@ export default withAuth(
           '/',
           '/login',
           '/auth/register',
+          '/hakkimizda',
+          '/gizlilik-politikasi',
         ];
 
         // Exact match için kontrol

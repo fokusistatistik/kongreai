@@ -946,7 +946,7 @@ describe('Password System', () => {
 
 **Proje**: Kocaeli İl Sağlık Müdürlüğü Görev Yönetim Sistemi
 **Geliştirici**: FOKUS İstatistik
-**Tarih**: 2024
+**Tarih**: 2025
 **Versiyon**: 1.0.0
 
 **Destek**: support@fokusistatistik.com
