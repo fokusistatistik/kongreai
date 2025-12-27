@@ -367,3 +367,29 @@ model Announcement {
   @@index([yayin_baslangic])
   @@map("announcements")
 }
+
+// ============================================
+// 7. PASSWORD RESET TABLE (Şifre Sıfırlama)
+// ============================================
+model PasswordReset {
+  id    String @id @default(uuid())
+  email String
+
+  // TOKEN BİLGİLERİ
+  token           String   @unique
+  n8n_verified    Boolean  @default(false) // n8n webhook onayı
+  n8n_response    String? // n8n yanıtı
+
+  // SÜRELİ GEÇERLİLİK
+  expires_at DateTime
+  used          Boolean  @default(false)
+  used_at       DateTime?
+
+  // ZAMAN DAMGALARI
+  created_at DateTime @default(now())
+
+  @@index([email])
+  @@index([token])
+  @@index([expires_at])
+  @@map("password_resets")
+}

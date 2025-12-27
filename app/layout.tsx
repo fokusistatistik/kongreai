@@ -27,9 +27,9 @@ export const metadata: Metadata = {
     follow: true,
   },
   icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
+    icon: 'https://static.fokusistatistik.com/resimler/favicon.png',
+    shortcut: 'https://static.fokusistatistik.com/resimler/favicon.png',
+    apple: 'https://static.fokusistatistik.com/resimler/favicon.png',
   },
 };
 
@@ -53,17 +53,17 @@ export default function RootLayout({
         <meta name="theme-color" content="#2563eb" />
 
         {/* Apple Touch Icons */}
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        <link rel="apple-touch-icon" sizes="167x167" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" href="https://static.fokusistatistik.com/resimler/favicon.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="https://static.fokusistatistik.com/resimler/favicon.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="https://static.fokusistatistik.com/resimler/favicon.png" />
+        <link rel="apple-touch-icon" sizes="167x167" href="https://static.fokusistatistik.com/resimler/favicon.png" />
 
         {/* Manifest */}
         <link rel="manifest" href="/manifest.json" />
 
         {/* Favicon */}
-        <link rel="icon" href="/favicon.ico" />
-        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="icon" href="https://static.fokusistatistik.com/resimler/favicon.png" />
+        <link rel="shortcut icon" href="https://static.fokusistatistik.com/resimler/favicon.png" />
       </head>
       <body className="font-sans min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
         <Providers>
