@@ -103,13 +103,13 @@ export default function Chatbot() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-40 bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white rounded-full w-16 h-16 border-4 border-blue-600 shadow-2xl transition-all duration-300 hover:scale-110 animate-pulse hover:animate-none flex items-center justify-center overflow-hidden"
+          className="fixed bottom-6 right-6 z-40 bg-white text-white rounded-full w-16 h-16 border-4 border-blue-600 shadow-2xl transition-all duration-300 hover:scale-110 hover:shadow-3xl flex items-center justify-center p-2"
           aria-label="Chatbot'u aç"
         >
           <img
             src="https://static.fokusistatistik.com/resimler/fokus216k.png"
             alt="Asistan"
-            className="w-12 h-12 object-contain"
+            className="w-full h-full object-cover rounded-full"
           />
         </button>
       )}

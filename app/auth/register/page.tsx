@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { UserPlus, Mail, Lock, User, Building, Phone, Briefcase } from 'lucide-react';
+import { UserPlus, Mail, Lock, User, Building, Phone, Briefcase, Home } from 'lucide-react';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -77,6 +77,17 @@ export default function RegisterPage() {
   return (
     <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl w-full space-y-8">
+        {/* Back to Home Button */}
+        <div className="text-center">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors"
+          >
+            <Home className="w-4 h-4" />
+            <span className="text-sm font-medium">Anasayfaya Dön</span>
+          </Link>
+        </div>
+
         {/* Header */}
         <div className="text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 text-white rounded-full mb-4">

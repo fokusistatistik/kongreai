@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { LogIn, AlertCircle, Mail, Lock, CheckCircle } from 'lucide-react';
+import { LogIn, AlertCircle, Mail, Lock, CheckCircle, Home } from 'lucide-react';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -62,7 +62,7 @@ function LoginForm() {
 
       if (result?.ok) {
         // Force full reload to ensure session is picked up
-        window.location.href = '/';
+        window.location.href = '/dashboard';
       } else {
         setError(result?.error || 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
         setLoading(false);
@@ -76,15 +76,30 @@ function LoginForm() {
   return (
     <div className="flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full">
+        {/* Back to Home Button */}
+        <div className="mb-6 text-center">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors"
+          >
+            <Home className="w-4 h-4" />
+            <span className="text-sm font-medium">Anasayfaya Dön</span>
+          </Link>
+        </div>
+
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 text-white rounded-full mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-full mb-4 shadow-lg">
             <LogIn className="w-8 h-8" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Giriş Yap
+            Kullanıcı Girişi
           </h1>
-          <p className="text-gray-600">Kongre Yönetim Sistemi</p>
+          <p className="text-gray-600">Kongrelere Başvur ve Takip Et</p>
+          <div className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-full">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-sm text-green-700 font-medium">Katılımcı Girişi</span>
+          </div>
         </div>
 
         {/* Success Message */}
@@ -165,8 +180,8 @@ function LoginForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold
-                       hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-4 rounded-lg font-semibold
+                       hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
                        disabled:opacity-50 disabled:cursor-not-allowed transition-all
                        shadow-lg hover:shadow-xl"
             >
@@ -193,7 +208,7 @@ function LoginForm() {
             <p className="text-gray-600 mb-3">Hesabınız yok mu?</p>
             <Link
               href="/auth/register"
-              className="inline-block w-full py-3 px-4 border-2 border-blue-600 text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
+              className="inline-block w-full py-3 px-4 border-2 border-green-600 text-green-600 rounded-lg font-semibold hover:bg-green-50 transition-colors"
             >
               Ücretsiz Üye Ol
             </Link>
