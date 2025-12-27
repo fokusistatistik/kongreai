@@ -60,7 +60,7 @@ export default function SiteFooter() {
                         <span className="hidden md:inline">•</span>
                         <span>Son Güncelleme: 24 Aralık 2025</span>
                         <span className="hidden md:inline">•</span>
-                        <Link href="/gizlilik" className="hover:text-gray-600 transition-colors">
+                        <Link href="/gizlilik-politikasi" className="hover:text-gray-600 transition-colors">
                             Gizlilik Politikası
                         </Link>
                         <span className="hidden md:inline">•</span>
