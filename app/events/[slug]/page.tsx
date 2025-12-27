@@ -5,6 +5,7 @@ import { Calendar, MapPin, Users, Clock, DollarSign, FileText, CheckCircle, Glob
 import prisma from '@/app/lib/prisma';
 import { authOptions } from '@/app/lib/auth/options';
 import EventSubsectionsTabs from '@/components/event-subsections-tabs';
+import EventAnnouncementsBanner from '@/components/event-announcements-banner';
 
 async function getEvent(slug: string) {
   const event = await prisma.event.findUnique({
@@ -72,6 +73,11 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Announcements Banner */}
+            <div className="relative z-10">
+              <EventAnnouncementsBanner eventId={event.id} />
+            </div>
+
             {/* Event Card */}
             <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 relative z-10">
               <div className="flex items-start justify-between mb-4">
