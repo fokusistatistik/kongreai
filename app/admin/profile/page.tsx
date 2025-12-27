@@ -102,6 +102,10 @@ export default function AdminProfilePage() {
       if (res.ok) {
         setMessage({ type: 'success', text: 'Profil bilgileriniz başarıyla güncellendi!' });
         await update();
+        // Reload page to reflect changes
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       } else {
         setMessage({ type: 'error', text: data.error || 'Profil güncellenirken bir hata oluştu.' });
       }

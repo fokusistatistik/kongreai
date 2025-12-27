@@ -13,7 +13,9 @@ import {
   FileText,
   Home,
   GraduationCap,
-  UserCircle
+  UserCircle,
+  Settings,
+  ChevronDown
 } from 'lucide-react';
 
 export default function SiteHeader() {
@@ -21,6 +23,7 @@ export default function SiteHeader() {
   const { data: session } = useSession();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
 
   // Don't show on auth pages
   if (
@@ -107,24 +110,58 @@ export default function SiteHeader() {
             <div className="flex items-center gap-3">
               {isLoggedIn ? (
                 <>
-                  {/* User Info (Desktop) */}
-                  <div className="hidden md:flex items-center gap-3 border-l pl-4">
-                    <div className="text-right">
-                      <p className="text-sm font-semibold text-gray-900">
-                        {user?.name || 'Kullanıcı'}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {user?.role === 'ADMIN' ? 'Yönetici' :
-                         user?.role === 'HAKEM' ? 'Hakem' : 'Katılımcı'}
-                      </p>
-                    </div>
+                  {/* User Dropdown (Desktop) */}
+                  <div className="hidden md:flex items-center gap-3 border-l pl-4 relative">
                     <button
-                      onClick={handleLogout}
-                      className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Çıkış Yap"
+                      onClick={() => setShowUserDropdown(!showUserDropdown)}
+                      className="flex items-center gap-3 hover:bg-gray-50 rounded-lg px-3 py-2 transition-colors"
                     >
-                      <LogOut className="h-5 w-5" />
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-gray-900">
+                          {user?.name || 'Kullanıcı'}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' ? 'Yönetici' :
+                           user?.role === 'HAKEM' ? 'Hakem' :
+                           user?.role === 'ORGANIZATOR' ? 'Organizatör' : 'Katılımcı'}
+                        </p>
+                      </div>
+                      <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${showUserDropdown ? 'rotate-180' : ''}`} />
                     </button>
+
+                    {/* Dropdown Menu */}
+                    {showUserDropdown && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-10"
+                          onClick={() => setShowUserDropdown(false)}
+                        />
+                        <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-20">
+                          <div className="px-4 py-2 border-b border-gray-100">
+                            <p className="text-sm font-semibold text-gray-900">{user?.name}</p>
+                            <p className="text-xs text-gray-500">{user?.email}</p>
+                          </div>
+                          <Link
+                            href="/dashboard/profile"
+                            onClick={() => setShowUserDropdown(false)}
+                            className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
+                          >
+                            <Settings className="h-4 w-4 text-gray-500" />
+                            <span className="text-sm text-gray-700">Profil Ayarları</span>
+                          </Link>
+                          <button
+                            onClick={() => {
+                              setShowUserDropdown(false);
+                              handleLogout();
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-2 hover:bg-red-50 text-red-600 transition-colors"
+                          >
+                            <LogOut className="h-4 w-4" />
+                            <span className="text-sm font-medium">Çıkış Yap</span>
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/* Mobile Menu Button */}
@@ -206,10 +243,19 @@ export default function SiteHeader() {
                     <div className="px-3 py-2 mb-2">
                       <p className="text-sm font-semibold text-gray-900">{user?.name}</p>
                       <p className="text-xs text-gray-500">
-                        {user?.role === 'ADMIN' ? 'Yönetici' :
-                         user?.role === 'HAKEM' ? 'Hakem' : 'Katılımcı'}
+                        {user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' ? 'Yönetici' :
+                         user?.role === 'HAKEM' ? 'Hakem' :
+                         user?.role === 'ORGANIZATOR' ? 'Organizatör' : 'Katılımcı'}
                       </p>
                     </div>
+                    <Link
+                      href="/dashboard/profile"
+                      onClick={() => setShowMobileMenu(false)}
+                      className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors mb-2"
+                    >
+                      <Settings className="h-5 w-5" />
+                      <span className="font-medium">Profil Ayarları</span>
+                    </Link>
                     <button
                       onClick={() => {
                         setShowMobileMenu(false);

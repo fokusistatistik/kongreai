@@ -64,8 +64,12 @@ export default function ProfilePage() {
 
       if (res.ok) {
         setMessage({ type: 'success', text: 'Profil bilgileriniz başarıyla güncellendi!' });
-        // Update session
+        // Update session and reload
         await update();
+        // Reload page to reflect changes
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       } else {
         setMessage({ type: 'error', text: data.error || 'Profil güncellenirken bir hata oluştu.' });
       }

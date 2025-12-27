@@ -62,7 +62,8 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
+      // Initial sign in
       if (user) {
         token.id = user.id;
         token.email = user.email;
@@ -72,6 +73,36 @@ export const authOptions: NextAuthOptions = {
         token.kurum = (user as any).kurum;
         token.ilk_giris = (user as any).ilk_giris;
       }
+
+      // Session update - refresh from database
+      if (trigger === "update" && token.email) {
+        const updatedUser = await prisma.user.findUnique({
+          where: { email: token.email as string },
+          select: {
+            id: true,
+            email: true,
+            ad: true,
+            soyad: true,
+            role: true,
+            unvan: true,
+            kurum: true,
+            telefon: true,
+            ilk_giris: true,
+          },
+        });
+
+        if (updatedUser) {
+          token.id = updatedUser.id;
+          token.email = updatedUser.email;
+          token.name = `${updatedUser.ad} ${updatedUser.soyad}`;
+          token.role = updatedUser.role;
+          token.unvan = updatedUser.unvan;
+          token.kurum = updatedUser.kurum;
+          token.telefon = updatedUser.telefon;
+          token.ilk_giris = updatedUser.ilk_giris;
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
@@ -82,6 +113,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).role = token.role;
         (session.user as any).unvan = token.unvan;
         (session.user as any).kurum = token.kurum;
+        (session.user as any).telefon = token.telefon;
         (session.user as any).ilk_giris = token.ilk_giris;
       }
 
