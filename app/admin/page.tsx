@@ -13,7 +13,8 @@ import {
   Clock,
   XCircle,
   UserCheck,
-  User
+  User,
+  Database
 } from 'lucide-react';
 import { authOptions } from '@/app/lib/auth/options';
 import prisma from '@/app/lib/prisma';
@@ -89,6 +90,15 @@ export default async function AdminDashboard() {
             </p>
           </div>
           <div className="flex items-center gap-3">
+            {stats.totalEvents === 0 && (
+              <Link
+                href="/admin/setup-demo"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              >
+                <Database className="w-4 h-4" />
+                Demo Etkinlik Oluştur
+              </Link>
+            )}
             <Link
               href="/admin/profile"
               className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
