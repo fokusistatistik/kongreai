@@ -21,10 +21,23 @@ export default withAuth(
       return NextResponse.next();
     }
 
+    // İlk giriş şifre değiştirme kontrolü
+    const firstLoginPasswordChangePath = '/auth/change-password-first-login';
+
+    // Kullanıcı ilk girişini yapmışsa ve şifre değiştirme sayfasında değilse, yönlendir
+    if (token?.ilk_giris === true && path !== firstLoginPasswordChangePath) {
+      return NextResponse.redirect(new URL(firstLoginPasswordChangePath, req.url));
+    }
+
+    // Kullanıcı şifresini zaten değiştirmişse, şifre değiştirme sayfasına erişemesin
+    if (token?.ilk_giris === false && path === firstLoginPasswordChangePath) {
+      return NextResponse.redirect(new URL('/dashboard', req.url));
+    }
+
     // Admin sayfalarına erişim kontrolü (admin/login hariç)
     if (path.startsWith('/admin')) {
-      if (token?.role !== 'ADMIN') {
-        // ADMIN değilse dashboard'a yönlendir
+      if (token?.role !== 'ADMIN' && token?.role !== 'SUPER_ADMIN' && token?.role !== 'HAKEM' && token?.role !== 'ORGANIZATOR') {
+        // Yetkili değilse dashboard'a yönlendir
         return NextResponse.redirect(new URL('/dashboard', req.url));
       }
     }
