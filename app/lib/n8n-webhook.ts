@@ -37,11 +37,6 @@ export const WEBHOOK_PATHS = {
   ANNOUNCEMENT_LIST: '/webhook-test/announcement-list',
   ANNOUNCEMENT_DELETE: '/webhook-test/announcement-delete',
 
-  // Event Gallery
-  GALLERY_UPLOAD: '/webhook-test/gallery-upload',
-  GALLERY_LIST: '/webhook-test/gallery-list',
-  GALLERY_DELETE: '/webhook-test/gallery-delete',
-
   // Welcome Emails
   REVIEWER_WELCOME: '/webhook-test/reviewer-welcome',
   USER_WELCOME: '/webhook-test/user-welcome',
@@ -965,6 +960,7 @@ export interface DocumentUploadRequest extends BaseWebhookRequest {
   event: WebhookEventContext;
   document: {
     documentId: string;
+    documentSlot: number; // Slot number (1-8), fixed ID that persists even if document is deleted
     fileName: string;
     fileSize: number; // in bytes, max 9MB (9437184 bytes)
     fileType: string; // Auto-detected: pdf, doc, docx, xls, xlsx, jpg, jpeg, png
@@ -994,6 +990,7 @@ export interface DocumentListRequest extends BaseWebhookRequest {
 export interface DocumentDetailResponse {
   id: string;
   eventId: string;
+  documentSlot: number; // Slot number (1-8), fixed
   fileName: string;
   fileSize: number;
   fileType: string;
@@ -1174,68 +1171,3 @@ export async function deleteAnnouncementViaWebhook(
   return sendWebhookRequest(WEBHOOK_PATHS.ANNOUNCEMENT_DELETE, data);
 }
 
-// ============================================
-// EVENT GALLERY
-// ============================================
-
-export interface GalleryUploadRequest extends BaseWebhookRequest {
-  event: WebhookEventContext;
-  gallery: {
-    galleryId: string;
-    fileName: string;
-    fileSize: number; // in bytes, max 9MB
-    fileType: string; // Auto-detected: jpg, jpeg, png
-    fileMimeType: string;
-    fileUrl: string; // Uploaded image URL
-    baslik?: string; // Image title
-    aciklama?: string; // Image description
-    sira?: number; // Display order
-  };
-}
-
-export interface GalleryResponse {
-  galleryId: string;
-  fileUrl: string;
-  status: string;
-  message?: string;
-}
-
-export interface GalleryListRequest extends BaseWebhookRequest {
-  filters: {
-    eventId: string;
-    limit?: number;
-    offset?: number;
-  };
-}
-
-export interface GalleryDetailResponse {
-  id: string;
-  eventId: string;
-  fileName: string;
-  fileSize: number;
-  fileType: string;
-  fileUrl: string;
-  baslik?: string;
-  aciklama?: string;
-  sira?: number;
-  uploadedBy: string;
-  created_at: string;
-}
-
-export async function uploadGalleryImageViaWebhook(
-  data: GalleryUploadRequest
-): Promise<WebhookResponse<GalleryResponse>> {
-  return sendWebhookRequest(WEBHOOK_PATHS.GALLERY_UPLOAD, data);
-}
-
-export async function listGalleryImagesViaWebhook(
-  data: GalleryListRequest
-): Promise<WebhookResponse<GalleryDetailResponse[]>> {
-  return sendWebhookRequest(WEBHOOK_PATHS.GALLERY_LIST, data, { method: 'POST' });
-}
-
-export async function deleteGalleryImageViaWebhook(
-  data: BaseWebhookRequest & { gallery: { galleryId: string; eventId: string } }
-): Promise<WebhookResponse<{ deleted: boolean; message?: string }>> {
-  return sendWebhookRequest(WEBHOOK_PATHS.GALLERY_DELETE, data);
-}
