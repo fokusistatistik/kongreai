@@ -10,15 +10,15 @@ async function getPayments() {
     orderBy: { created_at: 'desc' },
     take: 50,
     include: {
-      user: {
-        select: {
-          ad: true,
-          soyad: true,
-          email: true,
-        },
-      },
       application: {
         select: {
+          user: {
+            select: {
+              ad: true,
+              soyad: true,
+              email: true,
+            },
+          },
           event: {
             select: {
               baslik: true,
@@ -39,7 +39,7 @@ export default async function PaymentsPage() {
 
   const user = session.user as any;
 
-  if (user.role !== 'ADMIN') {
+  if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
     redirect('/dashboard');
   }
 
@@ -47,11 +47,11 @@ export default async function PaymentsPage() {
 
   const stats = {
     total: payments.length,
-    completed: payments.filter(p => p.durum === 'TAMAMLANDI').length,
+    completed: payments.filter(p => p.durum === 'ODENDI').length,
     pending: payments.filter(p => p.durum === 'BEKLIYOR').length,
-    failed: payments.filter(p => p.durum === 'BASARISIZ').length,
+    failed: payments.filter(p => p.durum === 'RED' || p.durum === 'IPTAL').length,
     totalAmount: payments
-      .filter(p => p.durum === 'TAMAMLANDI')
+      .filter(p => p.durum === 'ODENDI')
       .reduce((sum, p) => sum + p.tutar, 0),
   };
 
@@ -157,9 +157,9 @@ export default async function PaymentsPage() {
                           <User className="w-3 h-3 md:w-4 md:h-4 text-gray-400 hidden sm:block" />
                           <div className="text-xs md:text-sm">
                             <div className="font-medium text-gray-900">
-                              {payment.user.ad} {payment.user.soyad}
+                              {payment.application.user.ad} {payment.application.user.soyad}
                             </div>
-                            <div className="text-gray-500 truncate max-w-[150px] md:max-w-none">{payment.user.email}</div>
+                            <div className="text-gray-500 truncate max-w-[150px] md:max-w-none">{payment.application.user.email}</div>
                           </div>
                         </div>
                       </td>
@@ -176,14 +176,14 @@ export default async function PaymentsPage() {
                       <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap hidden lg:table-cell">
                         <div className="flex items-center gap-2 text-xs md:text-sm text-gray-500">
                           <CreditCard className="w-3 h-3 md:w-4 md:h-4" />
-                          {payment.odeme_yontemi || 'Kredi Kartı'}
+                          {payment.odeme_tipi || 'IYZICO'}
                         </div>
                       </td>
                       <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap">
-                        {payment.durum === 'TAMAMLANDI' && (
+                        {payment.durum === 'ODENDI' && (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                             <CheckCircle className="w-3 h-3" />
-                            <span className="hidden sm:inline">Tamamlandı</span>
+                            <span className="hidden sm:inline">Ödendi</span>
                           </span>
                         )}
                         {payment.durum === 'BEKLIYOR' && (
@@ -192,10 +192,10 @@ export default async function PaymentsPage() {
                             <span className="hidden sm:inline">Bekliyor</span>
                           </span>
                         )}
-                        {payment.durum === 'BASARISIZ' && (
+                        {(payment.durum === 'RED' || payment.durum === 'IPTAL') && (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                             <XCircle className="w-3 h-3" />
-                            <span className="hidden sm:inline">Başarısız</span>
+                            <span className="hidden sm:inline">{payment.durum === 'RED' ? 'Red' : 'İptal'}</span>
                           </span>
                         )}
                       </td>

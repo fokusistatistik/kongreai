@@ -26,14 +26,14 @@ async function getReviewers() {
   // Get assignments count for each reviewer
   const reviewersWithStats = await Promise.all(
     reviewers.map(async (reviewer) => {
-      const assignmentCount = await prisma.applicationReview.count({
-        where: { reviewer_email: reviewer.email },
+      const assignmentCount = await prisma.review.count({
+        where: { hakem_id: reviewer.id },
       });
 
-      const completedCount = await prisma.applicationReview.count({
+      const completedCount = await prisma.review.count({
         where: {
-          reviewer_email: reviewer.email,
-          durum: 'TAMAMLANDI',
+          hakem_id: reviewer.id,
+          tamamlandi: true,
         },
       });
 
@@ -57,7 +57,7 @@ export default async function ReviewersPage() {
 
   const user = session.user as any;
 
-  if (user.role !== 'ADMIN') {
+  if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
     redirect('/dashboard');
   }
 

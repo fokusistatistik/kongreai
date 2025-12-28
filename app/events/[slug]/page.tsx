@@ -257,9 +257,10 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
                       Başvuru yapabilirsiniz!
                     </div>
                     <Link
-                      href={`/dashboard/apply/${event.id}`}
-                      className="block w-full py-2.5 md:py-3 px-4 md:px-6 text-sm md:text-base bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center"
+                      href={`/events/${event.slug}/apply`}
+                      className="block w-full py-2.5 md:py-3 px-4 md:px-6 text-sm md:text-base bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl text-center flex items-center justify-center gap-2"
                     >
+                      <FileText className="w-5 h-5" />
                       Başvuru Yap
                     </Link>
                   </div>
