@@ -18,8 +18,50 @@ import {
 } from 'lucide-react';
 import { authOptions } from '@/app/lib/auth/options';
 import prisma from '@/app/lib/prisma';
+import { getDashboardStats } from '@/app/lib/n8n-webhook';
 
-async function getAdminStats() {
+async function getAdminStats(userId: string, userEmail: string, userName: string, userRole: string) {
+  try {
+    // Get stats from n8n webhook
+    const response = await getDashboardStats({
+      metadata: {
+        requestId: crypto.randomUUID(),
+        timestamp: new Date().toISOString(),
+        source: 'admin-panel',
+        environment: process.env.NODE_ENV || 'development',
+      },
+      requestedBy: {
+        userId,
+        userEmail,
+        userName,
+        userRole,
+      },
+      filters: {},
+    });
+
+    if (response.success && response.data) {
+      return {
+        totalEvents: response.data.totalEvents || 0,
+        activeEvents: response.data.activeEvents || 0,
+        totalApplications: response.data.totalApplications || 0,
+        pendingApplications: response.data.pendingApplications || 0,
+        totalUsers: response.data.totalUsers || 0,
+        totalPayments: response.data.totalPayments || 0,
+        pendingPayments: response.data.pendingPayments || 0,
+      };
+    } else {
+      // Webhook failed, fallback to Prisma (graceful degradation)
+      console.warn('n8n dashboard stats webhook failed, using Prisma fallback:', response.error);
+      return await getAdminStatsFallback();
+    }
+  } catch (error) {
+    // Network error or webhook timeout, fallback to Prisma
+    console.error('n8n dashboard stats webhook error, using Prisma fallback:', error);
+    return await getAdminStatsFallback();
+  }
+}
+
+async function getAdminStatsFallback() {
   const [
     totalEvents,
     activeEvents,
@@ -74,7 +116,12 @@ export default async function AdminDashboard() {
     redirect('/dashboard');
   }
 
-  const stats = await getAdminStats();
+  const stats = await getAdminStats(
+    user.id || '',
+    user.email || '',
+    user.name || '',
+    user.role || 'ADMIN'
+  );
   const recentApplications = await getRecentApplications();
 
   return (

@@ -802,6 +802,7 @@ export interface DashboardStatsResponse {
   completedPayments: number;
   pendingPayments: number;
   totalRevenue: number;
+  totalUsers: number;
   totalReviews?: number;
   pendingReviews?: number;
   completedReviews?: number;
