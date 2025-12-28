@@ -4,26 +4,43 @@ import prisma from '@/app/lib/prisma';
 
 async function getUpcomingEvents() {
   const today = new Date();
-  return await prisma.event.findMany({
+  today.setHours(0, 0, 0, 0); // Start of today
+
+  // Get all YAYINDA events from database
+  const allEvents = await prisma.event.findMany({
     where: {
       durum: 'YAYINDA',
-      baslangic_tarihi: { gte: today },
     },
     orderBy: { baslangic_tarihi: 'asc' },
-    take: 6,
   });
+
+  // Filter for upcoming events (end date is today or in the future)
+  const upcomingEvents = allEvents.filter((event) => {
+    const endDate = new Date(event.bitis_tarihi);
+    endDate.setHours(0, 0, 0, 0);
+    return endDate >= today;
+  });
+
+  return upcomingEvents.slice(0, 6);
 }
 
 async function getPastEvents() {
   const today = new Date();
-  return await prisma.event.findMany({
-    where: {
-      durum: 'TAMAMLANDI',
-      bitis_tarihi: { lt: today },
-    },
+  today.setHours(0, 0, 0, 0); // Start of today
+
+  // Get all events from database
+  const allEvents = await prisma.event.findMany({
     orderBy: { bitis_tarihi: 'desc' },
-    take: 3,
   });
+
+  // Filter for past events (end date is before today)
+  const pastEvents = allEvents.filter((event) => {
+    const endDate = new Date(event.bitis_tarihi);
+    endDate.setHours(0, 0, 0, 0);
+    return endDate < today;
+  });
+
+  return pastEvents.slice(0, 3);
 }
 
 export default async function HomePage() {

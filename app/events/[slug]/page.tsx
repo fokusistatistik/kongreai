@@ -46,26 +46,42 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header Image */}
+      {/* Header Banner - Logo + Event Title */}
       <div className="relative h-64 md:h-80 bg-gradient-to-br from-blue-600 to-indigo-700">
-        {event.gorsel_url ? (
-          <img src={event.gorsel_url} alt={event.baslik} className="w-full h-full object-cover" />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center text-white">
-              <FileText className="w-20 h-20 mx-auto mb-4 opacity-50" />
-            </div>
-          </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
 
         {/* Breadcrumb */}
-        <div className="absolute top-6 left-0 right-0 container mx-auto px-4">
+        <div className="absolute top-6 left-0 right-0 container mx-auto px-4 z-10">
           <nav className="text-sm text-white/90">
             <Link href="/" className="hover:text-white">Ana Sayfa</Link>
             <span className="mx-2">/</span>
             <span className="text-white font-medium">Etkinlik Detayı</span>
           </nav>
+        </div>
+
+        {/* Logo + Event Title */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col items-center gap-4 md:gap-6 text-center">
+              {event.logo_url && (
+                <div className="bg-white/95 backdrop-blur-sm rounded-lg p-4 md:p-6 shadow-2xl max-w-md w-full">
+                  <img
+                    src={event.logo_url}
+                    alt={`${event.baslik} Logo`}
+                    className="w-full h-auto max-h-24 md:max-h-32 object-contain"
+                  />
+                </div>
+              )}
+              <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-white drop-shadow-lg max-w-4xl">
+                {event.baslik}
+              </h1>
+              {event.alt_baslik && (
+                <p className="text-lg md:text-xl text-white/90 drop-shadow-md max-w-3xl">
+                  {event.alt_baslik}
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -81,7 +97,7 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
 
             {/* Event Card */}
             <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 relative z-10">
-              <div className="flex items-start justify-between mb-4">
+              <div className="flex items-start justify-between mb-6">
                 <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-semibold rounded-full">
                   {event.tip}
                 </span>
@@ -92,11 +108,6 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
                   </span>
                 )}
               </div>
-
-              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">{event.baslik}</h1>
-              {event.alt_baslik && (
-                <p className="text-lg text-gray-600 mb-6">{event.alt_baslik}</p>
-              )}
 
               {/* Quick Info Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mb-8">
