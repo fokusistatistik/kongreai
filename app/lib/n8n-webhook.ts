@@ -2,6 +2,8 @@
 // Base URL: n8n.fokusistatistik.com
 // TEST MODE: All webhooks use /webhook-test/ prefix
 
+import { v4 as uuidv4 } from 'uuid';
+
 const N8N_BASE_URL = process.env.N8N_WEBHOOK_URL || 'https://n8n.fokusistatistik.com';
 
 // Webhook paths - TEST MODE
@@ -55,11 +57,71 @@ export const WEBHOOK_PATHS = {
   REVIEWER_LIST: '/webhook-test/reviewer-list',
 } as const;
 
+// ============================================
+// STANDARD CONTEXT INTERFACES
+// ============================================
+
+/**
+ * Standard user context included in all webhook requests
+ */
+export interface WebhookRequestedBy {
+  userId: string;
+  userEmail: string;
+  userName: string;
+  userRole: string; // USER, HAKEM, ADMIN, SUPER_ADMIN, ORGANIZATOR
+}
+
+/**
+ * Event context when operation is related to an event
+ */
+export interface WebhookEventContext {
+  eventId: string;
+  eventName: string;
+  eventSlug: string;
+  eventType: string; // KONGRE, SEMPOZYUM, KONFERANS, etc.
+  eventDates: {
+    baslangicTarihi: string; // ISO 8601
+    bitisTarihi: string; // ISO 8601
+    sonBasvuruTarihi: string; // ISO 8601
+  };
+}
+
+/**
+ * Standard metadata included in all webhook requests
+ */
+export interface WebhookMetadata {
+  requestId: string; // Unique tracking ID (UUID)
+  timestamp: string; // ISO 8601 timestamp
+  source: string; // 'web-app' | 'mobile-app' | 'admin-panel'
+  environment: string; // 'production' | 'test' | 'development'
+}
+
+/**
+ * Base webhook request with standard context
+ */
+export interface BaseWebhookRequest {
+  metadata: WebhookMetadata;
+  requestedBy: WebhookRequestedBy;
+  event?: WebhookEventContext; // Optional, included when operation relates to event
+}
+
 interface WebhookResponse<T = any> {
   success: boolean;
   data?: T;
   error?: string;
   message?: string;
+}
+
+/**
+ * Create standard metadata for webhook request
+ */
+function createWebhookMetadata(): WebhookMetadata {
+  return {
+    requestId: uuidv4(),
+    timestamp: new Date().toISOString(),
+    source: 'web-app',
+    environment: process.env.NODE_ENV === 'production' ? 'production' : 'test',
+  };
 }
 
 /**
@@ -79,12 +141,18 @@ async function sendWebhookRequest<T = any>(
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
+    // Add metadata to all requests if not already present
+    const requestData = {
+      ...data,
+      metadata: data.metadata || createWebhookMetadata(),
+    };
+
     const response = await fetch(`${N8N_BASE_URL}${path}`, {
       method,
       headers: {
         'Content-Type': 'application/json',
       },
-      body: method !== 'GET' ? JSON.stringify(data) : undefined,
+      body: method !== 'GET' ? JSON.stringify(requestData) : undefined,
       signal: controller.signal,
     });
 
@@ -123,11 +191,16 @@ async function sendWebhookRequest<T = any>(
 // EMAIL VERIFICATION
 // ============================================
 
-export interface EmailVerificationRequest {
-  email: string;
-  userId: string;
-  verificationToken: string;
-  userName: string;
+export interface EmailVerificationRequest extends BaseWebhookRequest {
+  user: {
+    userId: string;
+    userEmail: string;
+    userName: string;
+  };
+  verification: {
+    verificationToken: string;
+    verificationUrl: string;
+  };
 }
 
 export interface EmailVerificationResponse {
@@ -146,12 +219,18 @@ export async function sendEmailVerification(
 // PASSWORD RESET
 // ============================================
 
-export interface PasswordResetRequest {
-  email: string;
-  resetToken: string;
-  resetUrl: string;
-  userName: string;
-  expiresInSeconds: number; // 180 seconds
+export interface PasswordResetRequest extends BaseWebhookRequest {
+  user: {
+    userId: string;
+    userEmail: string;
+    userName: string;
+  };
+  reset: {
+    resetToken: string;
+    resetUrl: string;
+    expiresInSeconds: number; // 180 seconds
+    expiresAt: string; // ISO 8601
+  };
 }
 
 export interface PasswordResetResponse {
@@ -171,12 +250,14 @@ export async function sendPasswordResetEmail(
 // GENERAL EMAIL SENDING
 // ============================================
 
-export interface SendEmailRequest {
-  to: string;
-  subject: string;
-  html: string;
-  text?: string;
-  from?: string;
+export interface SendEmailRequest extends BaseWebhookRequest {
+  email: {
+    to: string;
+    subject: string;
+    html: string;
+    text?: string;
+    from?: string;
+  };
 }
 
 export interface SendEmailResponse {
@@ -195,41 +276,56 @@ export async function sendEmail(
 // EVENT OPERATIONS
 // ============================================
 
-export interface EventCreateRequest {
-  baslik: string;
-  slug: string;
-  tip: string;
-  aciklama?: string;
-  baslangic_tarihi: string;
-  bitis_tarihi: string;
-  son_basvuru_tarihi: string;
-  yer: string;
-  adres?: string;
-  online?: boolean;
-  ucret?: number;
-  erken_kayit_ucret?: number;
-  ogrenci_ucret?: number;
-  erken_kayit_tarihi?: string;
-  max_katilimci?: number;
-  durum: string;
-  created_by_email: string;
+export interface EventCreateRequest extends BaseWebhookRequest {
+  event: {
+    baslik: string;
+    slug: string;
+    tip: string;
+    aciklama?: string;
+    dates: {
+      baslangicTarihi: string; // ISO 8601
+      bitisTarihi: string; // ISO 8601
+      sonBasvuruTarihi: string; // ISO 8601
+      erkenKayitTarihi?: string; // ISO 8601
+    };
+    location: {
+      yer: string;
+      adres?: string;
+      online: boolean;
+    };
+    fees: {
+      standartUcret: number;
+      erkenKayitUcret: number;
+      ogrenciUcret: number;
+      paraBirimi: string; // TRY, USD, EUR
+    };
+    settings: {
+      durum: string; // TASLAK, YAYINDA, TAMAMLANDI, IPTAL
+      maxKatilimci?: number;
+    };
+  };
 }
 
-export interface EventUpdateRequest {
-  eventId: string;
-  updates: Partial<EventCreateRequest>;
-  updated_by_email: string;
+export interface EventUpdateRequest extends BaseWebhookRequest {
+  event: WebhookEventContext;
+  updates: Partial<EventCreateRequest['event']>;
+  operationType: 'create' | 'update';
 }
 
-export interface EventGetRequest {
-  eventId?: string;
-  slug?: string;
+export interface EventGetRequest extends BaseWebhookRequest {
+  event: {
+    eventId?: string;
+    eventSlug?: string;
+  };
 }
 
-export interface EventListRequest {
-  durum?: string;
-  limit?: number;
-  offset?: number;
+export interface EventListRequest extends BaseWebhookRequest {
+  filters: {
+    durum?: string;
+    tip?: string;
+    limit?: number;
+    offset?: number;
+  };
 }
 
 export interface EventResponse {
@@ -256,7 +352,7 @@ export async function createEventViaWebhook(
 }
 
 export async function updateEventViaWebhook(
-  data: EventUpdateRequest & { operationType: 'create' | 'update' }
+  data: EventUpdateRequest
 ): Promise<WebhookResponse<EventResponse>> {
   return sendWebhookRequest(WEBHOOK_PATHS.EVENT_UPDATE, data);
 }
@@ -268,26 +364,36 @@ export async function getEventViaWebhook(
 }
 
 export async function listEventsViaWebhook(
-  data?: EventListRequest
+  data: EventListRequest
 ): Promise<WebhookResponse<EventResponse[]>> {
-  return sendWebhookRequest(WEBHOOK_PATHS.EVENT_LIST, data || {}, { method: 'POST' });
+  return sendWebhookRequest(WEBHOOK_PATHS.EVENT_LIST, data, { method: 'POST' });
 }
 
 // ============================================
 // WELCOME EMAILS
 // ============================================
 
-export interface ReviewerWelcomeRequest {
-  email: string;
-  name: string;
-  temporaryPassword: string;
-  loginUrl: string;
+export interface ReviewerWelcomeRequest extends BaseWebhookRequest {
+  reviewer: {
+    reviewerId: string;
+    reviewerEmail: string;
+    reviewerName: string;
+    uzmanlikAlani?: string;
+  };
+  credentials: {
+    temporaryPassword: string;
+    loginUrl: string;
+    mustChangePassword: boolean;
+  };
 }
 
-export interface UserWelcomeRequest {
-  email: string;
-  name: string;
-  eventName?: string;
+export interface UserWelcomeRequest extends BaseWebhookRequest {
+  user: {
+    userId: string;
+    userEmail: string;
+    userName: string;
+  };
+  event?: WebhookEventContext;
 }
 
 export async function sendReviewerWelcomeEmail(
@@ -335,18 +441,25 @@ export async function checkWebhookHealth(): Promise<boolean> {
 // APPLICATION OPERATIONS
 // ============================================
 
-export interface ApplicationSubmitRequest {
-  applicationId: string;
-  userId: string;
-  eventId: string;
-  eventName: string;
-  applicantName: string;
-  applicantEmail: string;
-  tip: string; // SOZLU_BILDIRI, POSTER, DINLEYICI
-  baslik?: string;
-  ozet?: string;
-  anahtar_kelimeler?: string;
-  kategori?: string;
+export interface ApplicationSubmitRequest extends BaseWebhookRequest {
+  event: WebhookEventContext;
+  application: {
+    applicationId: string;
+    tip: string; // SOZLU_BILDIRI, POSTER, DINLEYICI
+    baslik?: string;
+    ozet?: string;
+    anahtarKelimeler?: string;
+    kategori?: string;
+    status: string; // TASLAK, GONDERILDI, DEGERLENDIRILIYOR, KABUL, RED
+  };
+  applicant: {
+    userId: string;
+    userName: string;
+    userEmail: string;
+    phone?: string;
+    institution?: string;
+    department?: string;
+  };
   operationType: 'create' | 'update';
 }
 
@@ -357,12 +470,15 @@ export interface ApplicationResponse {
   message?: string;
 }
 
-export interface ApplicationListRequest {
-  eventId?: string;
-  userId?: string;
-  status?: string;
-  limit?: number;
-  offset?: number;
+export interface ApplicationListRequest extends BaseWebhookRequest {
+  filters: {
+    eventId?: string;
+    userId?: string;
+    status?: string;
+    tip?: string;
+    limit?: number;
+    offset?: number;
+  };
 }
 
 export interface ApplicationDetailResponse {
@@ -397,13 +513,13 @@ export async function updateApplicationViaWebhook(
 }
 
 export async function listApplicationsViaWebhook(
-  data?: ApplicationListRequest
+  data: ApplicationListRequest
 ): Promise<WebhookResponse<ApplicationDetailResponse[]>> {
-  return sendWebhookRequest(WEBHOOK_PATHS.APPLICATION_LIST, data || {}, { method: 'POST' });
+  return sendWebhookRequest(WEBHOOK_PATHS.APPLICATION_LIST, data, { method: 'POST' });
 }
 
 export async function getApplicationViaWebhook(
-  data: { applicationId: string }
+  data: BaseWebhookRequest & { application: { applicationId: string } }
 ): Promise<WebhookResponse<ApplicationDetailResponse>> {
   return sendWebhookRequest(WEBHOOK_PATHS.APPLICATION_GET, data, { method: 'POST' });
 }
@@ -412,16 +528,27 @@ export async function getApplicationViaWebhook(
 // PAYMENT OPERATIONS
 // ============================================
 
-export interface PaymentProcessRequest {
-  paymentId: string;
-  applicationId: string;
-  userId: string;
-  userName: string;
-  userEmail: string;
-  eventName: string;
-  tutar: number;
-  para_birimi: string;
-  odeme_tipi: string; // IYZICO, HAVALE, NAKIT
+export interface PaymentProcessRequest extends BaseWebhookRequest {
+  event: WebhookEventContext;
+  application: {
+    applicationId: string;
+    baslik?: string;
+    tip: string;
+  };
+  payment: {
+    paymentId: string;
+    tutar: number;
+    paraBirimi: string; // TRY, USD, EUR
+    odemeTipi: string; // IYZICO, HAVALE, NAKIT
+    status: string; // BEKLEMEDE, TAMAMLANDI, BASARISIZ, IPTAL
+    transactionId?: string;
+  };
+  payer: {
+    userId: string;
+    userName: string;
+    userEmail: string;
+    phone?: string;
+  };
   operationType: 'process' | 'verify' | 'approve' | 'reject';
 }
 
@@ -433,13 +560,17 @@ export interface PaymentResponse {
   message?: string;
 }
 
-export interface PaymentListRequest {
-  eventId?: string;
-  userId?: string;
-  status?: string;
-  odeme_tipi?: string;
-  limit?: number;
-  offset?: number;
+export interface PaymentListRequest extends BaseWebhookRequest {
+  filters: {
+    eventId?: string;
+    userId?: string;
+    status?: string;
+    odemeTipi?: string;
+    startDate?: string; // ISO 8601
+    endDate?: string; // ISO 8601
+    limit?: number;
+    offset?: number;
+  };
 }
 
 export interface PaymentDetailResponse {
@@ -472,13 +603,13 @@ export async function verifyPaymentViaWebhook(
 }
 
 export async function listPaymentsViaWebhook(
-  data?: PaymentListRequest
+  data: PaymentListRequest
 ): Promise<WebhookResponse<PaymentDetailResponse[]>> {
-  return sendWebhookRequest(WEBHOOK_PATHS.PAYMENT_LIST, data || {}, { method: 'POST' });
+  return sendWebhookRequest(WEBHOOK_PATHS.PAYMENT_LIST, data, { method: 'POST' });
 }
 
 export async function getPaymentViaWebhook(
-  data: { paymentId: string }
+  data: BaseWebhookRequest & { payment: { paymentId: string } }
 ): Promise<WebhookResponse<PaymentDetailResponse>> {
   return sendWebhookRequest(WEBHOOK_PATHS.PAYMENT_GET, data, { method: 'POST' });
 }
@@ -487,18 +618,32 @@ export async function getPaymentViaWebhook(
 // REVIEW OPERATIONS
 // ============================================
 
-export interface ReviewSubmitRequest {
-  reviewId: string;
-  applicationId: string;
-  reviewerName: string;
-  reviewerEmail: string;
-  applicantName: string;
-  applicantEmail: string;
-  eventName: string;
-  bildiriBaslik: string;
-  puan?: number;
-  karar: string; // KABUL, RED, REVIZYON
-  yorum?: string;
+export interface ReviewSubmitRequest extends BaseWebhookRequest {
+  event: WebhookEventContext;
+  application: {
+    applicationId: string;
+    baslik: string;
+    tip: string;
+  };
+  applicant: {
+    userId: string;
+    userName: string;
+    userEmail: string;
+  };
+  review: {
+    reviewId: string;
+    puan?: number;
+    karar: string; // KABUL, RED, REVIZYON
+    yorum?: string;
+    revizyonTalebi?: string;
+    status: string; // BEKLEMEDE, TAMAMLANDI
+  };
+  reviewer: {
+    reviewerId: string;
+    reviewerName: string;
+    reviewerEmail: string;
+    uzmanlikAlani?: string;
+  };
   operationType: 'submit' | 'update';
 }
 
@@ -509,13 +654,16 @@ export interface ReviewResponse {
   message?: string;
 }
 
-export interface ReviewListRequest {
-  eventId?: string;
-  reviewerId?: string;
-  applicationId?: string;
-  karar?: string;
-  limit?: number;
-  offset?: number;
+export interface ReviewListRequest extends BaseWebhookRequest {
+  filters: {
+    eventId?: string;
+    reviewerId?: string;
+    applicationId?: string;
+    karar?: string;
+    status?: string;
+    limit?: number;
+    offset?: number;
+  };
 }
 
 export interface ReviewDetailResponse {
@@ -542,13 +690,13 @@ export async function submitReviewViaWebhook(
 }
 
 export async function listReviewsViaWebhook(
-  data?: ReviewListRequest
+  data: ReviewListRequest
 ): Promise<WebhookResponse<ReviewDetailResponse[]>> {
-  return sendWebhookRequest(WEBHOOK_PATHS.REVIEW_LIST, data || {}, { method: 'POST' });
+  return sendWebhookRequest(WEBHOOK_PATHS.REVIEW_LIST, data, { method: 'POST' });
 }
 
 export async function getReviewViaWebhook(
-  data: { reviewId: string }
+  data: BaseWebhookRequest & { review: { reviewId: string } }
 ): Promise<WebhookResponse<ReviewDetailResponse>> {
   return sendWebhookRequest(WEBHOOK_PATHS.REVIEW_GET, data, { method: 'POST' });
 }
@@ -557,18 +705,28 @@ export async function getReviewViaWebhook(
 // RESULT NOTIFICATIONS
 // ============================================
 
-export interface ResultNotificationRequest {
-  applicationId: string;
-  applicantName: string;
-  applicantEmail: string;
-  eventName: string;
-  bildiriBaslik?: string;
-  karar: string; // KABUL, RED, REVIZYON
-  hakem_notu?: string;
-  revizyon_talep?: string;
-  sunum_tarihi?: string;
-  sunum_salonu?: string;
-  oturum?: string;
+export interface ResultNotificationRequest extends BaseWebhookRequest {
+  event: WebhookEventContext;
+  application: {
+    applicationId: string;
+    baslik?: string;
+    tip: string;
+  };
+  applicant: {
+    userId: string;
+    userName: string;
+    userEmail: string;
+  };
+  result: {
+    karar: string; // KABUL, RED, REVIZYON
+    hakemNotu?: string;
+    revizyonTalebi?: string;
+  };
+  presentation?: {
+    sunumTarihi: string; // ISO 8601
+    sunumSalonu: string;
+    oturum: string;
+  };
 }
 
 export interface ResultNotificationResponse {
@@ -600,9 +758,12 @@ export async function notifyRejection(
 // REPORTS & ANALYTICS
 // ============================================
 
-export interface DashboardStatsRequest {
-  userId?: string;
-  role: string; // USER, HAKEM, ADMIN, SUPER_ADMIN
+export interface DashboardStatsRequest extends BaseWebhookRequest {
+  filters: {
+    eventId?: string;
+    startDate?: string; // ISO 8601
+    endDate?: string; // ISO 8601
+  };
 }
 
 export interface DashboardStatsResponse {
@@ -621,8 +782,8 @@ export interface DashboardStatsResponse {
   completedReviews?: number;
 }
 
-export interface EventReportRequest {
-  eventId: string;
+export interface EventReportRequest extends BaseWebhookRequest {
+  event: WebhookEventContext;
 }
 
 export interface EventReportResponse {
@@ -647,24 +808,33 @@ export interface EventReportResponse {
   averageScore: number;
 }
 
-export interface ApplicationReportRequest {
-  eventId?: string;
-  userId?: string;
-  startDate?: string;
-  endDate?: string;
+export interface ApplicationReportRequest extends BaseWebhookRequest {
+  filters: {
+    eventId?: string;
+    userId?: string;
+    startDate?: string; // ISO 8601
+    endDate?: string; // ISO 8601
+    status?: string;
+    tip?: string;
+  };
 }
 
-export interface PaymentReportRequest {
-  eventId?: string;
-  userId?: string;
-  startDate?: string;
-  endDate?: string;
-  odeme_tipi?: string;
+export interface PaymentReportRequest extends BaseWebhookRequest {
+  filters: {
+    eventId?: string;
+    userId?: string;
+    startDate?: string; // ISO 8601
+    endDate?: string; // ISO 8601
+    odemeTipi?: string;
+    status?: string;
+  };
 }
 
-export interface ReviewerReportRequest {
-  eventId?: string;
-  reviewerId?: string;
+export interface ReviewerReportRequest extends BaseWebhookRequest {
+  filters: {
+    eventId?: string;
+    reviewerId?: string;
+  };
 }
 
 export interface ReviewerReportResponse {
@@ -691,15 +861,15 @@ export async function getEventReport(
 }
 
 export async function getApplicationReport(
-  data?: ApplicationReportRequest
+  data: ApplicationReportRequest
 ): Promise<WebhookResponse<ApplicationDetailResponse[]>> {
-  return sendWebhookRequest(WEBHOOK_PATHS.APPLICATION_REPORT, data || {}, { method: 'POST' });
+  return sendWebhookRequest(WEBHOOK_PATHS.APPLICATION_REPORT, data, { method: 'POST' });
 }
 
 export async function getPaymentReport(
-  data?: PaymentReportRequest
+  data: PaymentReportRequest
 ): Promise<WebhookResponse<PaymentDetailResponse[]>> {
-  return sendWebhookRequest(WEBHOOK_PATHS.PAYMENT_REPORT, data || {}, { method: 'POST' });
+  return sendWebhookRequest(WEBHOOK_PATHS.PAYMENT_REPORT, data, { method: 'POST' });
 }
 
 export async function getReviewerReport(
@@ -712,10 +882,13 @@ export async function getReviewerReport(
 // USER & REVIEWER LISTS
 // ============================================
 
-export interface UserListRequest {
-  role?: string;
-  limit?: number;
-  offset?: number;
+export interface UserListRequest extends BaseWebhookRequest {
+  filters: {
+    role?: string;
+    emailVerified?: boolean;
+    limit?: number;
+    offset?: number;
+  };
 }
 
 export interface UserListResponse {
@@ -727,10 +900,13 @@ export interface UserListResponse {
   created_at: string;
 }
 
-export interface ReviewerListRequest {
-  eventId?: string;
-  limit?: number;
-  offset?: number;
+export interface ReviewerListRequest extends BaseWebhookRequest {
+  filters: {
+    eventId?: string;
+    uzmanlikAlani?: string;
+    limit?: number;
+    offset?: number;
+  };
 }
 
 export interface ReviewerListResponse {
@@ -744,13 +920,13 @@ export interface ReviewerListResponse {
 }
 
 export async function listUsersViaWebhook(
-  data?: UserListRequest
+  data: UserListRequest
 ): Promise<WebhookResponse<UserListResponse[]>> {
-  return sendWebhookRequest(WEBHOOK_PATHS.USER_LIST, data || {}, { method: 'POST' });
+  return sendWebhookRequest(WEBHOOK_PATHS.USER_LIST, data, { method: 'POST' });
 }
 
 export async function listReviewersViaWebhook(
-  data?: ReviewerListRequest
+  data: ReviewerListRequest
 ): Promise<WebhookResponse<ReviewerListResponse[]>> {
-  return sendWebhookRequest(WEBHOOK_PATHS.REVIEWER_LIST, data || {}, { method: 'POST' });
+  return sendWebhookRequest(WEBHOOK_PATHS.REVIEWER_LIST, data, { method: 'POST' });
 }
