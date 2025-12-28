@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/lib/auth/options';
-import prisma from '@/app/lib/prisma';
+import { updateAnnouncementViaWebhook, deleteAnnouncementViaWebhook } from '@/app/lib/n8n-webhook';
 
-// PUT - Update an announcement
+// PUT - Update announcement (WEBHOOK ONLY - NO DATABASE WRITE)
 export async function PUT(
   request: NextRequest,
   { params }: { params: { eventId: string; announcementId: string } }
@@ -18,29 +18,64 @@ export async function PUT(
     const { eventId, announcementId } = params;
     const body = await request.json();
 
-    const existingAnnouncement = await prisma.announcement.findUnique({
-      where: { id: announcementId },
-    });
+    const { baslik, icerik, tip, oncelik, aktif, yayinTarihi, bitisTarihi } = body;
 
-    if (!existingAnnouncement || existingAnnouncement.event_id !== eventId) {
-      return NextResponse.json({ error: 'Duyuru bulunamadı' }, { status: 404 });
+    if (!baslik || !icerik) {
+      return NextResponse.json(
+        { error: 'Başlık ve içerik zorunludur' },
+        { status: 400 }
+      );
     }
 
-    const announcement = await prisma.announcement.update({
-      where: { id: announcementId },
-      data: {
-        baslik: body.baslik,
-        icerik: body.icerik,
-        tip: body.tip,
-        oncelik: body.oncelik,
-        yayinlandi: body.yayinlandi,
-        yayin_baslangic: body.yayin_baslangic ? new Date(body.yayin_baslangic) : null,
-        yayin_bitis: body.yayin_bitis ? new Date(body.yayin_bitis) : null,
-        updated_at: new Date(),
+    // Send to webhook for update
+    const webhookResponse = await updateAnnouncementViaWebhook({
+      metadata: {
+        requestId: `announcement-update-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        source: 'web-app',
+        environment: process.env.NODE_ENV === 'production' ? 'production' : 'test',
       },
+      requestedBy: {
+        userId: session.user.id || '',
+        userEmail: session.user.email || '',
+        userName: `${session.user.ad || ''} ${session.user.soyad || ''}`.trim() || session.user.name || '',
+        userRole: session.user.role || 'ADMIN',
+      },
+      event: {
+        eventId,
+        eventName: '', // Webhook will fetch this
+        eventSlug: '',
+        eventType: '',
+        eventDates: {
+          baslangicTarihi: '',
+          bitisTarihi: '',
+          sonBasvuruTarihi: '',
+        },
+      },
+      announcement: {
+        announcementId,
+        baslik,
+        icerik,
+        tip: tip || 'BILGI',
+        oncelik: oncelik !== undefined ? parseInt(oncelik) : 0,
+        aktif: aktif !== undefined ? aktif : true,
+        yayinTarihi: yayinTarihi || undefined,
+        bitisTarihi: bitisTarihi || undefined,
+      },
+      operationType: 'update',
     });
 
-    return NextResponse.json({ announcement });
+    if (!webhookResponse.success) {
+      return NextResponse.json(
+        { error: 'Duyuru webhook sistemi yanıt vermedi', details: webhookResponse.error },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      announcement: webhookResponse.data,
+      message: 'Duyuru başarıyla güncellendi (webhook üzerinden)',
+    });
   } catch (error) {
     console.error('Announcement update error:', error);
     return NextResponse.json(
@@ -50,7 +85,7 @@ export async function PUT(
   }
 }
 
-// DELETE - Delete an announcement
+// DELETE - Delete announcement (WEBHOOK ONLY - NO DATABASE WRITE)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { eventId: string; announcementId: string } }
@@ -64,21 +99,39 @@ export async function DELETE(
 
     const { eventId, announcementId } = params;
 
-    const existingAnnouncement = await prisma.announcement.findUnique({
-      where: { id: announcementId },
+    // Send to webhook for deletion
+    const webhookResponse = await deleteAnnouncementViaWebhook({
+      metadata: {
+        requestId: `announcement-delete-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        source: 'web-app',
+        environment: process.env.NODE_ENV === 'production' ? 'production' : 'test',
+      },
+      requestedBy: {
+        userId: session.user.id || '',
+        userEmail: session.user.email || '',
+        userName: `${session.user.ad || ''} ${session.user.soyad || ''}`.trim() || session.user.name || '',
+        userRole: session.user.role || 'ADMIN',
+      },
+      announcement: {
+        announcementId,
+        eventId,
+      },
     });
 
-    if (!existingAnnouncement || existingAnnouncement.event_id !== eventId) {
-      return NextResponse.json({ error: 'Duyuru bulunamadı' }, { status: 404 });
+    if (!webhookResponse.success) {
+      return NextResponse.json(
+        { error: 'Duyuru silinirken webhook sistemi yanıt vermedi', details: webhookResponse.error },
+        { status: 500 }
+      );
     }
 
-    await prisma.announcement.delete({
-      where: { id: announcementId },
+    return NextResponse.json({
+      message: 'Duyuru başarıyla silindi (webhook üzerinden)',
+      deleted: true,
     });
-
-    return NextResponse.json({ message: 'Duyuru başarıyla silindi' });
   } catch (error) {
-    console.error('Announcement deletion error:', error);
+    console.error('Announcement delete error:', error);
     return NextResponse.json(
       { error: 'Duyuru silinirken bir hata oluştu' },
       { status: 500 }

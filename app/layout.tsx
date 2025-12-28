@@ -7,6 +7,7 @@ import { Providers } from '@/components/providers';
 import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
 import MobileNav from '@/components/mobile-nav';
+import CookieConsent from '@/components/cookie-consent';
 
 export const metadata: Metadata = {
   title: 'Kongre Yönetim Sistemi',
@@ -76,6 +77,7 @@ export default function RootLayout({
           <ToastContainer />
           <ConfirmDialogContainer />
           <Chatbot />
+          <CookieConsent />
         </Providers>
       </body>
     </html>

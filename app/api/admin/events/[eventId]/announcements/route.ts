@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/lib/auth/options';
-import prisma from '@/app/lib/prisma';
+import { listAnnouncementsViaWebhook, createAnnouncementViaWebhook } from '@/app/lib/n8n-webhook';
 import { randomUUID } from 'crypto';
 
-// GET - List all announcements for an event (admin view - includes unpublished)
+// GET - List all announcements for an event (WEBHOOK ONLY - NO DATABASE READ)
 export async function GET(
   request: NextRequest,
   { params }: { params: { eventId: string } }
@@ -17,13 +17,39 @@ export async function GET(
     }
 
     const { eventId } = params;
+    const { searchParams } = new URL(request.url);
+    const tip = searchParams.get('tip');
+    const aktif = searchParams.get('aktif');
 
-    const announcements = await prisma.announcement.findMany({
-      where: { event_id: eventId },
-      orderBy: [{ oncelik: 'desc' }, { created_at: 'desc' }],
+    // Fetch from webhook only
+    const webhookResponse = await listAnnouncementsViaWebhook({
+      metadata: {
+        requestId: `announcement-list-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        source: 'web-app',
+        environment: process.env.NODE_ENV === 'production' ? 'production' : 'test',
+      },
+      requestedBy: {
+        userId: session.user.id || '',
+        userEmail: session.user.email || '',
+        userName: `${session.user.ad || ''} ${session.user.soyad || ''}`.trim() || session.user.name || '',
+        userRole: session.user.role || 'ADMIN',
+      },
+      filters: {
+        eventId,
+        tip: tip || undefined,
+        aktif: aktif !== null ? aktif === 'true' : undefined,
+      },
     });
 
-    return NextResponse.json({ announcements });
+    if (!webhookResponse.success) {
+      return NextResponse.json(
+        { error: 'Duyurular webhook sisteminden alınamadı', details: webhookResponse.error },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ announcements: webhookResponse.data || [] });
   } catch (error) {
     console.error('Announcements fetch error:', error);
     return NextResponse.json(
@@ -33,7 +59,7 @@ export async function GET(
   }
 }
 
-// POST - Create a new announcement
+// POST - Create a new announcement (WEBHOOK ONLY - NO DATABASE WRITE)
 export async function POST(
   request: NextRequest,
   { params }: { params: { eventId: string } }
@@ -48,7 +74,7 @@ export async function POST(
     const { eventId } = params;
     const body = await request.json();
 
-    const { baslik, icerik, tip, oncelik, yayinlandi, yayin_baslangic, yayin_bitis } = body;
+    const { baslik, icerik, tip, oncelik, aktif, yayinTarihi, bitisTarihi } = body;
 
     if (!baslik || !icerik) {
       return NextResponse.json(
@@ -57,22 +83,54 @@ export async function POST(
       );
     }
 
-    const announcement = await prisma.announcement.create({
-      data: {
-        id: randomUUID(),
-        event_id: eventId,
+    // Send to webhook for creation
+    const webhookResponse = await createAnnouncementViaWebhook({
+      metadata: {
+        requestId: `announcement-create-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        source: 'web-app',
+        environment: process.env.NODE_ENV === 'production' ? 'production' : 'test',
+      },
+      requestedBy: {
+        userId: session.user.id || '',
+        userEmail: session.user.email || '',
+        userName: `${session.user.ad || ''} ${session.user.soyad || ''}`.trim() || session.user.name || '',
+        userRole: session.user.role || 'ADMIN',
+      },
+      event: {
+        eventId,
+        eventName: '', // Webhook will fetch this
+        eventSlug: '',
+        eventType: '',
+        eventDates: {
+          baslangicTarihi: '',
+          bitisTarihi: '',
+          sonBasvuruTarihi: '',
+        },
+      },
+      announcement: {
+        announcementId: randomUUID(),
         baslik,
         icerik,
         tip: tip || 'BILGI',
-        oncelik: oncelik !== undefined ? oncelik : 0,
-        yayinlandi: yayinlandi !== undefined ? yayinlandi : false,
-        yayin_baslangic: yayin_baslangic ? new Date(yayin_baslangic) : null,
-        yayin_bitis: yayin_bitis ? new Date(yayin_bitis) : null,
-        created_by_email: session.user.email,
+        oncelik: oncelik !== undefined ? parseInt(oncelik) : 0,
+        aktif: aktif !== undefined ? aktif : true,
+        yayinTarihi: yayinTarihi || undefined,
+        bitisTarihi: bitisTarihi || undefined,
       },
     });
 
-    return NextResponse.json({ announcement }, { status: 201 });
+    if (!webhookResponse.success) {
+      return NextResponse.json(
+        { error: 'Duyuru webhook sistemi yanıt vermedi', details: webhookResponse.error },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      announcement: webhookResponse.data,
+      message: 'Duyuru başarıyla oluşturuldu (webhook üzerinden)',
+    }, { status: 201 });
   } catch (error) {
     console.error('Announcement creation error:', error);
     return NextResponse.json(
