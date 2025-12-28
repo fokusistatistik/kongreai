@@ -33,7 +33,8 @@ export default function CreateEventPage() {
   const [formData, setFormData] = useState({
     // Basic Info
     baslik: '',
-    tip: 'KONGRE',
+    tip: 'KONGRE' as 'KONGRE' | 'SEMPOZYUM' | 'KONFERANS' | 'CALISHTAY',
+    kapsam: 'ULUSAL' as 'ULUSAL' | 'ULUSLARARASI',
     aciklama: '',
 
     // Dates (Date only, no time)
@@ -49,7 +50,7 @@ export default function CreateEventPage() {
     online: false,
 
     // Settings
-    durum: 'TASLAK' as 'TASLAK' | 'YAYINDA' | 'TAMAMLANDI' | 'IPTAL',
+    durum: 'TASLAK' as 'TASLAK' | 'YAYINDA',
     max_katilimci: 500,
 
     // Fees
@@ -322,9 +323,38 @@ export default function CreateEventPage() {
                   <option value="KONGRE">Kongre</option>
                   <option value="SEMPOZYUM">Sempozyum</option>
                   <option value="KONFERANS">Konferans</option>
-                  <option value="SEMINER">Seminer</option>
-                  <option value="WORKSHOP">Workshop</option>
+                  <option value="CALISHTAY">Çalıştay</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5 md:mb-2">
+                  Kapsam <span className="text-red-500">*</span>
+                </label>
+                <div className="flex gap-6">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="kapsam"
+                      value="ULUSAL"
+                      checked={formData.kapsam === 'ULUSAL'}
+                      onChange={handleInputChange}
+                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">Ulusal</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="kapsam"
+                      value="ULUSLARARASI"
+                      checked={formData.kapsam === 'ULUSLARARASI'}
+                      onChange={handleInputChange}
+                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">Uluslararası</span>
+                  </label>
+                </div>
               </div>
 
               <div>
@@ -336,10 +366,14 @@ export default function CreateEventPage() {
                   value={formData.aciklama}
                   onChange={handleInputChange}
                   required
+                  maxLength={1000}
                   rows={4}
                   className="w-full px-4 py-2.5 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
-                  placeholder="Etkinlik hakkında kısa bir açıklama"
+                  placeholder="Etkinlik hakkında kısa bir açıklama (max 1000 karakter)"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  {formData.aciklama.length}/1000 karakter
+                </p>
               </div>
 
               <div>
@@ -395,10 +429,8 @@ export default function CreateEventPage() {
                   onChange={handleInputChange}
                   className="w-full px-4 py-2.5 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
                 >
-                  <option value="TASLAK">Taslak (Yayınlanmamış)</option>
-                  <option value="YAYINDA">Yayında (Görünür)</option>
-                  <option value="TAMAMLANDI">Tamamlandı</option>
-                  <option value="IPTAL">İptal Edildi</option>
+                  <option value="TASLAK">Taslak</option>
+                  <option value="YAYINDA">Yayınla</option>
                 </select>
               </div>
 
