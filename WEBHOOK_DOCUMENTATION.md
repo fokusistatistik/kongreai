@@ -417,13 +417,266 @@ curl -X POST https://n8n.fokusistatistik.com/webhook/event-create \
 
 ---
 
+### 10. Application Submit
+**Path:** `/webhook/application-submit`
+**Method:** `POST`
+
+#### Request Body
+```json
+{
+  "applicationId": "uuid-string",
+  "userId": "uuid-string",
+  "eventId": "uuid-string",
+  "eventName": "1. Uluslararası Tıp Kongresi",
+  "applicantName": "Dr. John Doe",
+  "applicantEmail": "john.doe@example.com",
+  "tip": "SOZLU_BILDIRI",
+  "baslik": "COVID-19 Araştırması",
+  "ozet": "Bu çalışmada COVID-19 ile ilgili...",
+  "anahtar_kelimeler": "COVID-19, pandemi, sağlık",
+  "kategori": "Tıp",
+  "operationType": "create"
+}
+```
+
+**Application Types (tip):**
+- `SOZLU_BILDIRI` - Oral Presentation
+- `POSTER` - Poster Presentation
+- `DINLEYICI` - Listener/Attendee
+
+**Operation Types:**
+- `create` - New application submission
+- `update` - Update existing application
+
+#### Response
+```json
+{
+  "success": true,
+  "data": {
+    "applicationId": "uuid-string",
+    "status": "SUBMITTED",
+    "notificationSent": true,
+    "message": "Application submitted successfully"
+  }
+}
+```
+
+---
+
+### 11. Application Update
+**Path:** `/webhook/application-update`
+**Method:** `POST`
+
+#### Request Body
+```json
+{
+  "applicationId": "uuid-string",
+  "userId": "uuid-string",
+  "eventId": "uuid-string",
+  "eventName": "1. Uluslararası Tıp Kongresi",
+  "applicantName": "Dr. John Doe",
+  "applicantEmail": "john.doe@example.com",
+  "tip": "SOZLU_BILDIRI",
+  "baslik": "Updated Title",
+  "ozet": "Updated abstract...",
+  "anahtar_kelimeler": "updated, keywords",
+  "kategori": "Tıp",
+  "operationType": "update"
+}
+```
+
+#### Response
+Same as Application Submit
+
+---
+
+### 12. Payment Process
+**Path:** `/webhook/payment-process`
+**Method:** `POST`
+
+#### Request Body
+```json
+{
+  "paymentId": "uuid-string",
+  "applicationId": "uuid-string",
+  "userId": "uuid-string",
+  "userName": "Dr. John Doe",
+  "userEmail": "john.doe@example.com",
+  "eventName": "1. Uluslararası Tıp Kongresi",
+  "tutar": 1500.00,
+  "para_birimi": "TRY",
+  "odeme_tipi": "IYZICO",
+  "operationType": "process"
+}
+```
+
+**Payment Types (odeme_tipi):**
+- `IYZICO` - Credit card payment via Iyzico
+- `HAVALE` - Bank transfer
+- `NAKIT` - Cash payment
+
+**Operation Types:**
+- `process` - Process new payment
+- `verify` - Verify payment status
+- `approve` - Approve manual payment (HAVALE/NAKIT)
+- `reject` - Reject manual payment
+
+#### Response
+```json
+{
+  "success": true,
+  "data": {
+    "paymentId": "uuid-string",
+    "status": "COMPLETED",
+    "transactionId": "iyzico-transaction-id",
+    "notificationSent": true,
+    "message": "Payment processed successfully"
+  }
+}
+```
+
+---
+
+### 13. Payment Verify
+**Path:** `/webhook/payment-verify`
+**Method:** `POST`
+
+#### Request Body
+Same as Payment Process with `operationType: "verify"`
+
+#### Response
+Same as Payment Process
+
+---
+
+### 14. Review Submit
+**Path:** `/webhook/review-submit`
+**Method:** `POST`
+
+#### Request Body
+```json
+{
+  "reviewId": "uuid-string",
+  "applicationId": "uuid-string",
+  "reviewerName": "Prof. Dr. Jane Smith",
+  "reviewerEmail": "jane.smith@example.com",
+  "applicantName": "Dr. John Doe",
+  "applicantEmail": "john.doe@example.com",
+  "eventName": "1. Uluslararası Tıp Kongresi",
+  "bildiriBaslik": "COVID-19 Araştırması",
+  "puan": 85,
+  "karar": "KABUL",
+  "yorum": "Çalışma metodolojik olarak güçlü...",
+  "operationType": "submit"
+}
+```
+
+**Review Decisions (karar):**
+- `KABUL` - Accept
+- `RED` - Reject
+- `REVIZYON` - Revision required
+
+**Operation Types:**
+- `submit` - Submit new review
+- `update` - Update existing review
+
+#### Response
+```json
+{
+  "success": true,
+  "data": {
+    "reviewId": "uuid-string",
+    "status": "SUBMITTED",
+    "notificationSent": true,
+    "message": "Review submitted successfully"
+  }
+}
+```
+
+---
+
+### 15. Result Notification (General)
+**Path:** `/webhook/result-notify`
+**Method:** `POST`
+
+#### Request Body
+```json
+{
+  "applicationId": "uuid-string",
+  "applicantName": "Dr. John Doe",
+  "applicantEmail": "john.doe@example.com",
+  "eventName": "1. Uluslararası Tıp Kongresi",
+  "bildiriBaslik": "COVID-19 Araştırması",
+  "karar": "KABUL",
+  "hakem_notu": "Çalışma metodolojik olarak güçlü",
+  "revizyon_talep": "",
+  "sunum_tarihi": "2026-05-16T14:00:00Z",
+  "sunum_salonu": "Salon A",
+  "oturum": "Tıp Oturumu 1"
+}
+```
+
+#### Response
+```json
+{
+  "success": true,
+  "data": {
+    "notificationId": "uuid-string",
+    "sent": true,
+    "messageId": "unique-message-id",
+    "message": "Result notification sent successfully"
+  }
+}
+```
+
+---
+
+### 16. Acceptance Notification
+**Path:** `/webhook/acceptance-notify`
+**Method:** `POST`
+
+#### Request Body
+Same as Result Notification (with `karar: "KABUL"`)
+
+#### Response
+Same as Result Notification
+
+**Important Notes:**
+- Sent when application is accepted
+- Includes presentation details (date, room, session)
+- Should include payment instructions if applicable
+
+---
+
+### 17. Rejection Notification
+**Path:** `/webhook/rejection-notify`
+**Method:** `POST`
+
+#### Request Body
+Same as Result Notification (with `karar: "RED"`)
+
+#### Response
+Same as Result Notification
+
+**Important Notes:**
+- Sent when application is rejected
+- Should include reviewer feedback if available
+- Professional and constructive tone
+
+---
+
 ## Notes
 
 1. **Password Reset Timing**: Exactly 180 seconds (3 minutes) for security
 2. **Event Operations**: All event CRUD operations go through webhooks for centralized management
-3. **Error Handling**: Application continues to work even if webhook fails (graceful degradation)
-4. **Database Records**: Token/event records are still created in local database even if webhook fails
-5. **Retry Logic**: Currently no automatic retry. Consider implementing if needed.
+3. **Application Workflow**: Application → Payment → Review → Result Notification
+4. **Payment Types**: Support for online (Iyzico), bank transfer (Havale), and cash payments
+5. **Review Process**: Reviewers can accept, reject, or request revisions
+6. **Notification System**: Automated notifications for all major status changes
+7. **Error Handling**: Application continues to work even if webhook fails (graceful degradation)
+8. **Database Records**: All records are created in local database even if webhook fails
+9. **Retry Logic**: Currently no automatic retry. Consider implementing if needed.
+10. **operationType Pattern**: All webhooks use operationType to distinguish actions (create/update/process/verify/approve/reject)
 
 ---
 

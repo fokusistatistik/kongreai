@@ -14,6 +14,14 @@ export const WEBHOOK_PATHS = {
   EVENT_LIST: '/webhook/event-list',
   REVIEWER_WELCOME: '/webhook/reviewer-welcome',
   USER_WELCOME: '/webhook/user-welcome',
+  APPLICATION_SUBMIT: '/webhook/application-submit',
+  APPLICATION_UPDATE: '/webhook/application-update',
+  PAYMENT_PROCESS: '/webhook/payment-process',
+  PAYMENT_VERIFY: '/webhook/payment-verify',
+  REVIEW_SUBMIT: '/webhook/review-submit',
+  RESULT_NOTIFY: '/webhook/result-notify',
+  ACCEPTANCE_NOTIFY: '/webhook/acceptance-notify',
+  REJECTION_NOTIFY: '/webhook/rejection-notify',
 } as const;
 
 interface WebhookResponse<T = any> {
@@ -217,7 +225,7 @@ export async function createEventViaWebhook(
 }
 
 export async function updateEventViaWebhook(
-  data: EventUpdateRequest
+  data: EventUpdateRequest & { operationType: 'create' | 'update' }
 ): Promise<WebhookResponse<EventResponse>> {
   return sendWebhookRequest(WEBHOOK_PATHS.EVENT_UPDATE, data);
 }
@@ -290,4 +298,154 @@ export async function checkWebhookHealth(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+// ============================================
+// APPLICATION OPERATIONS
+// ============================================
+
+export interface ApplicationSubmitRequest {
+  applicationId: string;
+  userId: string;
+  eventId: string;
+  eventName: string;
+  applicantName: string;
+  applicantEmail: string;
+  tip: string; // SOZLU_BILDIRI, POSTER, DINLEYICI
+  baslik?: string;
+  ozet?: string;
+  anahtar_kelimeler?: string;
+  kategori?: string;
+  operationType: 'create' | 'update';
+}
+
+export interface ApplicationResponse {
+  applicationId: string;
+  status: string;
+  notificationSent: boolean;
+  message?: string;
+}
+
+export async function submitApplicationViaWebhook(
+  data: ApplicationSubmitRequest
+): Promise<WebhookResponse<ApplicationResponse>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.APPLICATION_SUBMIT, data);
+}
+
+export async function updateApplicationViaWebhook(
+  data: ApplicationSubmitRequest
+): Promise<WebhookResponse<ApplicationResponse>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.APPLICATION_UPDATE, data);
+}
+
+// ============================================
+// PAYMENT OPERATIONS
+// ============================================
+
+export interface PaymentProcessRequest {
+  paymentId: string;
+  applicationId: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  eventName: string;
+  tutar: number;
+  para_birimi: string;
+  odeme_tipi: string; // IYZICO, HAVALE, NAKIT
+  operationType: 'process' | 'verify' | 'approve' | 'reject';
+}
+
+export interface PaymentResponse {
+  paymentId: string;
+  status: string;
+  transactionId?: string;
+  notificationSent: boolean;
+  message?: string;
+}
+
+export async function processPaymentViaWebhook(
+  data: PaymentProcessRequest
+): Promise<WebhookResponse<PaymentResponse>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.PAYMENT_PROCESS, data);
+}
+
+export async function verifyPaymentViaWebhook(
+  data: PaymentProcessRequest
+): Promise<WebhookResponse<PaymentResponse>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.PAYMENT_VERIFY, data);
+}
+
+// ============================================
+// REVIEW OPERATIONS
+// ============================================
+
+export interface ReviewSubmitRequest {
+  reviewId: string;
+  applicationId: string;
+  reviewerName: string;
+  reviewerEmail: string;
+  applicantName: string;
+  applicantEmail: string;
+  eventName: string;
+  bildiriBaslik: string;
+  puan?: number;
+  karar: string; // KABUL, RED, REVIZYON
+  yorum?: string;
+  operationType: 'submit' | 'update';
+}
+
+export interface ReviewResponse {
+  reviewId: string;
+  status: string;
+  notificationSent: boolean;
+  message?: string;
+}
+
+export async function submitReviewViaWebhook(
+  data: ReviewSubmitRequest
+): Promise<WebhookResponse<ReviewResponse>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.REVIEW_SUBMIT, data);
+}
+
+// ============================================
+// RESULT NOTIFICATIONS
+// ============================================
+
+export interface ResultNotificationRequest {
+  applicationId: string;
+  applicantName: string;
+  applicantEmail: string;
+  eventName: string;
+  bildiriBaslik?: string;
+  karar: string; // KABUL, RED, REVIZYON
+  hakem_notu?: string;
+  revizyon_talep?: string;
+  sunum_tarihi?: string;
+  sunum_salonu?: string;
+  oturum?: string;
+}
+
+export interface ResultNotificationResponse {
+  notificationId: string;
+  sent: boolean;
+  messageId?: string;
+  message?: string;
+}
+
+export async function notifyApplicationResult(
+  data: ResultNotificationRequest
+): Promise<WebhookResponse<ResultNotificationResponse>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.RESULT_NOTIFY, data);
+}
+
+export async function notifyAcceptance(
+  data: ResultNotificationRequest
+): Promise<WebhookResponse<ResultNotificationResponse>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.ACCEPTANCE_NOTIFY, data);
+}
+
+export async function notifyRejection(
+  data: ResultNotificationRequest
+): Promise<WebhookResponse<ResultNotificationResponse>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.REJECTION_NOTIFY, data);
 }
