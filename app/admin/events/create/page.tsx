@@ -26,25 +26,26 @@ export default function CreateEventPage() {
     // Basic Info
     baslik: '',
     slug: '',
+    tip: 'KONGRE',
     aciklama: '',
-    detayli_aciklama: '',
 
     // Location & Dates
     baslangic_tarihi: '',
     bitis_tarihi: '',
-    konum: '',
-    sehir: '',
-    ulke: 'Türkiye',
+    son_basvuru_tarihi: '',
+    yer: '',
+    adres: '',
+    online: false,
 
     // Settings
     durum: 'TASLAK' as 'TASLAK' | 'YAYINDA' | 'TAMAMLANDI' | 'IPTAL',
     max_katilimci: 500,
 
     // Fees
-    erken_kayit_ucreti: 0,
-    standart_kayit_ucreti: 0,
-    ogrenci_kayit_ucreti: 0,
-    erken_kayit_bitis: '',
+    ucret: 0,
+    erken_kayit_ucret: 0,
+    ogrenci_ucret: 0,
+    erken_kayit_tarihi: '',
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -225,33 +226,6 @@ export default function CreateEventPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5 md:mb-2">
-                  Detaylı Açıklama
-                </label>
-                <textarea
-                  name="detayli_aciklama"
-                  value={formData.detayli_aciklama}
-                  onChange={handleInputChange}
-                  rows={8}
-                  className="w-full px-4 py-2.5 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-xs md:text-sm"
-                  placeholder="# Etkinlik Hakkında
-
-Bu etkinlik...
-
-## Konular
-- Konu 1
-- Konu 2
-
-## Kimler Katılmalı?
-- Hedef Kitle 1
-- Hedef Kitle 2"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Markdown formatı desteklenir
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5 md:mb-2">
                   Durum <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -326,48 +300,45 @@ Bu etkinlik...
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5 md:mb-2">
-                  Konum <span className="text-red-500">*</span>
+                  Yer/Mekan <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  name="konum"
-                  value={formData.konum}
+                  name="yer"
+                  value={formData.yer}
                   onChange={handleInputChange}
                   required
                   className="w-full px-4 py-2.5 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
-                  placeholder="Örn: İstanbul Kongre Merkezi"
+                  placeholder="Örn: İstanbul Kongre Merkezi, İstanbul"
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5 md:mb-2">
-                    Şehir <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="sehir"
-                    value={formData.sehir}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-2.5 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
-                    placeholder="Örn: İstanbul"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5 md:mb-2">
+                  Detaylı Adres
+                </label>
+                <input
+                  type="text"
+                  name="adres"
+                  value={formData.adres}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2.5 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
+                  placeholder="Tam adres (isteğe bağlı)"
+                />
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5 md:mb-2">
-                    Ülke <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="ulke"
-                    value={formData.ulke}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-2.5 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5 md:mb-2">
+                  Son Başvuru Tarihi <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="datetime-local"
+                  name="son_basvuru_tarihi"
+                  value={formData.son_basvuru_tarihi}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-2.5 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
+                />
               </div>
 
               <div>
@@ -428,8 +399,8 @@ Bu etkinlik...
                   </label>
                   <input
                     type="number"
-                    name="erken_kayit_ucreti"
-                    value={formData.erken_kayit_ucreti}
+                    name="erken_kayit_ucret"
+                    value={formData.erken_kayit_ucret}
                     onChange={handleInputChange}
                     min="0"
                     step="0.01"
@@ -443,8 +414,8 @@ Bu etkinlik...
                   </label>
                   <input
                     type="number"
-                    name="standart_kayit_ucreti"
-                    value={formData.standart_kayit_ucreti}
+                    name="ucret"
+                    value={formData.ucret}
                     onChange={handleInputChange}
                     min="0"
                     step="0.01"
@@ -458,8 +429,8 @@ Bu etkinlik...
                   </label>
                   <input
                     type="number"
-                    name="ogrenci_kayit_ucreti"
-                    value={formData.ogrenci_kayit_ucreti}
+                    name="ogrenci_ucret"
+                    value={formData.ogrenci_ucret}
                     onChange={handleInputChange}
                     min="0"
                     step="0.01"
@@ -474,8 +445,8 @@ Bu etkinlik...
                 </label>
                 <input
                   type="datetime-local"
-                  name="erken_kayit_bitis"
-                  value={formData.erken_kayit_bitis}
+                  name="erken_kayit_tarihi"
+                  value={formData.erken_kayit_tarihi}
                   onChange={handleInputChange}
                   className="w-full px-4 py-2.5 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
                 />

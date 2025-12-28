@@ -15,8 +15,8 @@ async function getEvents() {
       aciklama: true,
       baslangic_tarihi: true,
       bitis_tarihi: true,
-      konum: true,
-      sehir: true,
+      yer: true,
+      adres: true,
       durum: true,
       max_katilimci: true,
       created_at: true,
@@ -162,7 +162,7 @@ export default async function EventsPage() {
                     </div>
                     <div className="flex items-center gap-1 md:gap-2 text-xs md:text-sm text-gray-600">
                       <MapPin className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" />
-                      <span className="truncate">{event.konum}, {event.sehir}</span>
+                      <span className="truncate">{event.yer}</span>
                     </div>
                     <div className="flex items-center gap-1 md:gap-2 text-xs md:text-sm text-gray-600">
                       <Users className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" />
