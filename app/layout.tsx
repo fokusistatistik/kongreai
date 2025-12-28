@@ -27,9 +27,9 @@ export const metadata: Metadata = {
     follow: true,
   },
   icons: {
-    icon: 'https://static.fokusistatistik.com/resimler/favicon.png',
-    shortcut: 'https://static.fokusistatistik.com/resimler/favicon.png',
-    apple: 'https://static.fokusistatistik.com/resimler/favicon.png',
+    icon: 'https://static.fokusistatistik.com/kongre/genel/faviconlogokongre.png',
+    shortcut: 'https://static.fokusistatistik.com/kongre/genel/faviconlogokongre.png',
+    apple: 'https://static.fokusistatistik.com/kongre/genel/faviconlogokongre.png',
   },
 };
 
@@ -53,17 +53,17 @@ export default function RootLayout({
         <meta name="theme-color" content="#2563eb" />
 
         {/* Apple Touch Icons */}
-        <link rel="apple-touch-icon" href="https://static.fokusistatistik.com/resimler/favicon.png" />
-        <link rel="apple-touch-icon" sizes="152x152" href="https://static.fokusistatistik.com/resimler/favicon.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="https://static.fokusistatistik.com/resimler/favicon.png" />
-        <link rel="apple-touch-icon" sizes="167x167" href="https://static.fokusistatistik.com/resimler/favicon.png" />
+        <link rel="apple-touch-icon" href="https://static.fokusistatistik.com/kongre/genel/faviconlogokongre.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="https://static.fokusistatistik.com/kongre/genel/faviconlogokongre.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="https://static.fokusistatistik.com/kongre/genel/faviconlogokongre.png" />
+        <link rel="apple-touch-icon" sizes="167x167" href="https://static.fokusistatistik.com/kongre/genel/faviconlogokongre.png" />
 
         {/* Manifest */}
         <link rel="manifest" href="/manifest.json" />
 
         {/* Favicon */}
-        <link rel="icon" href="https://static.fokusistatistik.com/resimler/favicon.png" />
-        <link rel="shortcut icon" href="https://static.fokusistatistik.com/resimler/favicon.png" />
+        <link rel="icon" href="https://static.fokusistatistik.com/kongre/genel/faviconlogokongre.png" />
+        <link rel="shortcut icon" href="https://static.fokusistatistik.com/kongre/genel/faviconlogokongre.png" />
       </head>
       <body className="font-sans min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
         <Providers>

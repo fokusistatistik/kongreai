@@ -86,9 +86,11 @@ function AdminLoginForm() {
 
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-full mb-4 shadow-lg">
-            <Shield className="w-8 h-8" />
-          </div>
+          <img
+            src="https://static.fokusistatistik.com/kongre/genel/faviconlogokongre.png"
+            alt="Kongre Yönetim Sistemi"
+            className="h-16 w-auto mx-auto mb-4"
+          />
           <h1 className="text-3xl font-bold text-white mb-2">
             Admin Paneli Girişi
           </h1>

@@ -12,7 +12,6 @@ import {
   Calendar,
   FileText,
   Home,
-  GraduationCap,
   UserCircle,
   Settings,
   ChevronDown
@@ -64,14 +63,12 @@ export default function SiteHeader() {
         <div className="container mx-auto">
           <div className="flex h-16 items-center justify-between px-4">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-3">
-              <div className="h-10 w-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                <GraduationCap className="h-6 w-6 text-white" />
-              </div>
-              <div className="hidden sm:block">
-                <h1 className="text-lg font-bold text-gray-900">Kongre Yönetim</h1>
-                <p className="text-xs text-gray-500">Congress Management</p>
-              </div>
+            <Link href="/" className="flex items-center">
+              <img
+                src="https://static.fokusistatistik.com/kongre/genel/logokongre.png"
+                alt="Kongre Yönetim Sistemi"
+                className="h-10 md:h-12 w-auto"
+              />
             </Link>
 
             {/* Desktop Navigation */}

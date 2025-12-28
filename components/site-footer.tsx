@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ExternalLink, GraduationCap } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 
 export default function SiteFooter() {
     const currentYear = 2025;
@@ -12,9 +12,11 @@ export default function SiteFooter() {
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
                     {/* Kongre Sistemi Tarafı */}
                     <div className="flex items-center gap-3 md:gap-4">
-                        <div className="h-10 md:h-12 w-10 md:w-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                            <GraduationCap className="h-6 md:h-7 w-6 md:w-7 text-white" />
-                        </div>
+                        <img
+                            src="https://static.fokusistatistik.com/kongre/genel/faviconlogokongre.png"
+                            alt="Kongre Yönetim Sistemi"
+                            className="h-10 md:h-12 w-auto"
+                        />
                         <div className="text-left">
                             <p className="text-xs md:text-sm font-semibold text-gray-900">
                                 Bilimsel Kongre Yönetim Sistemi
