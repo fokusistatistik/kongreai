@@ -886,10 +886,7 @@ function ResultsTab({ results, newResult, setNewResult, editingResult, setEditin
               baslik: '',
               icerik: '',
               tip: 'SONUC',
-              dosya_url: '',
               yayinlandi: false,
-              yayin_tarihi: '',
-              sira: 0,
             })
           }
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
@@ -903,60 +900,56 @@ function ResultsTab({ results, newResult, setNewResult, editingResult, setEditin
       {newResult && (
         <div className="bg-gray-50 p-4 rounded-lg mb-4 border border-gray-200">
           <h3 className="font-bold mb-3">Yeni Sonuç</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <input
-              type="text"
-              placeholder="Başlık *"
-              value={newResult.baslik}
-              onChange={(e) => setNewResult({ ...newResult, baslik: e.target.value })}
-              className="px-3 py-2 border rounded col-span-2"
-            />
-            <select
-              value={newResult.tip}
-              onChange={(e) => setNewResult({ ...newResult, tip: e.target.value })}
-              className="px-3 py-2 border rounded"
-            >
-              <option value="SONUC">Sonuç</option>
-              <option value="RAPOR">Rapor</option>
-              <option value="KABUL_EDILEN_BILDIRILER">Kabul Edilen Bildiriler</option>
-              <option value="ISTATISTIK">İstatistik</option>
-            </select>
-            <input
-              type="text"
-              placeholder="Dosya URL (opsiyonel)"
-              value={newResult.dosya_url}
-              onChange={(e) => setNewResult({ ...newResult, dosya_url: e.target.value })}
-              className="px-3 py-2 border rounded"
-            />
-            <textarea
-              placeholder="İçerik * (HTML desteklenir)"
-              value={newResult.icerik}
-              onChange={(e) => setNewResult({ ...newResult, icerik: e.target.value })}
-              className="px-3 py-2 border rounded col-span-2"
-              rows={4}
-            />
-            <input
-              type="datetime-local"
-              placeholder="Yayın Tarihi"
-              value={newResult.yayin_tarihi}
-              onChange={(e) => setNewResult({ ...newResult, yayin_tarihi: e.target.value })}
-              className="px-3 py-2 border rounded"
-            />
-            <input
-              type="number"
-              placeholder="Sıra"
-              value={newResult.sira}
-              onChange={(e) => setNewResult({ ...newResult, sira: parseInt(e.target.value) || 0 })}
-              className="px-3 py-2 border rounded"
-            />
-            <label className="flex items-center gap-2 col-span-2">
+          <p className="text-sm text-gray-600 mb-4">
+            Blog tarzında sonuç yayınlayın. HTML formatında yazabilirsiniz (kalın, italik, liste vb.)
+          </p>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Başlık <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                placeholder="Sonuç başlığı"
+                value={newResult.baslik}
+                onChange={(e) => setNewResult({ ...newResult, baslik: e.target.value })}
+                className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Sonuç Detayı <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                placeholder="HTML formatında sonuç detaylarını yazın. Örnek: <strong>Kalın</strong>, <em>İtalik</em>, <ul><li>Liste</li></ul>"
+                value={newResult.icerik}
+                onChange={(e) => {
+                  if (e.target.value.length <= 2000) {
+                    setNewResult({ ...newResult, icerik: e.target.value });
+                  }
+                }}
+                maxLength={2000}
+                className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                rows={8}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                {newResult.icerik.length}/2000 karakter (HTML desteklenir: &lt;strong&gt;, &lt;em&gt;, &lt;ul&gt;, &lt;li&gt;, &lt;p&gt;, vb.)
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 p-3 bg-white border rounded">
               <input
                 type="checkbox"
+                id="yayinla"
                 checked={newResult.yayinlandi}
                 onChange={(e) => setNewResult({ ...newResult, yayinlandi: e.target.checked })}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />
-              Yayınla
-            </label>
+              <label htmlFor="yayinla" className="text-sm font-medium text-gray-700 cursor-pointer">
+                Hemen yayınla
+              </label>
+            </div>
           </div>
           <div className="flex gap-2 mt-4">
             <button
@@ -985,48 +978,60 @@ function ResultsTab({ results, newResult, setNewResult, editingResult, setEditin
           results.map((result: any) => (
             <div key={result.id} className="bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
               {editingResult?.id === result.id ? (
-                <div>
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Başlık <span className="text-red-500">*</span>
+                    </label>
                     <input
                       type="text"
                       value={editingResult.baslik}
                       onChange={(e) => setEditingResult({ ...editingResult, baslik: e.target.value })}
-                      className="px-3 py-2 border rounded col-span-2"
-                    />
-                    <select
-                      value={editingResult.tip}
-                      onChange={(e) => setEditingResult({ ...editingResult, tip: e.target.value })}
-                      className="px-3 py-2 border rounded"
-                    >
-                      <option value="SONUC">Sonuç</option>
-                      <option value="RAPOR">Rapor</option>
-                      <option value="KABUL_EDILEN_BILDIRILER">Kabul Edilen Bildiriler</option>
-                      <option value="ISTATISTIK">İstatistik</option>
-                    </select>
-                    <input
-                      type="text"
-                      value={editingResult.dosya_url}
-                      onChange={(e) => setEditingResult({ ...editingResult, dosya_url: e.target.value })}
-                      className="px-3 py-2 border rounded"
-                    />
-                    <textarea
-                      value={editingResult.icerik}
-                      onChange={(e) => setEditingResult({ ...editingResult, icerik: e.target.value })}
-                      className="px-3 py-2 border rounded col-span-2"
-                      rows={4}
+                      className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
-                  <div className="flex gap-2 mt-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Sonuç Detayı <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      value={editingResult.icerik}
+                      onChange={(e) => {
+                        if (e.target.value.length <= 2000) {
+                          setEditingResult({ ...editingResult, icerik: e.target.value });
+                        }
+                      }}
+                      maxLength={2000}
+                      className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                      rows={6}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      {editingResult.icerik.length}/2000 karakter
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 p-3 bg-white border rounded">
+                    <input
+                      type="checkbox"
+                      id={`edit-yayinla-${result.id}`}
+                      checked={editingResult.yayinlandi}
+                      onChange={(e) => setEditingResult({ ...editingResult, yayinlandi: e.target.checked })}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <label htmlFor={`edit-yayinla-${result.id}`} className="text-sm font-medium text-gray-700 cursor-pointer">
+                      Yayınla
+                    </label>
+                  </div>
+                  <div className="flex gap-2">
                     <button
                       onClick={() => handleUpdate(result.id)}
-                      className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm flex items-center gap-1"
+                      className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center gap-2"
                     >
                       <Save className="w-4 h-4" />
-                      Kaydet
+                      Güncelle
                     </button>
                     <button
                       onClick={() => setEditingResult(null)}
-                      className="bg-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-400 text-sm flex items-center gap-1"
+                      className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 flex items-center gap-2"
                     >
                       <X className="w-4 h-4" />
                       İptal
@@ -1038,29 +1043,36 @@ function ResultsTab({ results, newResult, setNewResult, editingResult, setEditin
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="font-bold text-lg">{result.baslik}</h3>
-                      <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">{result.tip}</span>
-                      <span className={result.yayinlandi ? 'text-green-600 text-xs' : 'text-red-600 text-xs'}>
-                        {result.yayinlandi ? '✓ Yayında' : '✗ Taslak'}
+                      <span className={`text-xs px-2 py-1 rounded font-medium ${
+                        result.yayinlandi
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {result.yayinlandi ? '✓ Yayında' : '○ Taslak'}
                       </span>
                     </div>
                     <div
-                      className="text-sm text-gray-600 mb-2 line-clamp-2"
+                      className="text-sm text-gray-600 mb-2 line-clamp-3"
                       dangerouslySetInnerHTML={{ __html: result.icerik }}
                     />
-                    {result.dosya_url && (
-                      <p className="text-xs text-gray-500">📎 Dosya: {result.dosya_url}</p>
+                    {result.yayin_tarihi && (
+                      <p className="text-xs text-gray-500 mt-2">
+                        📅 {new Date(result.yayin_tarihi).toLocaleDateString('tr-TR')}
+                      </p>
                     )}
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 ml-4">
                     <button
                       onClick={() => setEditingResult(result)}
                       className="text-blue-600 hover:text-blue-800 p-2"
+                      title="Düzenle"
                     >
                       <Pencil className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(result.id)}
                       className="text-red-600 hover:text-red-800 p-2"
+                      title="Sil"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
