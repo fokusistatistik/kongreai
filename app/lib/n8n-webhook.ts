@@ -16,6 +16,7 @@ export const WEBHOOK_PATHS = {
   // Event Operations
   EVENT_CREATE: '/webhook-test/event-create',
   EVENT_UPDATE: '/webhook-test/event-update',
+  EVENT_DELETE: '/webhook-test/event-delete',
   EVENT_GET: '/webhook-test/event-get',
   EVENT_LIST: '/webhook-test/event-list',
 
@@ -387,6 +388,12 @@ export async function listEventsViaWebhook(
   data: EventListRequest
 ): Promise<WebhookResponse<EventResponse[]>> {
   return sendWebhookRequest(WEBHOOK_PATHS.EVENT_LIST, data, { method: 'POST' });
+}
+
+export async function deleteEventViaWebhook(
+  data: BaseWebhookRequest & { event: { eventId: string } }
+): Promise<WebhookResponse<{ deleted: boolean; message?: string }>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.EVENT_DELETE, data);
 }
 
 // ============================================
