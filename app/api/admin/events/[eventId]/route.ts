@@ -65,16 +65,21 @@ export async function PUT(
       slug,
       tip,
       aciklama,
+      // New date fields
+      erken_basvuru_son_tarihi,
+      son_basvuru_tarihi,
+      sonuc_aciklama_tarihi,
+      kongre_baslangic_tarihi,
+      kongre_bitis_tarihi,
+      // Old fields for backward compatibility
       baslangic_tarihi,
       bitis_tarihi,
-      son_basvuru_tarihi,
       yer,
       adres,
       online,
       ucret,
       erken_kayit_ucret,
       ogrenci_ucret,
-      erken_kayit_tarihi,
       max_katilimci,
       durum,
     } = body;
@@ -99,18 +104,42 @@ export async function PUT(
     if (slug !== undefined) updateData.slug = slug;
     if (tip !== undefined) updateData.tip = tip;
     if (aciklama !== undefined) updateData.aciklama = aciklama;
-    if (baslangic_tarihi !== undefined) updateData.baslangic_tarihi = new Date(baslangic_tarihi);
-    if (bitis_tarihi !== undefined) updateData.bitis_tarihi = new Date(bitis_tarihi);
-    if (son_basvuru_tarihi !== undefined) updateData.son_basvuru_tarihi = new Date(son_basvuru_tarihi);
+
+    // New date fields (priority)
+    if (erken_basvuru_son_tarihi !== undefined) {
+      updateData.erken_basvuru_son_tarihi = erken_basvuru_son_tarihi ? new Date(erken_basvuru_son_tarihi) : null;
+    }
+    if (son_basvuru_tarihi !== undefined) {
+      updateData.son_basvuru_tarihi = new Date(son_basvuru_tarihi);
+    }
+    if (sonuc_aciklama_tarihi !== undefined) {
+      updateData.sonuc_aciklama_tarihi = sonuc_aciklama_tarihi ? new Date(sonuc_aciklama_tarihi) : null;
+    }
+    if (kongre_baslangic_tarihi !== undefined) {
+      updateData.kongre_baslangic_tarihi = new Date(kongre_baslangic_tarihi);
+      // Also update old field for backward compatibility
+      updateData.baslangic_tarihi = new Date(kongre_baslangic_tarihi);
+    }
+    if (kongre_bitis_tarihi !== undefined) {
+      updateData.kongre_bitis_tarihi = new Date(kongre_bitis_tarihi);
+      // Also update old field for backward compatibility
+      updateData.bitis_tarihi = new Date(kongre_bitis_tarihi);
+    }
+
+    // Old date fields (fallback for backward compatibility)
+    if (baslangic_tarihi !== undefined && kongre_baslangic_tarihi === undefined) {
+      updateData.baslangic_tarihi = new Date(baslangic_tarihi);
+    }
+    if (bitis_tarihi !== undefined && kongre_bitis_tarihi === undefined) {
+      updateData.bitis_tarihi = new Date(bitis_tarihi);
+    }
+
     if (yer !== undefined) updateData.yer = yer;
     if (adres !== undefined) updateData.adres = adres;
     if (online !== undefined) updateData.online = online;
     if (ucret !== undefined) updateData.ucret = parseFloat(ucret);
     if (erken_kayit_ucret !== undefined) updateData.erken_kayit_ucret = parseFloat(erken_kayit_ucret);
     if (ogrenci_ucret !== undefined) updateData.ogrenci_ucret = parseFloat(ogrenci_ucret);
-    if (erken_kayit_tarihi !== undefined) {
-      updateData.erken_kayit_tarihi = erken_kayit_tarihi ? new Date(erken_kayit_tarihi) : null;
-    }
     if (max_katilimci !== undefined) {
       updateData.max_katilimci = max_katilimci ? parseInt(max_katilimci) : null;
     }
@@ -136,16 +165,42 @@ export async function PUT(
       if (slug !== undefined) webhookData.updates.slug = slug;
       if (tip !== undefined) webhookData.updates.tip = tip;
       if (aciklama !== undefined) webhookData.updates.aciklama = aciklama;
-      if (baslangic_tarihi !== undefined) webhookData.updates.baslangic_tarihi = new Date(baslangic_tarihi).toISOString();
-      if (bitis_tarihi !== undefined) webhookData.updates.bitis_tarihi = new Date(bitis_tarihi).toISOString();
-      if (son_basvuru_tarihi !== undefined) webhookData.updates.son_basvuru_tarihi = new Date(son_basvuru_tarihi).toISOString();
+
+      // New date fields
+      if (erken_basvuru_son_tarihi !== undefined) {
+        webhookData.updates.erken_basvuru_son_tarihi = erken_basvuru_son_tarihi ? new Date(erken_basvuru_son_tarihi).toISOString() : null;
+      }
+      if (son_basvuru_tarihi !== undefined) {
+        webhookData.updates.son_basvuru_tarihi = new Date(son_basvuru_tarihi).toISOString();
+      }
+      if (sonuc_aciklama_tarihi !== undefined) {
+        webhookData.updates.sonuc_aciklama_tarihi = sonuc_aciklama_tarihi ? new Date(sonuc_aciklama_tarihi).toISOString() : null;
+      }
+      if (kongre_baslangic_tarihi !== undefined) {
+        webhookData.updates.kongre_baslangic_tarihi = new Date(kongre_baslangic_tarihi).toISOString();
+        // Also send old field for backward compatibility
+        webhookData.updates.baslangic_tarihi = new Date(kongre_baslangic_tarihi).toISOString();
+      }
+      if (kongre_bitis_tarihi !== undefined) {
+        webhookData.updates.kongre_bitis_tarihi = new Date(kongre_bitis_tarihi).toISOString();
+        // Also send old field for backward compatibility
+        webhookData.updates.bitis_tarihi = new Date(kongre_bitis_tarihi).toISOString();
+      }
+
+      // Old date fields (fallback)
+      if (baslangic_tarihi !== undefined && kongre_baslangic_tarihi === undefined) {
+        webhookData.updates.baslangic_tarihi = new Date(baslangic_tarihi).toISOString();
+      }
+      if (bitis_tarihi !== undefined && kongre_bitis_tarihi === undefined) {
+        webhookData.updates.bitis_tarihi = new Date(bitis_tarihi).toISOString();
+      }
+
       if (yer !== undefined) webhookData.updates.yer = yer;
       if (adres !== undefined) webhookData.updates.adres = adres;
       if (online !== undefined) webhookData.updates.online = online;
       if (ucret !== undefined) webhookData.updates.ucret = parseFloat(ucret);
       if (erken_kayit_ucret !== undefined) webhookData.updates.erken_kayit_ucret = parseFloat(erken_kayit_ucret);
       if (ogrenci_ucret !== undefined) webhookData.updates.ogrenci_ucret = parseFloat(ogrenci_ucret);
-      if (erken_kayit_tarihi !== undefined) webhookData.updates.erken_kayit_tarihi = erken_kayit_tarihi ? new Date(erken_kayit_tarihi).toISOString() : null;
       if (max_katilimci !== undefined) webhookData.updates.max_katilimci = max_katilimci ? parseInt(max_katilimci) : null;
       if (durum !== undefined) webhookData.updates.durum = durum;
 
