@@ -1,27 +1,58 @@
 // n8n Webhook Integration Service
 // Base URL: n8n.fokusistatistik.com
+// TEST MODE: All webhooks use /webhook-test/ prefix
 
 const N8N_BASE_URL = process.env.N8N_WEBHOOK_URL || 'https://n8n.fokusistatistik.com';
 
-// Webhook paths
+// Webhook paths - TEST MODE
 export const WEBHOOK_PATHS = {
-  EMAIL_VERIFICATION: '/webhook/email-verification',
-  PASSWORD_RESET: '/webhook/password-reset',
-  SEND_EMAIL: '/webhook/send-email',
-  EVENT_CREATE: '/webhook/event-create',
-  EVENT_UPDATE: '/webhook/event-update',
-  EVENT_GET: '/webhook/event-get',
-  EVENT_LIST: '/webhook/event-list',
-  REVIEWER_WELCOME: '/webhook/reviewer-welcome',
-  USER_WELCOME: '/webhook/user-welcome',
-  APPLICATION_SUBMIT: '/webhook/application-submit',
-  APPLICATION_UPDATE: '/webhook/application-update',
-  PAYMENT_PROCESS: '/webhook/payment-process',
-  PAYMENT_VERIFY: '/webhook/payment-verify',
-  REVIEW_SUBMIT: '/webhook/review-submit',
-  RESULT_NOTIFY: '/webhook/result-notify',
-  ACCEPTANCE_NOTIFY: '/webhook/acceptance-notify',
-  REJECTION_NOTIFY: '/webhook/rejection-notify',
+  // Email & Authentication
+  EMAIL_VERIFICATION: '/webhook-test/email-verification',
+  PASSWORD_RESET: '/webhook-test/password-reset',
+  SEND_EMAIL: '/webhook-test/send-email',
+
+  // Event Operations
+  EVENT_CREATE: '/webhook-test/event-create',
+  EVENT_UPDATE: '/webhook-test/event-update',
+  EVENT_GET: '/webhook-test/event-get',
+  EVENT_LIST: '/webhook-test/event-list',
+
+  // Welcome Emails
+  REVIEWER_WELCOME: '/webhook-test/reviewer-welcome',
+  USER_WELCOME: '/webhook-test/user-welcome',
+
+  // Application Operations
+  APPLICATION_SUBMIT: '/webhook-test/application-submit',
+  APPLICATION_UPDATE: '/webhook-test/application-update',
+  APPLICATION_LIST: '/webhook-test/application-list',
+  APPLICATION_GET: '/webhook-test/application-get',
+
+  // Payment Operations
+  PAYMENT_PROCESS: '/webhook-test/payment-process',
+  PAYMENT_VERIFY: '/webhook-test/payment-verify',
+  PAYMENT_LIST: '/webhook-test/payment-list',
+  PAYMENT_GET: '/webhook-test/payment-get',
+
+  // Review Operations
+  REVIEW_SUBMIT: '/webhook-test/review-submit',
+  REVIEW_LIST: '/webhook-test/review-list',
+  REVIEW_GET: '/webhook-test/review-get',
+
+  // Result Notifications
+  RESULT_NOTIFY: '/webhook-test/result-notify',
+  ACCEPTANCE_NOTIFY: '/webhook-test/acceptance-notify',
+  REJECTION_NOTIFY: '/webhook-test/rejection-notify',
+
+  // Reports & Analytics
+  DASHBOARD_STATS: '/webhook-test/dashboard-stats',
+  EVENT_REPORT: '/webhook-test/event-report',
+  APPLICATION_REPORT: '/webhook-test/application-report',
+  PAYMENT_REPORT: '/webhook-test/payment-report',
+  REVIEWER_REPORT: '/webhook-test/reviewer-report',
+
+  // User & Reviewer Lists
+  USER_LIST: '/webhook-test/user-list',
+  REVIEWER_LIST: '/webhook-test/reviewer-list',
 } as const;
 
 interface WebhookResponse<T = any> {
@@ -326,6 +357,33 @@ export interface ApplicationResponse {
   message?: string;
 }
 
+export interface ApplicationListRequest {
+  eventId?: string;
+  userId?: string;
+  status?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface ApplicationDetailResponse {
+  id: string;
+  eventId: string;
+  eventName: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  tip: string;
+  baslik?: string;
+  ozet?: string;
+  anahtar_kelimeler?: string;
+  kategori?: string;
+  status: string;
+  hakem_notu?: string;
+  karar?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export async function submitApplicationViaWebhook(
   data: ApplicationSubmitRequest
 ): Promise<WebhookResponse<ApplicationResponse>> {
@@ -336,6 +394,18 @@ export async function updateApplicationViaWebhook(
   data: ApplicationSubmitRequest
 ): Promise<WebhookResponse<ApplicationResponse>> {
   return sendWebhookRequest(WEBHOOK_PATHS.APPLICATION_UPDATE, data);
+}
+
+export async function listApplicationsViaWebhook(
+  data?: ApplicationListRequest
+): Promise<WebhookResponse<ApplicationDetailResponse[]>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.APPLICATION_LIST, data || {}, { method: 'POST' });
+}
+
+export async function getApplicationViaWebhook(
+  data: { applicationId: string }
+): Promise<WebhookResponse<ApplicationDetailResponse>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.APPLICATION_GET, data, { method: 'POST' });
 }
 
 // ============================================
@@ -363,6 +433,32 @@ export interface PaymentResponse {
   message?: string;
 }
 
+export interface PaymentListRequest {
+  eventId?: string;
+  userId?: string;
+  status?: string;
+  odeme_tipi?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface PaymentDetailResponse {
+  id: string;
+  applicationId: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  eventName: string;
+  tutar: number;
+  para_birimi: string;
+  odeme_tipi: string;
+  status: string;
+  transactionId?: string;
+  odeme_tarihi?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export async function processPaymentViaWebhook(
   data: PaymentProcessRequest
 ): Promise<WebhookResponse<PaymentResponse>> {
@@ -373,6 +469,18 @@ export async function verifyPaymentViaWebhook(
   data: PaymentProcessRequest
 ): Promise<WebhookResponse<PaymentResponse>> {
   return sendWebhookRequest(WEBHOOK_PATHS.PAYMENT_VERIFY, data);
+}
+
+export async function listPaymentsViaWebhook(
+  data?: PaymentListRequest
+): Promise<WebhookResponse<PaymentDetailResponse[]>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.PAYMENT_LIST, data || {}, { method: 'POST' });
+}
+
+export async function getPaymentViaWebhook(
+  data: { paymentId: string }
+): Promise<WebhookResponse<PaymentDetailResponse>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.PAYMENT_GET, data, { method: 'POST' });
 }
 
 // ============================================
@@ -401,10 +509,48 @@ export interface ReviewResponse {
   message?: string;
 }
 
+export interface ReviewListRequest {
+  eventId?: string;
+  reviewerId?: string;
+  applicationId?: string;
+  karar?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface ReviewDetailResponse {
+  id: string;
+  applicationId: string;
+  bildiriBaslik: string;
+  reviewerId: string;
+  reviewerName: string;
+  reviewerEmail: string;
+  applicantName: string;
+  applicantEmail: string;
+  eventName: string;
+  puan?: number;
+  karar: string;
+  yorum?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export async function submitReviewViaWebhook(
   data: ReviewSubmitRequest
 ): Promise<WebhookResponse<ReviewResponse>> {
   return sendWebhookRequest(WEBHOOK_PATHS.REVIEW_SUBMIT, data);
+}
+
+export async function listReviewsViaWebhook(
+  data?: ReviewListRequest
+): Promise<WebhookResponse<ReviewDetailResponse[]>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.REVIEW_LIST, data || {}, { method: 'POST' });
+}
+
+export async function getReviewViaWebhook(
+  data: { reviewId: string }
+): Promise<WebhookResponse<ReviewDetailResponse>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.REVIEW_GET, data, { method: 'POST' });
 }
 
 // ============================================
@@ -448,4 +594,163 @@ export async function notifyRejection(
   data: ResultNotificationRequest
 ): Promise<WebhookResponse<ResultNotificationResponse>> {
   return sendWebhookRequest(WEBHOOK_PATHS.REJECTION_NOTIFY, data);
+}
+
+// ============================================
+// REPORTS & ANALYTICS
+// ============================================
+
+export interface DashboardStatsRequest {
+  userId?: string;
+  role: string; // USER, HAKEM, ADMIN, SUPER_ADMIN
+}
+
+export interface DashboardStatsResponse {
+  totalEvents: number;
+  activeEvents: number;
+  totalApplications: number;
+  pendingApplications: number;
+  acceptedApplications: number;
+  rejectedApplications: number;
+  totalPayments: number;
+  completedPayments: number;
+  pendingPayments: number;
+  totalRevenue: number;
+  totalReviews?: number;
+  pendingReviews?: number;
+  completedReviews?: number;
+}
+
+export interface EventReportRequest {
+  eventId: string;
+}
+
+export interface EventReportResponse {
+  eventId: string;
+  eventName: string;
+  totalApplications: number;
+  applicationsByType: {
+    SOZLU_BILDIRI: number;
+    POSTER: number;
+    DINLEYICI: number;
+  };
+  applicationsByStatus: {
+    BEKLEMEDE: number;
+    DEGERLENDIRILIYOR: number;
+    KABUL: number;
+    RED: number;
+  };
+  totalPayments: number;
+  completedPayments: number;
+  totalRevenue: number;
+  totalReviews: number;
+  averageScore: number;
+}
+
+export interface ApplicationReportRequest {
+  eventId?: string;
+  userId?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface PaymentReportRequest {
+  eventId?: string;
+  userId?: string;
+  startDate?: string;
+  endDate?: string;
+  odeme_tipi?: string;
+}
+
+export interface ReviewerReportRequest {
+  eventId?: string;
+  reviewerId?: string;
+}
+
+export interface ReviewerReportResponse {
+  reviewerId: string;
+  reviewerName: string;
+  totalReviews: number;
+  completedReviews: number;
+  pendingReviews: number;
+  averageScore: number;
+  acceptanceRate: number;
+  rejectionRate: number;
+}
+
+export async function getDashboardStats(
+  data: DashboardStatsRequest
+): Promise<WebhookResponse<DashboardStatsResponse>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.DASHBOARD_STATS, data, { method: 'POST' });
+}
+
+export async function getEventReport(
+  data: EventReportRequest
+): Promise<WebhookResponse<EventReportResponse>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.EVENT_REPORT, data, { method: 'POST' });
+}
+
+export async function getApplicationReport(
+  data?: ApplicationReportRequest
+): Promise<WebhookResponse<ApplicationDetailResponse[]>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.APPLICATION_REPORT, data || {}, { method: 'POST' });
+}
+
+export async function getPaymentReport(
+  data?: PaymentReportRequest
+): Promise<WebhookResponse<PaymentDetailResponse[]>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.PAYMENT_REPORT, data || {}, { method: 'POST' });
+}
+
+export async function getReviewerReport(
+  data: ReviewerReportRequest
+): Promise<WebhookResponse<ReviewerReportResponse[]>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.REVIEWER_REPORT, data, { method: 'POST' });
+}
+
+// ============================================
+// USER & REVIEWER LISTS
+// ============================================
+
+export interface UserListRequest {
+  role?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface UserListResponse {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  email_verified: boolean;
+  created_at: string;
+}
+
+export interface ReviewerListRequest {
+  eventId?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface ReviewerListResponse {
+  id: string;
+  email: string;
+  name: string;
+  uzmanlik_alani?: string;
+  totalReviews: number;
+  pendingReviews: number;
+  completedReviews: number;
+}
+
+export async function listUsersViaWebhook(
+  data?: UserListRequest
+): Promise<WebhookResponse<UserListResponse[]>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.USER_LIST, data || {}, { method: 'POST' });
+}
+
+export async function listReviewersViaWebhook(
+  data?: ReviewerListRequest
+): Promise<WebhookResponse<ReviewerListResponse[]>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.REVIEWER_LIST, data || {}, { method: 'POST' });
 }
