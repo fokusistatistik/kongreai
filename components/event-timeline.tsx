@@ -1,45 +1,81 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Calendar, FileText, Award, Bell, Clock, CheckCircle } from 'lucide-react';
+import { useMemo } from 'react';
+import { Calendar, FileText, Award, Bell, Clock, CheckCircle, Flag, User } from 'lucide-react';
 
 interface EventTimelineProps {
-  eventId: string;
+  event: {
+    baslangic_tarihi: Date | string;
+    bitis_tarihi: Date | string;
+    son_basvuru_tarihi: Date | string;
+    erken_kayit_tarihi?: Date | string | null;
+  };
 }
 
 interface TimelineItem {
   id: string;
   baslik: string;
   aciklama?: string;
-  tarih: string; // YYYY-MM-DD
+  tarih: Date;
   tip: string;
   ikon?: string;
   sira: number;
 }
 
-export default function EventTimeline({ eventId }: EventTimelineProps) {
-  const [timeline, setTimeline] = useState<TimelineItem[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function EventTimeline({ event }: EventTimelineProps) {
+  // Build timeline items from event dates
+  const timeline = useMemo(() => {
+    const items: TimelineItem[] = [];
 
-  useEffect(() => {
-    const fetchTimeline = async () => {
-      try {
-        const res = await fetch(`/api/events/${eventId}/timeline`);
-        if (res.ok) {
-          const data = await res.json();
-          setTimeline(data.timeline || []);
-        }
-      } catch (error) {
-        console.error('Timeline fetch error:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (eventId) {
-      fetchTimeline();
+    // Early registration deadline (if exists)
+    if (event.erken_kayit_tarihi) {
+      items.push({
+        id: 'erken-kayit',
+        baslik: 'Erken Kayıt Son Tarihi',
+        aciklama: 'Erken kayıt indiriminden yararlanmak için son tarih',
+        tarih: new Date(event.erken_kayit_tarihi),
+        tip: 'ERKEN_KAYIT',
+        ikon: 'clock',
+        sira: 1,
+      });
     }
-  }, [eventId]);
+
+    // Application deadline
+    items.push({
+      id: 'son-basvuru',
+      baslik: 'Son Başvuru Tarihi',
+      aciklama: 'Etkinliğe başvuru için son tarih',
+      tarih: new Date(event.son_basvuru_tarihi),
+      tip: 'BASVURU',
+      ikon: 'file',
+      sira: 2,
+    });
+
+    // Event start date
+    items.push({
+      id: 'baslangic',
+      baslik: 'Etkinlik Başlangıç Tarihi',
+      aciklama: 'Etkinliğin başlama tarihi',
+      tarih: new Date(event.baslangic_tarihi),
+      tip: 'ETKINLIK_BASLANGIC',
+      ikon: 'flag',
+      sira: 3,
+    });
+
+    // Event end date
+    items.push({
+      id: 'bitis',
+      baslik: 'Etkinlik Bitiş Tarihi',
+      aciklama: 'Etkinliğin sona erme tarihi',
+      tarih: new Date(event.bitis_tarihi),
+      tip: 'ETKINLIK_BITIS',
+      ikon: 'check',
+      sira: 4,
+    });
+
+    // Sort by date (chronological order)
+    return items.sort((a, b) => a.tarih.getTime() - b.tarih.getTime());
+  }, [event]);
 
   const getIcon = (tip: string, ikon?: string) => {
     // Custom icon override
@@ -48,15 +84,18 @@ export default function EventTimeline({ eventId }: EventTimelineProps) {
     if (ikon === 'clock') return <Clock className="w-5 h-5" />;
     if (ikon === 'check') return <CheckCircle className="w-5 h-5" />;
     if (ikon === 'file') return <FileText className="w-5 h-5" />;
+    if (ikon === 'flag') return <Flag className="w-5 h-5" />;
 
     // Default based on type
     switch (tip) {
-      case 'BILDIRI':
+      case 'ERKEN_KAYIT':
+        return <Clock className="w-5 h-5" />;
+      case 'BASVURU':
         return <FileText className="w-5 h-5" />;
-      case 'SONUC':
-        return <Award className="w-5 h-5" />;
-      case 'DUYURU':
-        return <Bell className="w-5 h-5" />;
+      case 'ETKINLIK_BASLANGIC':
+        return <Flag className="w-5 h-5" />;
+      case 'ETKINLIK_BITIS':
+        return <CheckCircle className="w-5 h-5" />;
       default:
         return <Calendar className="w-5 h-5" />;
     }
@@ -64,29 +103,13 @@ export default function EventTimeline({ eventId }: EventTimelineProps) {
 
   const getStyles = (tip: string) => {
     switch (tip) {
-      case 'BILDIRI':
+      case 'ERKEN_KAYIT':
         return {
-          bg: 'bg-purple-50',
-          border: 'border-purple-200',
-          text: 'text-purple-900',
-          icon: 'text-purple-600',
-          dot: 'bg-purple-600',
-        };
-      case 'SONUC':
-        return {
-          bg: 'bg-green-50',
-          border: 'border-green-200',
-          text: 'text-green-900',
-          icon: 'text-green-600',
-          dot: 'bg-green-600',
-        };
-      case 'DUYURU':
-        return {
-          bg: 'bg-yellow-50',
-          border: 'border-yellow-200',
-          text: 'text-yellow-900',
-          icon: 'text-yellow-600',
-          dot: 'bg-yellow-600',
+          bg: 'bg-orange-50',
+          border: 'border-orange-200',
+          text: 'text-orange-900',
+          icon: 'text-orange-600',
+          dot: 'bg-orange-600',
         };
       case 'BASVURU':
         return {
@@ -96,13 +119,21 @@ export default function EventTimeline({ eventId }: EventTimelineProps) {
           icon: 'text-blue-600',
           dot: 'bg-blue-600',
         };
-      case 'ETKINLIK':
+      case 'ETKINLIK_BASLANGIC':
         return {
           bg: 'bg-indigo-50',
           border: 'border-indigo-200',
           text: 'text-indigo-900',
           icon: 'text-indigo-600',
           dot: 'bg-indigo-600',
+        };
+      case 'ETKINLIK_BITIS':
+        return {
+          bg: 'bg-green-50',
+          border: 'border-green-200',
+          text: 'text-green-900',
+          icon: 'text-green-600',
+          dot: 'bg-green-600',
         };
       default:
         return {
@@ -115,8 +146,7 @@ export default function EventTimeline({ eventId }: EventTimelineProps) {
     }
   };
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
+  const formatDate = (date: Date) => {
     return date.toLocaleDateString('tr-TR', {
       year: 'numeric',
       month: 'long',
@@ -124,14 +154,15 @@ export default function EventTimeline({ eventId }: EventTimelineProps) {
     });
   };
 
-  const isDatePassed = (dateStr: string) => {
-    const date = new Date(dateStr);
+  const isDatePassed = (date: Date) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return date < today;
+    const checkDate = new Date(date);
+    checkDate.setHours(0, 0, 0, 0);
+    return checkDate < today;
   };
 
-  if (loading || timeline.length === 0) {
+  if (timeline.length === 0) {
     return null;
   }
 

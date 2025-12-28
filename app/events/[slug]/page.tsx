@@ -193,7 +193,12 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
             </div>
 
             {/* Event Timeline (Important Dates) */}
-            <EventTimeline eventId={event.id} />
+            <EventTimeline event={{
+              baslangic_tarihi: event.baslangic_tarihi,
+              bitis_tarihi: event.bitis_tarihi,
+              son_basvuru_tarihi: event.son_basvuru_tarihi,
+              erken_kayit_tarihi: event.erken_kayit_tarihi,
+            }} />
 
             {/* Event Subsections (Documents, Results, Gallery, Schedule) */}
             <EventSubsectionsTabs eventId={event.id} />

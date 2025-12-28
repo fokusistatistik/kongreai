@@ -196,6 +196,7 @@ export default function EventSubsectionsTabs({ eventId }: EventSubsectionsTabsPr
                       <div className="space-y-2">
                         {schedule
                           .filter((s) => s.gun === gun)
+                          .sort((a, b) => a.baslangic_saati.localeCompare(b.baslangic_saati))
                           .map((item) => (
                             <div
                               key={item.id}

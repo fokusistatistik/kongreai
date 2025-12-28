@@ -270,6 +270,79 @@ export default function ManageEventSubsectionsPage() {
     }
   };
 
+  // Announcement handlers
+  const handleCreateAnnouncement = async () => {
+    if (!newAnnouncement?.baslik || !newAnnouncement?.icerik) {
+      alert('Başlık ve içerik zorunludur');
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/admin/events/${eventId}/announcements`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newAnnouncement),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setAnnouncements([...announcements, data.announcement]);
+        setNewAnnouncement(null);
+        alert('Duyuru başarıyla oluşturuldu');
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Bir hata oluştu');
+      }
+    } catch (error) {
+      console.error('Announcement creation error:', error);
+      alert('Bir hata oluştu');
+    }
+  };
+
+  const handleUpdateAnnouncement = async (announcementId: string) => {
+    try {
+      const res = await fetch(`/api/admin/events/${eventId}/announcements/${announcementId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editingAnnouncement),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setAnnouncements(announcements.map((a) => (a.id === announcementId ? data.announcement : a)));
+        setEditingAnnouncement(null);
+        alert('Duyuru başarıyla güncellendi');
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Bir hata oluştu');
+      }
+    } catch (error) {
+      console.error('Announcement update error:', error);
+      alert('Bir hata oluştu');
+    }
+  };
+
+  const handleDeleteAnnouncement = async (announcementId: string) => {
+    if (!confirm('Bu duyuruyu silmek istediğinizden emin misiniz?')) return;
+
+    try {
+      const res = await fetch(`/api/admin/events/${eventId}/announcements/${announcementId}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        setAnnouncements(announcements.filter((a) => a.id !== announcementId));
+        alert('Duyuru başarıyla silindi');
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Bir hata oluştu');
+      }
+    } catch (error) {
+      console.error('Announcement deletion error:', error);
+      alert('Bir hata oluştu');
+    }
+  };
+
   // Gallery handlers
   const handleCreateGallery = async () => {
     if (!newGallery?.medya_url || !newGallery?.medya_tipi) {
@@ -660,13 +733,18 @@ export default function ManageEventSubsectionsPage() {
             />
           )}
 
-          {/* Announcements Tab - Coming soon */}
+          {/* Announcements Tab */}
           {activeTab === 'announcements' && (
-            <div className="text-center py-8">
-              <Bell className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">Duyuru yönetimi yakında eklenecek</p>
-              <p className="text-sm text-gray-500 mt-2">Announcement API entegrasyonu devam ediyor</p>
-            </div>
+            <AnnouncementsTab
+              announcements={announcements}
+              newAnnouncement={newAnnouncement}
+              setNewAnnouncement={setNewAnnouncement}
+              editingAnnouncement={editingAnnouncement}
+              setEditingAnnouncement={setEditingAnnouncement}
+              handleCreate={handleCreateAnnouncement}
+              handleUpdate={handleUpdateAnnouncement}
+              handleDelete={handleDeleteAnnouncement}
+            />
           )}
         </div>
       )}
@@ -1784,6 +1862,298 @@ function TimelineTab({ timeline, newTimeline, setNewTimeline, editingTimeline, s
                     >
                       <Trash2 className="w-4 h-4" />
                       Sil
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+// Announcements Tab Component
+function AnnouncementsTab({ announcements, newAnnouncement, setNewAnnouncement, editingAnnouncement, setEditingAnnouncement, handleCreate, handleUpdate, handleDelete }: any) {
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">Duyurular</h2>
+        <button
+          onClick={() =>
+            setNewAnnouncement({
+              baslik: '',
+              icerik: '',
+              tip: 'BILGI',
+              oncelik: 0,
+              yayinlandi: false,
+              yayin_baslangic: '',
+              yayin_bitis: '',
+            })
+          }
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+        >
+          <Plus className="w-5 h-5" />
+          Yeni Duyuru
+        </button>
+      </div>
+
+      {/* New Announcement Form */}
+      {newAnnouncement && (
+        <div className="mb-6 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+          <h3 className="text-lg font-bold mb-4">Yeni Duyuru Ekle</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Başlık <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                placeholder="Duyuru başlığı"
+                value={newAnnouncement.baslik}
+                onChange={(e) => setNewAnnouncement({ ...newAnnouncement, baslik: e.target.value })}
+                className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                İçerik <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                placeholder="Duyuru içeriği (HTML desteklenir)"
+                value={newAnnouncement.icerik}
+                onChange={(e) => setNewAnnouncement({ ...newAnnouncement, icerik: e.target.value })}
+                className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+                rows={4}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tip</label>
+                <select
+                  value={newAnnouncement.tip}
+                  onChange={(e) => setNewAnnouncement({ ...newAnnouncement, tip: e.target.value })}
+                  className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="BILGI">Bilgi</option>
+                  <option value="UYARI">Uyarı</option>
+                  <option value="ONEMLI">Önemli</option>
+                  <option value="ACIL">Acil</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Öncelik (0-10)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="10"
+                  value={newAnnouncement.oncelik}
+                  onChange={(e) => setNewAnnouncement({ ...newAnnouncement, oncelik: parseInt(e.target.value) })}
+                  className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Yayın Başlangıç (opsiyonel)
+                </label>
+                <input
+                  type="datetime-local"
+                  value={newAnnouncement.yayin_baslangic}
+                  onChange={(e) => setNewAnnouncement({ ...newAnnouncement, yayin_baslangic: e.target.value })}
+                  className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Yayın Bitiş (opsiyonel)
+                </label>
+                <input
+                  type="datetime-local"
+                  value={newAnnouncement.yayin_bitis}
+                  onChange={(e) => setNewAnnouncement({ ...newAnnouncement, yayin_bitis: e.target.value })}
+                  className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 p-3 bg-white border rounded">
+              <input
+                type="checkbox"
+                id="yayinla-duyuru"
+                checked={newAnnouncement.yayinlandi}
+                onChange={(e) => setNewAnnouncement({ ...newAnnouncement, yayinlandi: e.target.checked })}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <label htmlFor="yayinla-duyuru" className="text-sm font-medium text-gray-700 cursor-pointer">
+                Hemen yayınla
+              </label>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={handleCreate}
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center gap-2"
+              >
+                <Save className="w-4 h-4" />
+                Kaydet
+              </button>
+              <button
+                onClick={() => setNewAnnouncement(null)}
+                className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
+              >
+                İptal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Announcements List */}
+      <div className="space-y-4">
+        {announcements.length === 0 ? (
+          <div className="text-center py-8 bg-gray-50 rounded-lg">
+            <Bell className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+            <p className="text-gray-600">Henüz duyuru eklenmemiş</p>
+            <p className="text-sm text-gray-500 mt-1">Yeni bir duyuru eklemek için yukarıdaki butona tıklayın</p>
+          </div>
+        ) : (
+          announcements.map((announcement: any) => (
+            <div key={announcement.id} className="p-4 bg-white border border-gray-200 rounded-lg">
+              {editingAnnouncement?.id === announcement.id ? (
+                <div className="space-y-4">
+                  <input
+                    type="text"
+                    value={editingAnnouncement.baslik}
+                    onChange={(e) => setEditingAnnouncement({ ...editingAnnouncement, baslik: e.target.value })}
+                    className="w-full px-3 py-2 border rounded"
+                    placeholder="Başlık"
+                  />
+                  <textarea
+                    value={editingAnnouncement.icerik}
+                    onChange={(e) => setEditingAnnouncement({ ...editingAnnouncement, icerik: e.target.value })}
+                    className="w-full px-3 py-2 border rounded"
+                    rows={4}
+                    placeholder="İçerik"
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <select
+                      value={editingAnnouncement.tip}
+                      onChange={(e) => setEditingAnnouncement({ ...editingAnnouncement, tip: e.target.value })}
+                      className="px-3 py-2 border rounded"
+                    >
+                      <option value="BILGI">Bilgi</option>
+                      <option value="UYARI">Uyarı</option>
+                      <option value="ONEMLI">Önemli</option>
+                      <option value="ACIL">Acil</option>
+                    </select>
+                    <input
+                      type="number"
+                      min="0"
+                      max="10"
+                      value={editingAnnouncement.oncelik}
+                      onChange={(e) => setEditingAnnouncement({ ...editingAnnouncement, oncelik: parseInt(e.target.value) })}
+                      className="px-3 py-2 border rounded"
+                      placeholder="Öncelik"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <input
+                      type="datetime-local"
+                      value={editingAnnouncement.yayin_baslangic ? new Date(editingAnnouncement.yayin_baslangic).toISOString().slice(0, 16) : ''}
+                      onChange={(e) => setEditingAnnouncement({ ...editingAnnouncement, yayin_baslangic: e.target.value })}
+                      className="px-3 py-2 border rounded"
+                    />
+                    <input
+                      type="datetime-local"
+                      value={editingAnnouncement.yayin_bitis ? new Date(editingAnnouncement.yayin_bitis).toISOString().slice(0, 16) : ''}
+                      onChange={(e) => setEditingAnnouncement({ ...editingAnnouncement, yayin_bitis: e.target.value })}
+                      className="px-3 py-2 border rounded"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={editingAnnouncement.yayinlandi}
+                      onChange={(e) => setEditingAnnouncement({ ...editingAnnouncement, yayinlandi: e.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    <label className="text-sm">Yayınla</label>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleUpdate(announcement.id)}
+                      className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm flex items-center gap-1"
+                    >
+                      <Save className="w-4 h-4" />
+                      Kaydet
+                    </button>
+                    <button
+                      onClick={() => setEditingAnnouncement(null)}
+                      className="bg-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-400 text-sm flex items-center gap-1"
+                    >
+                      <X className="w-4 h-4" />
+                      İptal
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="font-bold text-lg">{announcement.baslik}</h3>
+                      <span className={`px-2 py-1 text-xs rounded ${
+                        announcement.tip === 'ACIL' ? 'bg-red-100 text-red-700' :
+                        announcement.tip === 'UYARI' ? 'bg-yellow-100 text-yellow-700' :
+                        announcement.tip === 'ONEMLI' ? 'bg-blue-100 text-blue-700' :
+                        'bg-gray-100 text-gray-700'
+                      }`}>
+                        {announcement.tip}
+                      </span>
+                      <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                        Öncelik: {announcement.oncelik}
+                      </span>
+                      <span className={announcement.yayinlandi ? 'text-green-600 text-sm' : 'text-red-600 text-sm'}>
+                        {announcement.yayinlandi ? '✓ Yayında' : '✗ Taslak'}
+                      </span>
+                    </div>
+                    <div
+                      className="text-sm text-gray-700 mb-2"
+                      dangerouslySetInnerHTML={{ __html: announcement.icerik }}
+                    />
+                    {(announcement.yayin_baslangic || announcement.yayin_bitis) && (
+                      <div className="text-xs text-gray-500 mt-2">
+                        {announcement.yayin_baslangic && (
+                          <span>Başlangıç: {new Date(announcement.yayin_baslangic).toLocaleDateString('tr-TR')} </span>
+                        )}
+                        {announcement.yayin_bitis && (
+                          <span>• Bitiş: {new Date(announcement.yayin_bitis).toLocaleDateString('tr-TR')}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setEditingAnnouncement(announcement)}
+                      className="text-blue-600 hover:text-blue-800 p-2"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(announcement.id)}
+                      className="text-red-600 hover:text-red-800 p-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
