@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { Calendar, MapPin, Users, ChevronRight, GraduationCap } from 'lucide-react';
 import prisma from '@/app/lib/prisma';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/lib/auth/options';
 
 async function getUpcomingEvents() {
   const today = new Date();
@@ -46,6 +48,7 @@ async function getPastEvents() {
 export default async function HomePage() {
   const upcomingEvents = await getUpcomingEvents();
   const pastEvents = await getPastEvents();
+  const session = await getServerSession(authOptions);
 
   return (
     <div className="min-h-screen">
@@ -66,20 +69,22 @@ export default async function HomePage() {
               Akademik kongreler, sempozyumlar ve panellere kolayca başvurun.
               Bildirinizi gönderin, süreci takip edin, sertifikanızı alın.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-6">
-              <Link
-                href="/auth/register"
-                className="w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 text-sm md:text-base bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-              >
-                Hemen Üye Ol
-              </Link>
-              <Link
-                href="/login"
-                className="w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 text-sm md:text-base bg-blue-500/20 backdrop-blur-sm border-2 border-white/30 text-white rounded-lg font-semibold hover:bg-blue-500/30 transition-all"
-              >
-                Giriş Yap
-              </Link>
-            </div>
+            {!session && (
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-6">
+                <Link
+                  href="/auth/register"
+                  className="w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 text-sm md:text-base bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                >
+                  Hemen Üye Ol
+                </Link>
+                <Link
+                  href="/login"
+                  className="w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 text-sm md:text-base bg-blue-500/20 backdrop-blur-sm border-2 border-white/30 text-white rounded-lg font-semibold hover:bg-blue-500/30 transition-all"
+                >
+                  Giriş Yap
+                </Link>
+              </div>
+            )}
           </div>
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-gray-50 to-transparent"></div>
