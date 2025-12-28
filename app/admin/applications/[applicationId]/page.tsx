@@ -101,6 +101,9 @@ export default function ApplicationDetailPage({ params }: { params: { applicatio
 
   const [showAssignReviewer, setShowAssignReviewer] = useState(false);
   const [selectedReviewer, setSelectedReviewer] = useState('');
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [statusModalAction, setStatusModalAction] = useState<'KABUL' | 'RED' | null>(null);
+  const [statusReason, setStatusReason] = useState('');
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -209,6 +212,54 @@ export default function ApplicationDetailPage({ params }: { params: { applicatio
         fetchApplication();
       } else {
         setError(data.error || 'Hakem ataması sırasında bir hata oluştu');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Bir hata oluştu');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleQuickStatusChange = (action: 'KABUL' | 'RED') => {
+    setStatusModalAction(action);
+    setShowStatusModal(true);
+    setStatusReason('');
+  };
+
+  const confirmStatusChange = async () => {
+    if (!statusModalAction) return;
+
+    if (statusModalAction === 'RED' && !statusReason.trim()) {
+      setError('Reddetme sebebi zorunludur');
+      return;
+    }
+
+    setUpdating(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const updateData = {
+        durum: statusModalAction,
+        yonetici_notu: statusReason.trim() || formData.yonetici_notu,
+      };
+
+      const response = await fetch(`/api/admin/applications/${params.applicationId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updateData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess(`Başvuru ${statusModalAction === 'KABUL' ? 'onaylandı' : 'reddedildi'}!`);
+        setShowStatusModal(false);
+        setStatusModalAction(null);
+        setStatusReason('');
+        fetchApplication();
+      } else {
+        setError(data.error || 'Güncelleme sırasında bir hata oluştu');
       }
     } catch (err: any) {
       setError(err.message || 'Bir hata oluştu');
@@ -476,6 +527,31 @@ export default function ApplicationDetailPage({ params }: { params: { applicatio
               </div>
             </div>
 
+            {/* Quick Actions */}
+            {(application.durum === 'BEKLEMEDE' || application.durum === 'HAKEMDE' || application.durum === 'REVIZYON') && (
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-sm border border-blue-200 p-4 md:p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Hızlı İşlemler</h3>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => handleQuickStatusChange('KABUL')}
+                    disabled={updating}
+                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:bg-green-400 disabled:cursor-not-allowed font-medium shadow-md hover:shadow-lg"
+                  >
+                    <CheckCircle className="w-5 h-5" />
+                    Başvuruyu Onayla
+                  </button>
+                  <button
+                    onClick={() => handleQuickStatusChange('RED')}
+                    disabled={updating}
+                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:bg-red-400 disabled:cursor-not-allowed font-medium shadow-md hover:shadow-lg"
+                  >
+                    <XCircle className="w-5 h-5" />
+                    Başvuruyu Reddet
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Reviewers */}
             <div className="bg-white rounded-xl shadow-sm border p-4 md:p-6">
               <div className="flex items-center justify-between mb-4">
@@ -561,6 +637,107 @@ export default function ApplicationDetailPage({ params }: { params: { applicatio
           </div>
         </div>
       </div>
+
+      {/* Status Change Modal */}
+      {showStatusModal && statusModalAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className={`${statusModalAction === 'KABUL' ? 'bg-gradient-to-r from-green-600 to-green-700' : 'bg-gradient-to-r from-red-600 to-red-700'} text-white p-6 rounded-t-2xl`}>
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-4">
+                  <div className="flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-sm rounded-lg">
+                    {statusModalAction === 'KABUL' ? (
+                      <CheckCircle className="w-6 h-6" />
+                    ) : (
+                      <XCircle className="w-6 h-6" />
+                    )}
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold">
+                      {statusModalAction === 'KABUL' ? 'Başvuruyu Onayla' : 'Başvuruyu Reddet'}
+                    </h2>
+                    <p className="text-white/90 text-sm mt-1">
+                      {statusModalAction === 'KABUL'
+                        ? 'Bu işlem başvuruyu onaylayacak'
+                        : 'Bu işlem başvuruyu reddedecek'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowStatusModal(false);
+                    setStatusModalAction(null);
+                    setStatusReason('');
+                  }}
+                  className="text-white/80 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg"
+                  aria-label="Kapat"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6">
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {statusModalAction === 'KABUL' ? 'Not (Opsiyonel)' : 'Reddetme Sebebi *'}
+                </label>
+                <textarea
+                  value={statusReason}
+                  onChange={(e) => setStatusReason(e.target.value)}
+                  rows={4}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  placeholder={
+                    statusModalAction === 'KABUL'
+                      ? 'Onay notu ekleyin (opsiyonel)'
+                      : 'Reddetme sebebini açıklayın (zorunlu)'
+                  }
+                  required={statusModalAction === 'RED'}
+                />
+                {statusModalAction === 'RED' && (
+                  <p className="text-xs text-gray-500 mt-2">
+                    * Reddetme sebebi başvurana gönderilecektir
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 bg-gray-50 border-t border-gray-200 rounded-b-2xl flex gap-3">
+              <button
+                onClick={() => {
+                  setShowStatusModal(false);
+                  setStatusModalAction(null);
+                  setStatusReason('');
+                }}
+                className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors border border-gray-300"
+              >
+                İptal
+              </button>
+              <button
+                onClick={confirmStatusChange}
+                disabled={updating || (statusModalAction === 'RED' && !statusReason.trim())}
+                className={`flex-1 px-4 py-2.5 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                  statusModalAction === 'KABUL'
+                    ? 'bg-green-600 hover:bg-green-700'
+                    : 'bg-red-600 hover:bg-red-700'
+                }`}
+              >
+                {updating ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    İşleniyor...
+                  </span>
+                ) : (
+                  <span>{statusModalAction === 'KABUL' ? 'Onayla' : 'Reddet'}</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
