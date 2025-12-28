@@ -57,6 +57,17 @@ export default function SiteHeader() {
     { name: 'Başvurularım', href: '/dashboard/applications', icon: FileText },
   ] : [];
 
+  // Admin/Reviewer navigation items
+  const roleNavItems = [];
+  if (isLoggedIn) {
+    if (user?.role === 'HAKEM') {
+      roleNavItems.push({ name: 'Hakem Paneli', href: '/reviewer', icon: FileText });
+    }
+    if (user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') {
+      roleNavItems.push({ name: 'Admin Paneli', href: '/admin', icon: Settings });
+    }
+  }
+
   return (
     <>
       <header className="sticky top-0 z-40 w-full border-b bg-white shadow-sm">
@@ -88,6 +99,22 @@ export default function SiteHeader() {
 
               {/* User Navigation (if logged in) */}
               {userNavItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-2 text-sm font-medium transition-colors hover:text-blue-600 ${
+                    pathname === item.href || pathname.startsWith(item.href)
+                      ? 'text-blue-600'
+                      : 'text-gray-700'
+                  }`}
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.name}
+                </Link>
+              ))}
+
+              {/* Role-based Navigation (Admin/Reviewer) */}
+              {roleNavItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
@@ -220,6 +247,23 @@ export default function SiteHeader() {
                 <>
                   <div className="border-t pt-3 mt-3">
                     {userNavItems.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setShowMobileMenu(false)}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                          pathname.startsWith(item.href)
+                            ? 'bg-blue-50 text-blue-600'
+                            : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        <item.icon className="h-5 w-5" />
+                        <span className="font-medium">{item.name}</span>
+                      </Link>
+                    ))}
+
+                    {/* Role-based Navigation */}
+                    {roleNavItems.map((item) => (
                       <Link
                         key={item.href}
                         href={item.href}

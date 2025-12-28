@@ -74,6 +74,13 @@ export const WEBHOOK_PATHS = {
   // User & Reviewer Lists
   USER_LIST: '/webhook-test/user-list',
   REVIEWER_LIST: '/webhook-test/reviewer-list',
+
+  // Reviewer Assignment Operations
+  REVIEWER_ASSIGN: '/webhook-test/reviewer-assign',
+  REVIEWER_UNASSIGN: '/webhook-test/reviewer-unassign',
+  REVIEWER_ASSIGNMENTS_LIST: '/webhook-test/reviewer-assignments-list',
+  REVIEWER_ASSIGNMENT_UPDATE: '/webhook-test/reviewer-assignment-update',
+  EVENT_REVIEWERS_LIST: '/webhook-test/event-reviewers-list',
 } as const;
 
 // ============================================
@@ -1176,5 +1183,175 @@ export async function deleteAnnouncementViaWebhook(
   data: BaseWebhookRequest & { announcement: { announcementId: string; eventId: string } }
 ): Promise<WebhookResponse<{ deleted: boolean; message?: string }>> {
   return sendWebhookRequest(WEBHOOK_PATHS.ANNOUNCEMENT_DELETE, data);
+}
+
+// ============================================
+// REVIEWER ASSIGNMENT MANAGEMENT
+// ============================================
+
+/**
+ * Assign a reviewer to an event or application
+ */
+export interface ReviewerAssignRequest extends BaseWebhookRequest {
+  event: WebhookEventContext;
+  assignment: {
+    assignmentId: string; // Unique ID for this assignment
+    reviewerId: string;
+    reviewerName: string;
+    reviewerEmail: string;
+    applicationId?: string; // Optional: assign to specific application
+    uzmanlikAlani?: string;
+    notlar?: string; // Assignment notes
+  };
+}
+
+export interface ReviewerAssignResponse {
+  assignmentId: string;
+  status: string;
+  notificationSent: boolean;
+  message?: string;
+}
+
+/**
+ * Remove a reviewer from an event or application
+ */
+export interface ReviewerUnassignRequest extends BaseWebhookRequest {
+  event: WebhookEventContext;
+  assignment: {
+    assignmentId?: string; // Optional: specific assignment ID
+    reviewerId: string;
+    applicationId?: string; // Optional: unassign from specific application
+  };
+  reason?: string; // Reason for unassignment
+}
+
+export interface ReviewerUnassignResponse {
+  success: boolean;
+  message?: string;
+}
+
+/**
+ * List reviewer's assignments (for reviewer dashboard)
+ */
+export interface ReviewerAssignmentsListRequest extends BaseWebhookRequest {
+  reviewer: {
+    reviewerId: string;
+  };
+  filters: {
+    eventId?: string;
+    durum?: string; // BEKLEMEDE, KABUL_EDILDI, REDDEDILDI, TAMAMLANDI
+    limit?: number;
+    offset?: number;
+  };
+}
+
+export interface ReviewerAssignmentDetail {
+  assignmentId: string;
+  eventId: string;
+  eventName: string;
+  eventSlug: string;
+  eventDates: {
+    baslangicTarihi: string;
+    bitisTarihi: string;
+    sonBasvuruTarihi: string;
+  };
+  applicationId?: string;
+  applicationBaslik?: string;
+  applicantName?: string;
+  applicantEmail?: string;
+  durum: string; // BEKLEMEDE, KABUL_EDILDI, REDDEDILDI, TAMAMLANDI
+  atanmaTarihi: string;
+  kabulTarihi?: string;
+  tamamlanmaTarihi?: string;
+  notlar?: string;
+  reviewStatus?: {
+    puan?: number;
+    karar?: string;
+    tamamlandi: boolean;
+  };
+}
+
+/**
+ * Update reviewer assignment status (accept/reject assignment)
+ */
+export interface ReviewerAssignmentUpdateRequest extends BaseWebhookRequest {
+  assignment: {
+    assignmentId: string;
+    reviewerId: string;
+  };
+  update: {
+    durum: string; // KABUL_EDILDI, REDDEDILDI
+    redNedeni?: string; // Reason for rejection
+    notlar?: string;
+  };
+}
+
+export interface ReviewerAssignmentUpdateResponse {
+  assignmentId: string;
+  durum: string;
+  message?: string;
+}
+
+/**
+ * List all reviewers assigned to an event (for admin)
+ */
+export interface EventReviewersListRequest extends BaseWebhookRequest {
+  event: {
+    eventId: string;
+  };
+  filters: {
+    durum?: string; // BEKLEMEDE, KABUL_EDILDI, REDDEDILDI, TAMAMLANDI
+    applicationId?: string; // Filter by specific application
+    limit?: number;
+    offset?: number;
+  };
+}
+
+export interface EventReviewerDetail {
+  assignmentId: string;
+  reviewerId: string;
+  reviewerName: string;
+  reviewerEmail: string;
+  uzmanlikAlani?: string;
+  applicationId?: string;
+  applicationBaslik?: string;
+  durum: string;
+  atanmaTarihi: string;
+  kabulTarihi?: string;
+  notlar?: string;
+  reviewCount: number;
+  completedReviews: number;
+  pendingReviews: number;
+}
+
+// Webhook functions
+export async function assignReviewerViaWebhook(
+  data: ReviewerAssignRequest
+): Promise<WebhookResponse<ReviewerAssignResponse>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.REVIEWER_ASSIGN, data);
+}
+
+export async function unassignReviewerViaWebhook(
+  data: ReviewerUnassignRequest
+): Promise<WebhookResponse<ReviewerUnassignResponse>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.REVIEWER_UNASSIGN, data);
+}
+
+export async function listReviewerAssignmentsViaWebhook(
+  data: ReviewerAssignmentsListRequest
+): Promise<WebhookResponse<ReviewerAssignmentDetail[]>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.REVIEWER_ASSIGNMENTS_LIST, data, { method: 'POST' });
+}
+
+export async function updateReviewerAssignmentViaWebhook(
+  data: ReviewerAssignmentUpdateRequest
+): Promise<WebhookResponse<ReviewerAssignmentUpdateResponse>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.REVIEWER_ASSIGNMENT_UPDATE, data);
+}
+
+export async function listEventReviewersViaWebhook(
+  data: EventReviewersListRequest
+): Promise<WebhookResponse<EventReviewerDetail[]>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.EVENT_REVIEWERS_LIST, data, { method: 'POST' });
 }
 

@@ -42,6 +42,14 @@ export default withAuth(
       }
     }
 
+    // Hakem sayfalarına erişim kontrolü
+    if (path.startsWith('/reviewer')) {
+      if (token?.role !== 'HAKEM') {
+        // Sadece HAKEM rolü erişebilir
+        return NextResponse.redirect(new URL('/dashboard', req.url));
+      }
+    }
+
     return NextResponse.next();
   },
   {
