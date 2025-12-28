@@ -67,10 +67,13 @@ export default async function UsersPage() {
                 <p className="text-gray-600 mt-1">Tüm sistem kullanıcılarını yönetin</p>
               </div>
             </div>
-            <button className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            <Link
+              href="/admin/users/create"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
               <UserPlus className="w-4 h-4" />
               Yeni Kullanıcı
-            </button>
+            </Link>
           </div>
         </div>
 
@@ -221,9 +224,13 @@ export default async function UsersPage() {
                         : '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button className="text-blue-600 hover:text-blue-900 transition-colors">
+                      <Link
+                        href={`/admin/users/${user.id}`}
+                        className="text-blue-600 hover:text-blue-900 transition-colors inline-flex items-center gap-1"
+                      >
                         <Edit className="w-4 h-4" />
-                      </button>
+                        Düzenle
+                      </Link>
                     </td>
                   </tr>
                 ))}
