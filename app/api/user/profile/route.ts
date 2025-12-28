@@ -15,7 +15,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { ad, soyad, unvan, kurum, telefon } = body;
+    const { ad, soyad, unvan, kurum, telefon, ogrenci, ulke, sehir } = body;
 
     // Validation
     if (!ad || !soyad) {
@@ -34,6 +34,9 @@ export async function PUT(request: NextRequest) {
         unvan: unvan || null,
         kurum: kurum || null,
         telefon: telefon || null,
+        ogrenci: ogrenci !== undefined ? ogrenci : false,
+        ulke: ulke || null,
+        sehir: sehir || null,
         updated_at: new Date(),
       },
       select: {
@@ -44,6 +47,9 @@ export async function PUT(request: NextRequest) {
         unvan: true,
         kurum: true,
         telefon: true,
+        ogrenci: true,
+        ulke: true,
+        sehir: true,
         role: true,
       },
     });

@@ -24,6 +24,11 @@ model User {
   kurum   String? // Çalıştığı kurum
   telefon String?
 
+  // EK BİLGİLER
+  ogrenci Boolean @default(false) // Öğrenci statüsü
+  ulke    String? // Ülke
+  sehir   String? // Şehir
+
   // ROL SİSTEMİ
   role String @default("KATILIMCI") // SUPER_ADMIN, ADMIN, ORGANIZATOR, HAKEM, KATILIMCI
 
