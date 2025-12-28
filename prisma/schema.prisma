@@ -57,7 +57,8 @@ model Event {
   // TEMEL BİLGİLER
   baslik   String
   alt_baslik String? // Opsiyonel alt başlık
-  tip      String  @default("KONGRE") // KONGRE, SEMPOZYUM, PANEL, CALISTAY
+  tip      String  @default("KONGRE") // KONGRE, SEMPOZYUM, KONFERANS, CALISTAY
+  kapsam   String  @default("ULUSAL") // ULUSAL, ULUSLARARASI
   aciklama String? // Rich text (HTML veya Markdown)
 
   // TARİHLER

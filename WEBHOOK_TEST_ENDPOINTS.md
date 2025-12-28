@@ -41,13 +41,14 @@ Tüm webhook'lar `/webhook-test/` prefix'i ile TEST modundadır.
 
 ---
 
-## 📄 Event Sub-Sections Management (13) ⭐ YENİ
+## 📄 Event Sub-Sections Management (10) ⭐ YENİ
 
 8. **Döküman Yükleme**
    `https://n8n.fokusistatistik.com/webhook-test/document-upload`
    - **Dosya Tipleri**: PDF, DOC, DOCX, XLS, XLSX, JPG, JPEG, PNG
    - **Max Boyut**: 9MB
-   - **Request**: eventId, fileName, fileSize, fileType, fileMimeType, fileUrl, aciklama
+   - **Max Döküman**: 8 adet (sabit slot ID: 1-8)
+   - **Request**: eventId, documentSlot (1-8), fileName, fileSize, fileType, fileMimeType, fileUrl, aciklama
    - **UI Entegrasyonu**: Event create/edit sayfalarında aktif
 
 9. **Döküman Listele**
@@ -55,26 +56,30 @@ Tüm webhook'lar `/webhook-test/` prefix'i ile TEST modundadır.
 
 10. **Döküman Sil**
     `https://n8n.fokusistatistik.com/webhook-test/document-delete`
+    - Slot ID değişmez, sadece döküman silinir
 
 11. **Döküman Detay Getir**
     `https://n8n.fokusistatistik.com/webhook-test/document-get`
 
 12. **Program Oluştur**
     `https://n8n.fokusistatistik.com/webhook-test/program-create`
-    - **Request**: eventId, baslik, items[] (saat, konu, konusmaci)
+    - **Request**: eventId, baslik, items[] (tarih, baslangicSaati, bitisSaati, baslik, aciklama, konum, konusmacilar)
+    - **Sıralama**: Başlangıç saatine göre otomatik kronolojik
 
 13. **Program Güncelle**
     `https://n8n.fokusistatistik.com/webhook-test/program-update`
 
 14. **Program Listele**
     `https://n8n.fokusistatistik.com/webhook-test/program-list`
+    - **Response**: Başlangıç saatine göre sıralı
 
 15. **Program Sil**
     `https://n8n.fokusistatistik.com/webhook-test/program-delete`
 
-16. **Duyuru Oluştur**
+16. **Duyuru Oluştur** 🔄 ENTEGRASYONlu
     `https://n8n.fokusistatistik.com/webhook-test/announcement-create`
-    - **Request**: eventId, baslik, icerik, oncelik (1-5)
+    - **Kullanım**: Etkinlik Kaynakları + Kongre Alt Bölümler Yönetimi (birleşik)
+    - **Request**: eventId, baslik, icerik, tip (DUYURU/UYARI/BILGILENDIRME), oncelik (1-5)
 
 17. **Duyuru Güncelle**
     `https://n8n.fokusistatistik.com/webhook-test/announcement-update`
@@ -84,17 +89,6 @@ Tüm webhook'lar `/webhook-test/` prefix'i ile TEST modundadır.
 
 19. **Duyuru Sil**
     `https://n8n.fokusistatistik.com/webhook-test/announcement-delete`
-
-20. **Galeri Resim Yükle**
-    `https://n8n.fokusistatistik.com/webhook-test/gallery-upload`
-    - **Dosya Tipleri**: JPG, JPEG, PNG
-    - **Max Boyut**: 9MB
-
-21. **Galeri Resim Listele**
-    `https://n8n.fokusistatistik.com/webhook-test/gallery-list`
-
-22. **Galeri Resim Sil**
-    `https://n8n.fokusistatistik.com/webhook-test/gallery-delete`
 
 ---
 

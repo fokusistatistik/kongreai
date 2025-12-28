@@ -489,67 +489,6 @@ export default function ManageEventSubsectionsPage() {
     }
   };
 
-  // Export schedule to PDF
-  const handleExportSchedulePDF = () => {
-    if (schedule.length === 0) {
-      alert('Program boş, PDF oluşturulamaz');
-      return;
-    }
-
-    // Group by day
-    const dayGroups = schedule.reduce((acc: any, item: any) => {
-      if (!acc[item.gun]) {
-        acc[item.gun] = [];
-      }
-      acc[item.gun].push(item);
-      return acc;
-    }, {});
-
-    // Create HTML content
-    let htmlContent = `
-      <html>
-        <head>
-          <meta charset="UTF-8">
-          <title>${event?.baslik || 'Kongre'} - Program</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 40px; }
-            h1 { color: #1e40af; border-bottom: 3px solid #1e40af; padding-bottom: 10px; }
-            h2 { color: #3b82f6; margin-top: 30px; }
-            .schedule-item { margin: 15px 0; padding: 15px; border-left: 4px solid #3b82f6; background: #f3f4f6; }
-            .time { font-weight: bold; color: #1e40af; }
-            .type { background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
-            .salon { color: #6b7280; }
-          </style>
-        </head>
-        <body>
-          <h1>${event?.baslik || 'Kongre'} - Program</h1>
-    `;
-
-    Object.keys(dayGroups).sort().forEach((gun) => {
-      htmlContent += `<h2>${gun}</h2>`;
-      dayGroups[gun].sort((a: any, b: any) => a.baslangic_saati.localeCompare(b.baslangic_saati)).forEach((item: any) => {
-        htmlContent += `
-          <div class="schedule-item">
-            <div class="time">${item.baslangic_saati} - ${item.bitis_saati}</div>
-            <h3>${item.baslik} <span class="type">${item.tip}</span></h3>
-            ${item.salon ? `<div class="salon">📍 ${item.salon}</div>` : ''}
-            ${item.aciklama ? `<p>${item.aciklama}</p>` : ''}
-            ${item.oturum_baskani ? `<p><strong>Oturum Başkanı:</strong> ${item.oturum_baskani}</p>` : ''}
-          </div>
-        `;
-      });
-    });
-
-    htmlContent += `</body></html>`;
-
-    // Open in new window for printing
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(htmlContent);
-      printWindow.document.close();
-      printWindow.print();
-    }
-  };
 
   if (!session) {
     return (
@@ -704,7 +643,6 @@ export default function ManageEventSubsectionsPage() {
               handleCreate={handleCreateSchedule}
               handleUpdate={handleUpdateSchedule}
               handleDelete={handleDeleteSchedule}
-              handleExportPDF={handleExportSchedulePDF}
             />
           )}
 
@@ -1346,41 +1284,32 @@ function GalleryTab({ gallery, newGallery, setNewGallery, editingGallery, setEdi
 }
 
 // Schedule Tab Component
-function ScheduleTab({ schedule, newSchedule, setNewSchedule, editingSchedule, setEditingSchedule, handleCreate, handleUpdate, handleDelete, handleExportPDF }: any) {
+function ScheduleTab({ schedule, newSchedule, setNewSchedule, editingSchedule, setEditingSchedule, handleCreate, handleUpdate, handleDelete }: any) {
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">Program</h2>
-        <div className="flex gap-2">
-          <button
-            onClick={handleExportPDF}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"
-          >
-            <Download className="w-5 h-5" />
-            PDF İndir
-          </button>
-          <button
-            onClick={() =>
-              setNewSchedule({
-                gun: '',
-                baslik: '',
-                aciklama: '',
-                baslangic_saati: '',
-                bitis_saati: '',
-                salon: '',
-                tip: 'OTURUM',
-                konusmacilar: '',
-                oturum_baskani: '',
-                yayinlandi: true,
-                sira: 0,
-              })
-            }
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
-          >
-            <Plus className="w-5 h-5" />
-            Yeni Program Öğesi
-          </button>
-        </div>
+        <button
+          onClick={() =>
+            setNewSchedule({
+              gun: '',
+              baslik: '',
+              aciklama: '',
+              baslangic_saati: '',
+              bitis_saati: '',
+              salon: '',
+              tip: 'OTURUM',
+              konusmacilar: '',
+              oturum_baskani: '',
+              yayinlandi: true,
+              sira: 0,
+            })
+          }
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+        >
+          <Plus className="w-5 h-5" />
+          Yeni Program Öğesi
+        </button>
       </div>
 
       {/* New Schedule Form */}
