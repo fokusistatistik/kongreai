@@ -1,20 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FileText, Award, Image as ImageIcon, Calendar, Download, ExternalLink } from 'lucide-react';
+import { FileText, Award, Calendar, Download, ExternalLink } from 'lucide-react';
 
 interface EventSubsectionsTabsProps {
   eventId: string;
 }
 
 export default function EventSubsectionsTabs({ eventId }: EventSubsectionsTabsProps) {
-  const [activeTab, setActiveTab] = useState<'documents' | 'results' | 'gallery' | 'schedule'>('documents');
+  const [activeTab, setActiveTab] = useState<'documents' | 'results' | 'schedule'>('documents');
   const [loading, setLoading] = useState(false);
 
   // Data states
   const [documents, setDocuments] = useState<any[]>([]);
   const [results, setResults] = useState<any[]>([]);
-  const [gallery, setGallery] = useState<any[]>([]);
   const [schedule, setSchedule] = useState<any[]>([]);
 
   // Fetch data based on active tab
@@ -34,12 +33,6 @@ export default function EventSubsectionsTabs({ eventId }: EventSubsectionsTabsPr
           if (res.ok) {
             const data = await res.json();
             setResults(data.results || []);
-          }
-        } else if (activeTab === 'gallery') {
-          res = await fetch(`/api/events/${eventId}/gallery`);
-          if (res.ok) {
-            const data = await res.json();
-            setGallery(data.galleryItems || []);
           }
         } else if (activeTab === 'schedule') {
           res = await fetch(`/api/events/${eventId}/schedule`);
@@ -117,17 +110,6 @@ export default function EventSubsectionsTabs({ eventId }: EventSubsectionsTabsPr
           >
             <Award className="inline-block w-4 h-4 mr-2" />
             Sonuçlar
-          </button>
-          <button
-            onClick={() => setActiveTab('gallery')}
-            className={`pb-3 px-3 font-medium text-sm border-b-2 transition-colors ${
-              activeTab === 'gallery'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <ImageIcon className="inline-block w-4 h-4 mr-2" />
-            Galeri
           </button>
         </nav>
       </div>
@@ -271,46 +253,6 @@ export default function EventSubsectionsTabs({ eventId }: EventSubsectionsTabsPr
                           Yayınlanma: {new Date(result.yayin_tarihi).toLocaleDateString('tr-TR')}
                         </p>
                       )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Gallery Tab */}
-          {activeTab === 'gallery' && (
-            <div>
-              {gallery.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">Henüz galeri öğesi eklenmemiş</p>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {gallery.map((item) => (
-                    <div key={item.id} className="group relative overflow-hidden rounded-lg border border-gray-200 hover:shadow-lg transition-all">
-                      {item.medya_tipi === 'IMAGE' ? (
-                        <img
-                          src={item.medya_url}
-                          alt={item.baslik || 'Galeri görseli'}
-                          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <video
-                          src={item.medya_url}
-                          className="w-full h-48 object-cover"
-                          controls
-                        />
-                      )}
-                      {(item.baslik || item.aciklama) && (
-                        <div className="p-3 bg-white">
-                          {item.baslik && <h4 className="font-semibold text-gray-900">{item.baslik}</h4>}
-                          {item.aciklama && <p className="text-sm text-gray-600 mt-1">{item.aciklama}</p>}
-                        </div>
-                      )}
-                      <div className="absolute top-2 right-2">
-                        <span className="bg-black/50 text-white text-xs px-2 py-1 rounded">
-                          {item.kategori}
-                        </span>
-                      </div>
                     </div>
                   ))}
                 </div>

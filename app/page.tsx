@@ -1,48 +1,89 @@
 import Link from 'next/link';
 import { Calendar, MapPin, Users, ChevronRight, GraduationCap } from 'lucide-react';
-import prisma from '@/app/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/lib/auth/options';
+import { listEventsViaWebhook } from '@/app/lib/n8n-webhook';
 
 async function getUpcomingEvents() {
   const today = new Date();
   today.setHours(0, 0, 0, 0); // Start of today
 
-  // Get all YAYINDA events from database
-  const allEvents = await prisma.event.findMany({
-    where: {
-      durum: 'YAYINDA',
-    },
-    orderBy: { baslangic_tarihi: 'asc' },
-  });
+  try {
+    // Get all YAYINDA events from webhook
+    const response = await listEventsViaWebhook({
+      user: {
+        userId: 'system',
+        userEmail: 'system@kongreai.com',
+        userName: 'System',
+        userRole: 'SYSTEM',
+      },
+      filters: {
+        durum: 'YAYINDA',
+      },
+    });
 
-  // Filter for upcoming events (end date is today or in the future)
-  const upcomingEvents = allEvents.filter((event) => {
-    const endDate = new Date(event.bitis_tarihi);
-    endDate.setHours(0, 0, 0, 0);
-    return endDate >= today;
-  });
+    if (!response.success || !response.data) {
+      console.error('Failed to fetch events from webhook:', response.error);
+      return [];
+    }
 
-  return upcomingEvents.slice(0, 6);
+    // Filter for upcoming events (end date is today or in the future)
+    const upcomingEvents = response.data.filter((event) => {
+      const endDate = new Date(event.bitis_tarihi);
+      endDate.setHours(0, 0, 0, 0);
+      return endDate >= today;
+    });
+
+    // Sort by start date ascending
+    const sortedEvents = upcomingEvents.sort((a, b) =>
+      new Date(a.baslangic_tarihi).getTime() - new Date(b.baslangic_tarihi).getTime()
+    );
+
+    return sortedEvents.slice(0, 6);
+  } catch (error) {
+    console.error('Error fetching upcoming events:', error);
+    return [];
+  }
 }
 
 async function getPastEvents() {
   const today = new Date();
   today.setHours(0, 0, 0, 0); // Start of today
 
-  // Get all events from database
-  const allEvents = await prisma.event.findMany({
-    orderBy: { bitis_tarihi: 'desc' },
-  });
+  try {
+    // Get all events from webhook
+    const response = await listEventsViaWebhook({
+      user: {
+        userId: 'system',
+        userEmail: 'system@kongreai.com',
+        userName: 'System',
+        userRole: 'SYSTEM',
+      },
+      filters: {},
+    });
 
-  // Filter for past events (end date is before today)
-  const pastEvents = allEvents.filter((event) => {
-    const endDate = new Date(event.bitis_tarihi);
-    endDate.setHours(0, 0, 0, 0);
-    return endDate < today;
-  });
+    if (!response.success || !response.data) {
+      console.error('Failed to fetch events from webhook:', response.error);
+      return [];
+    }
 
-  return pastEvents.slice(0, 3);
+    // Filter for past events (end date is before today)
+    const pastEvents = response.data.filter((event) => {
+      const endDate = new Date(event.bitis_tarihi);
+      endDate.setHours(0, 0, 0, 0);
+      return endDate < today;
+    });
+
+    // Sort by end date descending
+    const sortedEvents = pastEvents.sort((a, b) =>
+      new Date(b.bitis_tarihi).getTime() - new Date(a.bitis_tarihi).getTime()
+    );
+
+    return sortedEvents.slice(0, 3);
+  } catch (error) {
+    console.error('Error fetching past events:', error);
+    return [];
+  }
 }
 
 export default async function HomePage() {

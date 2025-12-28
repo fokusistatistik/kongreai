@@ -56,6 +56,7 @@ export const authOptions: NextAuthOptions = {
             kurum: user.kurum,
             telefon: user.telefon,
             ilk_giris: user.ilk_giris,
+            email_verified: user.email_verified,
           };
         } catch (error) {
           // Re-throw without logging sensitive data
@@ -78,6 +79,7 @@ export const authOptions: NextAuthOptions = {
         token.ad = (user as any).ad;
         token.soyad = (user as any).soyad;
         token.telefon = (user as any).telefon;
+        token.email_verified = (user as any).email_verified;
       }
 
       // Session update - refresh from database
@@ -94,6 +96,7 @@ export const authOptions: NextAuthOptions = {
             kurum: true,
             telefon: true,
             ilk_giris: true,
+            email_verified: true,
           },
         });
 
@@ -108,6 +111,7 @@ export const authOptions: NextAuthOptions = {
           token.kurum = updatedUser.kurum;
           token.telefon = updatedUser.telefon;
           token.ilk_giris = updatedUser.ilk_giris;
+          token.email_verified = updatedUser.email_verified;
         }
       }
 
@@ -125,6 +129,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).kurum = token.kurum;
         (session.user as any).telefon = token.telefon;
         (session.user as any).ilk_giris = token.ilk_giris;
+        (session.user as any).email_verified = token.email_verified;
       }
 
       return session;

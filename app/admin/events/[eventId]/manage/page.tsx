@@ -3,14 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { FileText, Award, Image, Calendar, Clock, Plus, Pencil, Trash2, Save, X, Bell, Download } from 'lucide-react';
+import { FileText, Award, Calendar, Clock, Plus, Pencil, Trash2, Save, X, Bell, Download } from 'lucide-react';
 
 export default function ManageEventSubsectionsPage() {
   const params = useParams();
   const { data: session } = useSession();
   const eventId = params?.eventId as string;
 
-  const [activeTab, setActiveTab] = useState<'documents' | 'results' | 'gallery' | 'schedule' | 'timeline' | 'announcements'>('documents');
+  const [activeTab, setActiveTab] = useState<'documents' | 'results' | 'schedule' | 'timeline' | 'announcements'>('documents');
   const [loading, setLoading] = useState(false);
   const [event, setEvent] = useState<any>(null);
 
@@ -23,11 +23,6 @@ export default function ManageEventSubsectionsPage() {
   const [results, setResults] = useState<any[]>([]);
   const [editingResult, setEditingResult] = useState<any>(null);
   const [newResult, setNewResult] = useState<any>(null);
-
-  // Gallery state
-  const [gallery, setGallery] = useState<any[]>([]);
-  const [editingGallery, setEditingGallery] = useState<any>(null);
-  const [newGallery, setNewGallery] = useState<any>(null);
 
   // Schedule state
   const [schedule, setSchedule] = useState<any[]>([]);
@@ -86,12 +81,6 @@ export default function ManageEventSubsectionsPage() {
           if (res.ok) {
             const data = await res.json();
             setResults(data.results || []);
-          }
-        } else if (activeTab === 'gallery') {
-          const res = await fetch(`/api/admin/events/${eventId}/gallery`);
-          if (res.ok) {
-            const data = await res.json();
-            setGallery(data.galleryItems || []);
           }
         } else if (activeTab === 'schedule') {
           const res = await fetch(`/api/admin/events/${eventId}/schedule`);
@@ -343,79 +332,6 @@ export default function ManageEventSubsectionsPage() {
     }
   };
 
-  // Gallery handlers
-  const handleCreateGallery = async () => {
-    if (!newGallery?.medya_url || !newGallery?.medya_tipi) {
-      alert('Medya URL ve medya tipi zorunludur');
-      return;
-    }
-
-    try {
-      const res = await fetch(`/api/admin/events/${eventId}/gallery`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newGallery),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setGallery([...gallery, data.galleryItem]);
-        setNewGallery(null);
-        alert('Galeri öğesi başarıyla oluşturuldu');
-      } else {
-        const error = await res.json();
-        alert(error.error || 'Bir hata oluştu');
-      }
-    } catch (error) {
-      console.error('Gallery creation error:', error);
-      alert('Bir hata oluştu');
-    }
-  };
-
-  const handleUpdateGallery = async (galleryId: string) => {
-    try {
-      const res = await fetch(`/api/admin/events/${eventId}/gallery/${galleryId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editingGallery),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setGallery(gallery.map((g) => (g.id === galleryId ? data.galleryItem : g)));
-        setEditingGallery(null);
-        alert('Galeri öğesi başarıyla güncellendi');
-      } else {
-        const error = await res.json();
-        alert(error.error || 'Bir hata oluştu');
-      }
-    } catch (error) {
-      console.error('Gallery update error:', error);
-      alert('Bir hata oluştu');
-    }
-  };
-
-  const handleDeleteGallery = async (galleryId: string) => {
-    if (!confirm('Bu galeri öğesini silmek istediğinizden emin misiniz?')) return;
-
-    try {
-      const res = await fetch(`/api/admin/events/${eventId}/gallery/${galleryId}`, {
-        method: 'DELETE',
-      });
-
-      if (res.ok) {
-        setGallery(gallery.filter((g) => g.id !== galleryId));
-        alert('Galeri öğesi başarıyla silindi');
-      } else {
-        const error = await res.json();
-        alert(error.error || 'Bir hata oluştu');
-      }
-    } catch (error) {
-      console.error('Gallery deletion error:', error);
-      alert('Bir hata oluştu');
-    }
-  };
-
   // Schedule handlers
   const handleCreateSchedule = async () => {
     if (!newSchedule?.gun || !newSchedule?.baslik || !newSchedule?.baslangic_saati || !newSchedule?.bitis_saati) {
@@ -632,17 +548,6 @@ export default function ManageEventSubsectionsPage() {
             Sonuçlar
           </button>
           <button
-            onClick={() => setActiveTab('gallery')}
-            className={`pb-4 px-4 font-medium text-sm border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === 'gallery'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <Image className="inline-block w-5 h-5 mr-2" />
-            Galeri
-          </button>
-          <button
             onClick={() => setActiveTab('announcements')}
             className={`pb-4 px-4 font-medium text-sm border-b-2 transition-colors whitespace-nowrap ${
               activeTab === 'announcements'
@@ -688,20 +593,6 @@ export default function ManageEventSubsectionsPage() {
               handleCreate={handleCreateResult}
               handleUpdate={handleUpdateResult}
               handleDelete={handleDeleteResult}
-            />
-          )}
-
-          {/* Gallery Tab */}
-          {activeTab === 'gallery' && (
-            <GalleryTab
-              gallery={gallery}
-              newGallery={newGallery}
-              setNewGallery={setNewGallery}
-              editingGallery={editingGallery}
-              setEditingGallery={setEditingGallery}
-              handleCreate={handleCreateGallery}
-              handleUpdate={handleUpdateGallery}
-              handleDelete={handleDeleteGallery}
             />
           )}
 
@@ -1156,214 +1047,6 @@ function ResultsTab({ results, newResult, setNewResult, editingResult, setEditin
                     </button>
                   </div>
                 </div>
-              )}
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
-}
-
-// Gallery Tab Component
-function GalleryTab({ gallery, newGallery, setNewGallery, editingGallery, setEditingGallery, handleCreate, handleUpdate, handleDelete }: any) {
-  return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Galeri</h2>
-        <button
-          onClick={() =>
-            setNewGallery({
-              baslik: '',
-              aciklama: '',
-              medya_url: '',
-              medya_tipi: 'IMAGE',
-              thumbnail_url: '',
-              kategori: 'GENEL',
-              yayinlandi: true,
-              sira: 0,
-            })
-          }
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
-        >
-          <Plus className="w-5 h-5" />
-          Yeni Medya
-        </button>
-      </div>
-
-      {/* New Gallery Form */}
-      {newGallery && (
-        <div className="bg-gray-50 p-4 rounded-lg mb-4 border border-gray-200">
-          <h3 className="font-bold mb-3">Yeni Galeri Öğesi</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <input
-              type="text"
-              placeholder="Başlık"
-              value={newGallery.baslik}
-              onChange={(e) => setNewGallery({ ...newGallery, baslik: e.target.value })}
-              className="px-3 py-2 border rounded"
-            />
-            <select
-              value={newGallery.medya_tipi}
-              onChange={(e) => setNewGallery({ ...newGallery, medya_tipi: e.target.value })}
-              className="px-3 py-2 border rounded"
-            >
-              <option value="IMAGE">Resim</option>
-              <option value="VIDEO">Video</option>
-            </select>
-            <input
-              type="text"
-              placeholder="Medya URL *"
-              value={newGallery.medya_url}
-              onChange={(e) => setNewGallery({ ...newGallery, medya_url: e.target.value })}
-              className="px-3 py-2 border rounded"
-            />
-            <input
-              type="text"
-              placeholder="Thumbnail URL (opsiyonel)"
-              value={newGallery.thumbnail_url}
-              onChange={(e) => setNewGallery({ ...newGallery, thumbnail_url: e.target.value })}
-              className="px-3 py-2 border rounded"
-            />
-            <select
-              value={newGallery.kategori}
-              onChange={(e) => setNewGallery({ ...newGallery, kategori: e.target.value })}
-              className="px-3 py-2 border rounded"
-            >
-              <option value="GENEL">Genel</option>
-              <option value="OTURUM">Oturum</option>
-              <option value="GALA">Gala</option>
-              <option value="POSTER">Poster</option>
-              <option value="SOSYAL">Sosyal</option>
-            </select>
-            <input
-              type="number"
-              placeholder="Sıra"
-              value={newGallery.sira}
-              onChange={(e) => setNewGallery({ ...newGallery, sira: parseInt(e.target.value) || 0 })}
-              className="px-3 py-2 border rounded"
-            />
-            <textarea
-              placeholder="Açıklama"
-              value={newGallery.aciklama}
-              onChange={(e) => setNewGallery({ ...newGallery, aciklama: e.target.value })}
-              className="px-3 py-2 border rounded col-span-2"
-              rows={2}
-            />
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={newGallery.yayinlandi}
-                onChange={(e) => setNewGallery({ ...newGallery, yayinlandi: e.target.checked })}
-              />
-              Yayınla
-            </label>
-          </div>
-          <div className="flex gap-2 mt-4">
-            <button
-              onClick={handleCreate}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center gap-2"
-            >
-              <Save className="w-4 h-4" />
-              Kaydet
-            </button>
-            <button
-              onClick={() => setNewGallery(null)}
-              className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 flex items-center gap-2"
-            >
-              <X className="w-4 h-4" />
-              İptal
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Gallery Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {gallery.length === 0 ? (
-          <div className="col-span-full text-gray-500 text-center py-8">Henüz galeri öğesi eklenmemiş</div>
-        ) : (
-          gallery.map((item: any) => (
-            <div key={item.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-              {editingGallery?.id === item.id ? (
-                <div className="p-4">
-                  <input
-                    type="text"
-                    value={editingGallery.baslik}
-                    onChange={(e) => setEditingGallery({ ...editingGallery, baslik: e.target.value })}
-                    className="px-3 py-2 border rounded w-full mb-2"
-                    placeholder="Başlık"
-                  />
-                  <input
-                    type="text"
-                    value={editingGallery.medya_url}
-                    onChange={(e) => setEditingGallery({ ...editingGallery, medya_url: e.target.value })}
-                    className="px-3 py-2 border rounded w-full mb-2"
-                    placeholder="Medya URL"
-                  />
-                  <select
-                    value={editingGallery.kategori}
-                    onChange={(e) => setEditingGallery({ ...editingGallery, kategori: e.target.value })}
-                    className="px-3 py-2 border rounded w-full mb-2"
-                  >
-                    <option value="GENEL">Genel</option>
-                    <option value="OTURUM">Oturum</option>
-                    <option value="GALA">Gala</option>
-                    <option value="POSTER">Poster</option>
-                    <option value="SOSYAL">Sosyal</option>
-                  </select>
-                  <div className="flex gap-2 mt-2">
-                    <button
-                      onClick={() => handleUpdate(item.id)}
-                      className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm flex items-center gap-1 flex-1"
-                    >
-                      <Save className="w-4 h-4" />
-                      Kaydet
-                    </button>
-                    <button
-                      onClick={() => setEditingGallery(null)}
-                      className="bg-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-400 text-sm flex items-center gap-1"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="relative">
-                    {item.medya_tipi === 'IMAGE' ? (
-                      <img src={item.medya_url} alt={item.baslik || 'Galeri'} className="w-full h-48 object-cover" />
-                    ) : (
-                      <video src={item.medya_url} className="w-full h-48 object-cover" controls />
-                    )}
-                    <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
-                      {item.kategori}
-                    </div>
-                    <div className="absolute top-2 left-2">
-                      <span className={`text-xs px-2 py-1 rounded ${item.yayinlandi ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
-                        {item.yayinlandi ? 'Yayında' : 'Taslak'}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="p-3">
-                    {item.baslik && <h4 className="font-semibold text-sm mb-1">{item.baslik}</h4>}
-                    {item.aciklama && <p className="text-xs text-gray-600 mb-2">{item.aciklama}</p>}
-                    <div className="flex gap-2 justify-end">
-                      <button
-                        onClick={() => setEditingGallery(item)}
-                        className="text-blue-600 hover:text-blue-800 p-1"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="text-red-600 hover:text-red-800 p-1"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </>
               )}
             </div>
           ))
