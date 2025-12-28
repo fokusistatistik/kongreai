@@ -103,10 +103,14 @@ export default function Chatbot() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-40 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-full w-16 h-16 shadow-2xl transition-all duration-300 hover:scale-110 hover:shadow-3xl flex items-center justify-center"
+          className="fixed bottom-6 right-6 z-40 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-full w-16 h-16 shadow-2xl transition-all duration-300 hover:scale-110 hover:shadow-3xl flex items-center justify-center overflow-hidden"
           aria-label="Chatbot'u aç"
         >
-          <MessageCircle className="w-8 h-8" />
+          <img
+            src="https://static.fokusistatistik.com/kongre/genel/216akademisyen.png"
+            alt="Kongre AI Asistan"
+            className="w-full h-full object-cover"
+          />
         </button>
       )}
 
@@ -115,8 +119,12 @@ export default function Chatbot() {
         <div className="fixed bottom-6 right-6 z-50 w-[400px] max-w-[calc(100vw-48px)] h-[600px] max-h-[calc(100vh-48px)] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-5 flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center">
-              <MessageCircle className="w-6 h-6 text-blue-600" />
+            <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center overflow-hidden">
+              <img
+                src="https://static.fokusistatistik.com/kongre/genel/216akademisyen.png"
+                alt="Kongre AI Asistan"
+                className="w-full h-full object-cover"
+              />
             </div>
             <div className="flex-1 text-white">
               <div className="font-semibold text-base">Kongre AI Asistan</div>
