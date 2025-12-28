@@ -179,23 +179,25 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-12 md:py-16 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">
-            Akademik Yolculuğunuza Bugün Başlayın
-          </h2>
-          <p className="text-blue-100 text-base md:text-lg mb-8 max-w-2xl mx-auto">
-            Ücretsiz üye olun ve bilimsel kongreler, sempozyumlar ve panellere kolayca başvurun.
-          </p>
-          <Link
-            href="/auth/register"
-            className="inline-block px-6 md:px-8 py-3 md:py-4 text-sm md:text-base bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-          >
-            Ücretsiz Üye Ol
-          </Link>
-        </div>
-      </section>
+      {/* CTA Section - Only show for non-logged in users */}
+      {!session && (
+        <section className="py-12 md:py-16 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+          <div className="container mx-auto px-4 text-center">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">
+              Akademik Yolculuğunuza Bugün Başlayın
+            </h2>
+            <p className="text-blue-100 text-base md:text-lg mb-8 max-w-2xl mx-auto">
+              Ücretsiz üye olun ve bilimsel kongreler, sempozyumlar ve panellere kolayca başvurun.
+            </p>
+            <Link
+              href="/auth/register"
+              className="inline-block px-6 md:px-8 py-3 md:py-4 text-sm md:text-base bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            >
+              Ücretsiz Üye Ol
+            </Link>
+          </div>
+        </section>
+      )}
     </div>
   );
 }
