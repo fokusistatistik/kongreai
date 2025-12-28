@@ -1,8 +1,9 @@
 import Link from 'next/link';
-import { Calendar, MapPin, Users, ChevronRight, GraduationCap } from 'lucide-react';
+import { Calendar, MapPin, Users, ChevronRight, GraduationCap, Bell, ExternalLink } from 'lucide-react';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/lib/auth/options';
-import { listEventsViaWebhook } from '@/app/lib/n8n-webhook';
+import { listEventsViaWebhook, listAnnouncementsViaWebhook } from '@/app/lib/n8n-webhook';
+import AnnouncementsSection from '@/components/announcements-section';
 
 async function getUpcomingEvents() {
   const today = new Date();
@@ -86,9 +87,54 @@ async function getPastEvents() {
   }
 }
 
+async function getRecentAnnouncements() {
+  try {
+    // Get all published announcements from webhook
+    const response = await listAnnouncementsViaWebhook({
+      metadata: {
+        requestId: crypto.randomUUID(),
+        timestamp: new Date().toISOString(),
+        source: 'homepage',
+        environment: process.env.NODE_ENV || 'development',
+      },
+      requestedBy: {
+        userId: 'system',
+        userEmail: 'system@kongreai.com',
+        userName: 'System',
+        userRole: 'SYSTEM',
+      },
+      filters: {
+        yayinlandi: true,
+      },
+    });
+
+    if (!response.success || !response.data) {
+      console.error('Failed to fetch announcements from webhook:', response.error);
+      return [];
+    }
+
+    // Sort by priority and created date
+    const sortedAnnouncements = response.data.sort((a, b) => {
+      // First sort by priority (higher first)
+      if (a.oncelik !== b.oncelik) {
+        return (b.oncelik || 0) - (a.oncelik || 0);
+      }
+      // Then by creation date (newer first)
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+
+    // Return top 5 announcements
+    return sortedAnnouncements.slice(0, 5);
+  } catch (error) {
+    console.error('Error fetching announcements:', error);
+    return [];
+  }
+}
+
 export default async function HomePage() {
   const upcomingEvents = await getUpcomingEvents();
   const pastEvents = await getPastEvents();
+  const announcements = await getRecentAnnouncements();
   const session = await getServerSession(authOptions);
 
   return (
@@ -130,6 +176,11 @@ export default async function HomePage() {
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-gray-50 to-transparent"></div>
       </section>
+
+      {/* Announcements Section */}
+      {announcements.length > 0 && (
+        <AnnouncementsSection announcements={announcements} />
+      )}
 
       {/* Upcoming Events Section */}
       <section className="py-12 md:py-16 bg-gray-50">
