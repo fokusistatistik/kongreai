@@ -103,14 +103,10 @@ export default function Chatbot() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-40 bg-white text-white rounded-full w-16 h-16 border-4 border-blue-600 shadow-2xl transition-all duration-300 hover:scale-110 hover:shadow-3xl flex items-center justify-center p-2"
+          className="fixed bottom-6 right-6 z-40 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-full w-16 h-16 shadow-2xl transition-all duration-300 hover:scale-110 hover:shadow-3xl flex items-center justify-center"
           aria-label="Chatbot'u aç"
         >
-          <img
-            src="https://static.fokusistatistik.com/resimler/fokus216k.png"
-            alt="Asistan"
-            className="w-full h-full object-cover rounded-full"
-          />
+          <MessageCircle className="w-8 h-8" />
         </button>
       )}
 
@@ -118,17 +114,13 @@ export default function Chatbot() {
       {isOpen && (
         <div className="fixed bottom-6 right-6 z-50 w-[400px] max-w-[calc(100vw-48px)] h-[600px] max-h-[calc(100vh-48px)] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-primary to-primary/80 p-5 flex items-center gap-3">
-            <div className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center overflow-hidden">
-              <img
-                src="https://static.fokusistatistik.com/resimler/fokus216k.png"
-                alt="SAHA Asistan"
-                className="w-full h-full object-cover"
-              />
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-5 flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center">
+              <MessageCircle className="w-6 h-6 text-blue-600" />
             </div>
             <div className="flex-1 text-white">
-              <div className="font-semibold text-base">SAHA Asistan</div>
-              <div className="text-xs text-white/80">Size nasıl yardımcı olabilirim?</div>
+              <div className="font-semibold text-base">Kongre AI Asistan</div>
+              <div className="text-xs text-white/90">Size nasıl yardımcı olabilirim?</div>
             </div>
             <button
               onClick={() => setIsOpen(false)}
@@ -149,7 +141,7 @@ export default function Chatbot() {
                 <div
                   className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
                     msg.sender === 'user'
-                      ? 'bg-gradient-to-br from-primary to-primary/80 text-white rounded-br-sm'
+                      ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-br-sm'
                       : 'bg-white text-gray-800 rounded-bl-sm shadow-sm border border-gray-100'
                   }`}
                   dangerouslySetInnerHTML={{
@@ -186,14 +178,14 @@ export default function Chatbot() {
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 placeholder="Mesajınızı yazın..."
-                className="flex-1 resize-none px-4 py-2.5 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-gray-50 text-sm max-h-[140px]"
+                className="flex-1 resize-none px-4 py-2.5 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 text-sm max-h-[140px]"
                 style={{ height: '44px' }}
                 maxLength={1000}
               />
               <button
                 onClick={handleSend}
                 disabled={!inputValue.trim() || isTyping}
-                className="w-11 h-11 min-w-[44px] bg-gradient-to-br from-primary to-primary/80 text-white rounded-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 transition-transform shadow-lg"
+                className="w-11 h-11 min-w-[44px] bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 transition-transform shadow-lg"
                 aria-label="Gönder"
               >
                 <Send className="w-5 h-5" />

@@ -33,7 +33,7 @@ export default function CreateEventPage() {
   const [formData, setFormData] = useState({
     // Basic Info
     baslik: '',
-    tip: 'KONGRE' as 'KONGRE' | 'SEMPOZYUM' | 'KONFERANS' | 'CALISHTAY',
+    tip: 'KONGRE' as 'KONGRE' | 'SEMPOZYUM' | 'KONFERANS' | 'CALISHTAY' | 'DIGER',
     kapsam: 'ULUSAL' as 'ULUSAL' | 'ULUSLARARASI',
     aciklama: '',
 
@@ -161,8 +161,57 @@ export default function CreateEventPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
+
+    // Date validations
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const baslangicDate = formData.kongre_baslangic_tarihi ? new Date(formData.kongre_baslangic_tarihi) : null;
+    const bitisDate = formData.kongre_bitis_tarihi ? new Date(formData.kongre_bitis_tarihi) : null;
+    const sonBasvuruDate = formData.son_basvuru_tarihi ? new Date(formData.son_basvuru_tarihi) : null;
+    const erkenBasvuruDate = formData.erken_basvuru_son_tarihi ? new Date(formData.erken_basvuru_son_tarihi) : null;
+    const sonucDate = formData.sonuc_aciklama_tarihi ? new Date(formData.sonuc_aciklama_tarihi) : null;
+
+    // Bitiş tarihi başlangıçtan önce olamaz
+    if (baslangicDate && bitisDate && bitisDate < baslangicDate) {
+      setError('Kongre bitiş tarihi, başlangıç tarihinden önce olamaz');
+      return;
+    }
+
+    // Geçmiş tarih kontrolleri (başlangıç tarihi hariç)
+    if (sonBasvuruDate && sonBasvuruDate < today) {
+      setError('Son başvuru tarihi geçmişte olamaz');
+      return;
+    }
+
+    if (erkenBasvuruDate && erkenBasvuruDate < today) {
+      setError('Erken başvuru son tarihi geçmişte olamaz');
+      return;
+    }
+
+    if (sonucDate && sonucDate < today) {
+      setError('Sonuç açıklama tarihi geçmişte olamaz');
+      return;
+    }
+
+    if (bitisDate && bitisDate < today) {
+      setError('Kongre bitiş tarihi geçmişte olamaz');
+      return;
+    }
+
+    // Mantıksal kontroller
+    if (erkenBasvuruDate && sonBasvuruDate && erkenBasvuruDate > sonBasvuruDate) {
+      setError('Erken başvuru son tarihi, normal başvuru tarihinden sonra olamaz');
+      return;
+    }
+
+    if (sonBasvuruDate && baslangicDate && sonBasvuruDate > baslangicDate) {
+      setError('Son başvuru tarihi, kongre başlangıç tarihinden sonra olamaz');
+      return;
+    }
+
+    setLoading(true);
 
     try {
       // Generate slug from baslik
@@ -324,6 +373,7 @@ export default function CreateEventPage() {
                   <option value="SEMPOZYUM">Sempozyum</option>
                   <option value="KONFERANS">Konferans</option>
                   <option value="CALISHTAY">Çalıştay</option>
+                  <option value="DIGER">Diğer</option>
                 </select>
               </div>
 

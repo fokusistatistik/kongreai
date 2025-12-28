@@ -163,34 +163,34 @@ export default async function AdminDashboard() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           <StatCard
             title="Toplam Etkinlik"
             value={stats.totalEvents}
             subtitle={`${stats.activeEvents} aktif`}
             icon={<Calendar className="w-6 h-6" />}
-            color="bg-blue-500"
+            color="bg-gradient-to-br from-blue-500 to-blue-600"
           />
           <StatCard
             title="Toplam Başvuru"
             value={stats.totalApplications}
             subtitle={`${stats.pendingApplications} beklemede`}
             icon={<FileText className="w-6 h-6" />}
-            color="bg-green-500"
+            color="bg-gradient-to-br from-green-500 to-green-600"
           />
           <StatCard
             title="Toplam Kullanıcı"
             value={stats.totalUsers}
-            subtitle="Kayıtlı kullanıcı"
+            subtitle="Kayıtlı"
             icon={<Users className="w-6 h-6" />}
-            color="bg-purple-500"
+            color="bg-gradient-to-br from-purple-500 to-purple-600"
           />
           <StatCard
             title="Toplam Ödeme"
             value={stats.totalPayments}
             subtitle={`${stats.pendingPayments} bekliyor`}
             icon={<DollarSign className="w-6 h-6" />}
-            color="bg-orange-500"
+            color="bg-gradient-to-br from-orange-500 to-orange-600"
           />
         </div>
 
@@ -344,15 +344,20 @@ function StatCard({
   color: string;
 }) {
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className={`${color} text-white p-3 rounded-lg`}>{icon}</div>
+    <div className="group bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg hover:border-blue-200 transition-all duration-300">
+      <div className="flex items-start justify-between mb-3">
+        <div className={`${color} text-white p-3 rounded-xl shadow-md group-hover:scale-110 transition-transform duration-300`}>
+          {icon}
+        </div>
+        <span className="text-xs font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+          {subtitle}
+        </span>
       </div>
-      <div>
-        <p className="text-2xl font-bold text-gray-900">{value}</p>
-        <p className="text-sm text-gray-600 mt-1">{title}</p>
-        <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
+      <div className="mt-4">
+        <p className="text-3xl font-bold text-gray-900 mb-1">{value}</p>
+        <p className="text-sm font-medium text-gray-600">{title}</p>
       </div>
+      <div className="mt-3 h-1 bg-gradient-to-r from-transparent via-gray-200 to-transparent rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
     </div>
   );
 }

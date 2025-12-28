@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Calendar, FileText, Clock, CheckCircle, XCircle, AlertCircle, Plus, CreditCard } from 'lucide-react';
 import prisma from '@/app/lib/prisma';
 import { authOptions } from '@/app/lib/auth/options';
+import { listEventsViaWebhook } from '@/app/lib/n8n-webhook';
 
 async function getUserApplications(userId: string) {
   return await prisma.application.findMany({
@@ -18,15 +19,43 @@ async function getUserApplications(userId: string) {
 
 async function getAvailableEvents() {
   const today = new Date();
-  return await prisma.event.findMany({
-    where: {
-      durum: 'YAYINDA',
-      basvuru_aktif: true,
-      son_basvuru_tarihi: { gte: today },
-    },
-    orderBy: { son_basvuru_tarihi: 'asc' },
-    take: 3,
-  });
+
+  try {
+    // Get events from webhook
+    const response = await listEventsViaWebhook({
+      user: {
+        userId: 'system',
+        userEmail: 'system@kongreai.com',
+        userName: 'System',
+        userRole: 'SYSTEM',
+      },
+      filters: {
+        durum: 'YAYINDA',
+      },
+    });
+
+    if (!response.success || !response.data) {
+      console.error('Failed to fetch events from webhook:', response.error);
+      return [];
+    }
+
+    // Filter events with active applications and upcoming deadline
+    const availableEvents = response.data.filter((event: any) => {
+      const sonBasvuru = new Date(event.son_basvuru_tarihi);
+      // Check if application is active and deadline is in the future
+      return event.basvuru_aktif && sonBasvuru >= today;
+    });
+
+    // Sort by deadline (closest first) and take first 3
+    const sortedEvents = availableEvents.sort((a: any, b: any) =>
+      new Date(a.son_basvuru_tarihi).getTime() - new Date(b.son_basvuru_tarihi).getTime()
+    );
+
+    return sortedEvents.slice(0, 3);
+  } catch (error) {
+    console.error('Error fetching available events:', error);
+    return [];
+  }
 }
 
 export default async function DashboardPage() {
