@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { randomBytes } from 'crypto';
-
-const prisma = new PrismaClient();
-
-// n8n webhook URL - prod environment
-const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL || 'https://n8n.fokusistatistik.com/webhook/password-reset';
+import prisma from '@/app/lib/prisma';
+import { sendPasswordResetEmail } from '@/app/lib/n8n-webhook';
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,9 +32,9 @@ export async function POST(request: NextRequest) {
     // Generate secure token
     const token = randomBytes(32).toString('hex');
 
-    // Create password reset record (expires in 30 minutes)
+    // Create password reset record (expires in 180 seconds = 3 minutes)
     const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 30);
+    expiresAt.setSeconds(expiresAt.getSeconds() + 180);
 
     await prisma.passwordReset.create({
       data: {
@@ -49,39 +45,35 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Call n8n webhook
-    try {
-      const n8nResponse = await fetch(N8N_WEBHOOK_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+    // Send password reset email via n8n webhook
+    const resetUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/auth/reset-password?token=${token}`;
+
+    const webhookResult = await sendPasswordResetEmail({
+      email: user.email,
+      resetToken: token,
+      resetUrl,
+      userName: `${user.ad} ${user.soyad}`,
+      expiresInSeconds: 180,
+    });
+
+    if (!webhookResult.success) {
+      console.error('n8n webhook error:', webhookResult.error);
+      // Devam et, token database'de oluşturuldu
+    } else {
+      // Update record with n8n verification
+      await prisma.passwordReset.update({
+        where: { token },
+        data: {
+          n8n_verified: true,
+          n8n_response: JSON.stringify(webhookResult.data),
         },
-        body: JSON.stringify({
-          email: user.email,
-          token,
-          name: `${user.ad} ${user.soyad}`,
-          resetUrl: `${process.env.NEXTAUTH_URL}/auth/reset-password?token=${token}`,
-          expiresAt: expiresAt.toISOString(),
-        }),
-      });
-
-      if (!n8nResponse.ok) {
-        console.error('n8n webhook error:', await n8nResponse.text());
-        // Devam et ama webhook yanıtını kaydet
-      }
-
-      return NextResponse.json({
-        message: 'Şifre sıfırlama talebi alındı.',
-        token, // Frontend'e token gönder
-      });
-    } catch (webhookError) {
-      console.error('n8n webhook call failed:', webhookError);
-      // Hata olsa bile token oluşturduk, kullanıcıyı bilgilendir
-      return NextResponse.json({
-        message: 'Şifre sıfırlama talebi alındı. E-postanızı kontrol edin.',
-        token,
       });
     }
+
+    return NextResponse.json({
+      message: 'Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.',
+      success: true,
+    });
   } catch (error: any) {
     console.error('Forgot password error:', error);
     return NextResponse.json(

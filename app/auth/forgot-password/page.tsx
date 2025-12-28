@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Mail, ArrowLeft, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { Mail, ArrowLeft, Loader2, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -11,6 +11,24 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [countdown]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,10 +46,7 @@ export default function ForgotPasswordPage() {
 
       if (res.ok) {
         setSuccess(true);
-        // Redirect to reset password page with token
-        setTimeout(() => {
-          router.push(`/auth/reset-password?token=${data.token}`);
-        }, 2000);
+        setCountdown(180); // Start 180 second countdown
       } else {
         setError(data.error || 'Bir hata oluştu');
       }
@@ -40,6 +55,12 @@ export default function ForgotPasswordPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -61,17 +82,54 @@ export default function ForgotPasswordPage() {
         {/* Form */}
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 md:p-8">
           {success ? (
-            <div className="text-center py-8">
-              <CheckCircle className="h-12 w-12 md:h-16 md:w-16 text-green-500 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                İstek Gönderildi!
-              </h3>
-              <p className="text-gray-600 mb-4">
-                E-posta doğrulama sayfasına yönlendiriliyorsunuz...
-              </p>
-              <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Yönlendiriliyor...</span>
+            <div className="space-y-6">
+              <div className="text-center py-4">
+                <CheckCircle className="h-12 w-12 md:h-16 md:w-16 text-green-500 mx-auto mb-4" />
+                <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">
+                  E-posta Gönderildi!
+                </h3>
+                <p className="text-sm md:text-base text-gray-600">
+                  <strong>{email}</strong> adresine şifre sıfırlama bağlantısı gönderdik.
+                </p>
+              </div>
+
+              {countdown > 0 && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center gap-3">
+                    <Clock className="h-5 w-5 md:h-6 md:w-6 text-blue-600 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm md:text-base text-blue-900 font-semibold">
+                        Bağlantı <span className="text-lg">{formatTime(countdown)}</span> sonra geçersiz olacak
+                      </p>
+                      <p className="text-xs md:text-sm text-blue-700 mt-1">
+                        Lütfen e-postanızı kontrol edin ve bağlantıya tıklayın
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="text-center space-y-3">
+                <p className="text-sm text-gray-600">
+                  E-posta gelmedi mi?{' '}
+                  <button
+                    onClick={() => {
+                      setSuccess(false);
+                      setError('');
+                      setCountdown(0);
+                    }}
+                    className="text-blue-600 hover:text-blue-700 font-medium underline"
+                  >
+                    Tekrar gönder
+                  </button>
+                </p>
+                <Link
+                  href="/auth/login"
+                  className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600 transition-colors"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Giriş sayfasına dön
+                </Link>
               </div>
             </div>
           ) : (
