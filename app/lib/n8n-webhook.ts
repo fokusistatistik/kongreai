@@ -19,6 +19,29 @@ export const WEBHOOK_PATHS = {
   EVENT_GET: '/webhook-test/event-get',
   EVENT_LIST: '/webhook-test/event-list',
 
+  // Event Documents
+  DOCUMENT_UPLOAD: '/webhook-test/document-upload',
+  DOCUMENT_LIST: '/webhook-test/document-list',
+  DOCUMENT_DELETE: '/webhook-test/document-delete',
+  DOCUMENT_GET: '/webhook-test/document-get',
+
+  // Event Program
+  PROGRAM_CREATE: '/webhook-test/program-create',
+  PROGRAM_UPDATE: '/webhook-test/program-update',
+  PROGRAM_LIST: '/webhook-test/program-list',
+  PROGRAM_DELETE: '/webhook-test/program-delete',
+
+  // Event Announcements
+  ANNOUNCEMENT_CREATE: '/webhook-test/announcement-create',
+  ANNOUNCEMENT_UPDATE: '/webhook-test/announcement-update',
+  ANNOUNCEMENT_LIST: '/webhook-test/announcement-list',
+  ANNOUNCEMENT_DELETE: '/webhook-test/announcement-delete',
+
+  // Event Gallery
+  GALLERY_UPLOAD: '/webhook-test/gallery-upload',
+  GALLERY_LIST: '/webhook-test/gallery-list',
+  GALLERY_DELETE: '/webhook-test/gallery-delete',
+
   // Welcome Emails
   REVIEWER_WELCOME: '/webhook-test/reviewer-welcome',
   USER_WELCOME: '/webhook-test/user-welcome',
@@ -279,14 +302,16 @@ export async function sendEmail(
 export interface EventCreateRequest extends BaseWebhookRequest {
   event: {
     baslik: string;
-    slug: string;
+    slug: string; // Auto-generated from baslik
     tip: string;
     aciklama?: string;
     dates: {
-      baslangicTarihi: string; // ISO 8601
-      bitisTarihi: string; // ISO 8601
-      sonBasvuruTarihi: string; // ISO 8601
-      erkenKayitTarihi?: string; // ISO 8601
+      baslangicTarihi: string; // Day only (date), stored as 23:59:59
+      erkenBasvuruSonTarihi?: string; // Day only (date), stored as 23:59:59
+      sonBasvuruTarihi: string; // Day only (date), stored as 23:59:59
+      sonucAciklamaTarihi?: string; // Day only (date), stored as 23:59:59
+      kongreBaslangicTarihi: string; // Day only (date), stored as 23:59:59
+      kongreBitisTarihi: string; // Day only (date), stored as 23:59:59
     };
     location: {
       yer: string;
@@ -929,4 +954,287 @@ export async function listReviewersViaWebhook(
   data: ReviewerListRequest
 ): Promise<WebhookResponse<ReviewerListResponse[]>> {
   return sendWebhookRequest(WEBHOOK_PATHS.REVIEWER_LIST, data, { method: 'POST' });
+}
+
+// ============================================
+// EVENT DOCUMENT MANAGEMENT
+// ============================================
+
+export interface DocumentUploadRequest extends BaseWebhookRequest {
+  event: WebhookEventContext;
+  document: {
+    documentId: string;
+    fileName: string;
+    fileSize: number; // in bytes, max 9MB (9437184 bytes)
+    fileType: string; // Auto-detected: pdf, doc, docx, xls, xlsx, jpg, jpeg, png
+    fileMimeType: string;
+    fileUrl: string; // Uploaded file URL
+    aciklama: string; // Document description (e.g., "Kongre Kuralları", "Örnek Bildiri Formatı")
+    category?: string; // Optional category
+  };
+}
+
+export interface DocumentResponse {
+  documentId: string;
+  fileUrl: string;
+  status: string;
+  message?: string;
+}
+
+export interface DocumentListRequest extends BaseWebhookRequest {
+  filters: {
+    eventId: string;
+    category?: string;
+    limit?: number;
+    offset?: number;
+  };
+}
+
+export interface DocumentDetailResponse {
+  id: string;
+  eventId: string;
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  fileUrl: string;
+  aciklama: string;
+  category?: string;
+  uploadedBy: string;
+  created_at: string;
+}
+
+export async function uploadDocumentViaWebhook(
+  data: DocumentUploadRequest
+): Promise<WebhookResponse<DocumentResponse>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.DOCUMENT_UPLOAD, data);
+}
+
+export async function listDocumentsViaWebhook(
+  data: DocumentListRequest
+): Promise<WebhookResponse<DocumentDetailResponse[]>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.DOCUMENT_LIST, data, { method: 'POST' });
+}
+
+export async function getDocumentViaWebhook(
+  data: BaseWebhookRequest & { document: { documentId: string } }
+): Promise<WebhookResponse<DocumentDetailResponse>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.DOCUMENT_GET, data, { method: 'POST' });
+}
+
+export async function deleteDocumentViaWebhook(
+  data: BaseWebhookRequest & { document: { documentId: string; eventId: string } }
+): Promise<WebhookResponse<{ deleted: boolean; message?: string }>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.DOCUMENT_DELETE, data);
+}
+
+// ============================================
+// EVENT PROGRAM MANAGEMENT
+// ============================================
+
+export interface ProgramCreateRequest extends BaseWebhookRequest {
+  event: WebhookEventContext;
+  program: {
+    programId: string;
+    baslik: string; // Program title (e.g., "Kongre Programı")
+    maddeler: ProgramItem[]; // Program items/agenda
+    sira: number; // Display order
+  };
+}
+
+export interface ProgramItem {
+  id: string;
+  baslik: string; // Item title
+  aciklama?: string; // Item description
+  tarih?: string; // ISO 8601 date
+  baslangicSaati?: string; // HH:mm format
+  bitisSaati?: string; // HH:mm format
+  konum?: string; // Location/room
+  konusmacilar?: string[]; // Speaker names
+  sira: number; // Display order
+}
+
+export interface ProgramResponse {
+  programId: string;
+  status: string;
+  message?: string;
+}
+
+export interface ProgramListRequest extends BaseWebhookRequest {
+  filters: {
+    eventId: string;
+    limit?: number;
+    offset?: number;
+  };
+}
+
+export interface ProgramDetailResponse {
+  id: string;
+  eventId: string;
+  baslik: string;
+  maddeler: ProgramItem[];
+  sira: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function createProgramViaWebhook(
+  data: ProgramCreateRequest
+): Promise<WebhookResponse<ProgramResponse>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.PROGRAM_CREATE, data);
+}
+
+export async function updateProgramViaWebhook(
+  data: ProgramCreateRequest & { operationType: 'update' }
+): Promise<WebhookResponse<ProgramResponse>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.PROGRAM_UPDATE, data);
+}
+
+export async function listProgramsViaWebhook(
+  data: ProgramListRequest
+): Promise<WebhookResponse<ProgramDetailResponse[]>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.PROGRAM_LIST, data, { method: 'POST' });
+}
+
+export async function deleteProgramViaWebhook(
+  data: BaseWebhookRequest & { program: { programId: string; eventId: string } }
+): Promise<WebhookResponse<{ deleted: boolean; message?: string }>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.PROGRAM_DELETE, data);
+}
+
+// ============================================
+// EVENT ANNOUNCEMENTS
+// ============================================
+
+export interface AnnouncementCreateRequest extends BaseWebhookRequest {
+  event: WebhookEventContext;
+  announcement: {
+    announcementId: string;
+    baslik: string; // Announcement title
+    icerik: string; // Announcement content/body
+    tip: string; // Type: DUYURU, UYARI, BILGILENDIRME
+    oncelik: number; // Priority: 1 (high) to 5 (low)
+    aktif: boolean; // Active/visible status
+    yayinTarihi?: string; // Publication date (ISO 8601)
+    bitisTarihi?: string; // Expiry date (ISO 8601)
+  };
+}
+
+export interface AnnouncementResponse {
+  announcementId: string;
+  status: string;
+  message?: string;
+}
+
+export interface AnnouncementListRequest extends BaseWebhookRequest {
+  filters: {
+    eventId: string;
+    tip?: string;
+    aktif?: boolean;
+    limit?: number;
+    offset?: number;
+  };
+}
+
+export interface AnnouncementDetailResponse {
+  id: string;
+  eventId: string;
+  baslik: string;
+  icerik: string;
+  tip: string;
+  oncelik: number;
+  aktif: boolean;
+  yayinTarihi?: string;
+  bitisTarihi?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function createAnnouncementViaWebhook(
+  data: AnnouncementCreateRequest
+): Promise<WebhookResponse<AnnouncementResponse>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.ANNOUNCEMENT_CREATE, data);
+}
+
+export async function updateAnnouncementViaWebhook(
+  data: AnnouncementCreateRequest & { operationType: 'update' }
+): Promise<WebhookResponse<AnnouncementResponse>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.ANNOUNCEMENT_UPDATE, data);
+}
+
+export async function listAnnouncementsViaWebhook(
+  data: AnnouncementListRequest
+): Promise<WebhookResponse<AnnouncementDetailResponse[]>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.ANNOUNCEMENT_LIST, data, { method: 'POST' });
+}
+
+export async function deleteAnnouncementViaWebhook(
+  data: BaseWebhookRequest & { announcement: { announcementId: string; eventId: string } }
+): Promise<WebhookResponse<{ deleted: boolean; message?: string }>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.ANNOUNCEMENT_DELETE, data);
+}
+
+// ============================================
+// EVENT GALLERY
+// ============================================
+
+export interface GalleryUploadRequest extends BaseWebhookRequest {
+  event: WebhookEventContext;
+  gallery: {
+    galleryId: string;
+    fileName: string;
+    fileSize: number; // in bytes, max 9MB
+    fileType: string; // Auto-detected: jpg, jpeg, png
+    fileMimeType: string;
+    fileUrl: string; // Uploaded image URL
+    baslik?: string; // Image title
+    aciklama?: string; // Image description
+    sira?: number; // Display order
+  };
+}
+
+export interface GalleryResponse {
+  galleryId: string;
+  fileUrl: string;
+  status: string;
+  message?: string;
+}
+
+export interface GalleryListRequest extends BaseWebhookRequest {
+  filters: {
+    eventId: string;
+    limit?: number;
+    offset?: number;
+  };
+}
+
+export interface GalleryDetailResponse {
+  id: string;
+  eventId: string;
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  fileUrl: string;
+  baslik?: string;
+  aciklama?: string;
+  sira?: number;
+  uploadedBy: string;
+  created_at: string;
+}
+
+export async function uploadGalleryImageViaWebhook(
+  data: GalleryUploadRequest
+): Promise<WebhookResponse<GalleryResponse>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.GALLERY_UPLOAD, data);
+}
+
+export async function listGalleryImagesViaWebhook(
+  data: GalleryListRequest
+): Promise<WebhookResponse<GalleryDetailResponse[]>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.GALLERY_LIST, data, { method: 'POST' });
+}
+
+export async function deleteGalleryImageViaWebhook(
+  data: BaseWebhookRequest & { gallery: { galleryId: string; eventId: string } }
+): Promise<WebhookResponse<{ deleted: boolean; message?: string }>> {
+  return sendWebhookRequest(WEBHOOK_PATHS.GALLERY_DELETE, data);
 }
