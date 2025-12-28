@@ -48,21 +48,21 @@ export default async function DashboardPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="container mx-auto px-4 py-6 md:py-8 space-y-6 md:space-y-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 md:mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
             Hoş Geldiniz, {session.user.name}
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-sm md:text-base text-gray-600 mt-1">
             Başvurularınızı yönetin ve yeni etkinliklere katılın
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Link
             href="/dashboard/profile"
-            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+            className="w-full sm:w-auto px-4 md:px-6 py-2.5 md:py-3 text-sm md:text-base border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium text-center"
           >
             Profil Ayarları
           </Link>
@@ -70,27 +70,27 @@ export default async function DashboardPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         <StatCard
-          icon={<FileText className="w-6 h-6" />}
+          icon={<FileText className="w-4 h-4 md:w-5 md:h-5" />}
           title="Toplam Başvuru"
           value={stats.total}
           color="bg-blue-500"
         />
         <StatCard
-          icon={<Clock className="w-6 h-6" />}
+          icon={<Clock className="w-4 h-4 md:w-5 md:h-5" />}
           title="Beklemede"
           value={stats.beklemede}
           color="bg-yellow-500"
         />
         <StatCard
-          icon={<CheckCircle className="w-6 h-6" />}
+          icon={<CheckCircle className="w-4 h-4 md:w-5 md:h-5" />}
           title="Kabul Edildi"
           value={stats.kabul}
           color="bg-green-500"
         />
         <StatCard
-          icon={<XCircle className="w-6 h-6" />}
+          icon={<XCircle className="w-4 h-4 md:w-5 md:h-5" />}
           title="Reddedildi"
           value={stats.red}
           color="bg-red-500"
@@ -99,20 +99,20 @@ export default async function DashboardPage() {
 
       {/* Available Events */}
       {availableEvents.length > 0 && (
-        <section className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
-          <div className="flex items-center justify-between mb-4">
+        <section className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 md:p-6 border border-blue-100">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 md:gap-4 mb-4 md:mb-6">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Başvuru Yapabileceğiniz Etkinlikler</h2>
-              <p className="text-gray-600 text-sm mt-1">Son başvuru tarihi yaklaşan etkinlikler</p>
+              <h2 className="text-lg md:text-xl font-bold text-gray-900">Başvuru Yapabileceğiniz Etkinlikler</h2>
+              <p className="text-gray-600 text-xs md:text-sm mt-1">Son başvuru tarihi yaklaşan etkinlikler</p>
             </div>
             <Link
               href="/"
-              className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center gap-1"
+              className="text-blue-600 hover:text-blue-700 font-medium text-xs md:text-sm flex items-center gap-1 whitespace-nowrap"
             >
               Tümünü Gör →
             </Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
             {availableEvents.map((event) => {
               const hasApplied = applications.some((app) => app.event_id === event.id);
               return (
@@ -125,47 +125,47 @@ export default async function DashboardPage() {
 
       {/* Applications Table */}
       <section className="bg-white rounded-xl shadow-sm border border-gray-200">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900">Başvurularım</h2>
-          <p className="text-gray-600 text-sm mt-1">Tüm başvurularınızın durumunu buradan takip edebilirsiniz</p>
+        <div className="p-4 md:p-6 border-b border-gray-200">
+          <h2 className="text-lg md:text-xl font-bold text-gray-900">Başvurularım</h2>
+          <p className="text-gray-600 text-xs md:text-sm mt-1">Tüm başvurularınızın durumunu buradan takip edebilirsiniz</p>
         </div>
 
         {applications.length === 0 ? (
-          <div className="p-12 text-center">
-            <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">Henüz başvuru yapmadınız</h3>
-            <p className="text-gray-500 mb-6">
+          <div className="p-8 md:p-12 text-center">
+            <FileText className="w-12 h-12 md:w-16 md:h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-base md:text-lg font-semibold text-gray-700 mb-2">Henüz başvuru yapmadınız</h3>
+            <p className="text-sm md:text-base text-gray-500 mb-6">
               Aktif etkinliklere başvuru yaparak bilimsel çalışmalarınızı paylaşabilirsiniz.
             </p>
             <Link
               href="/"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              className="inline-flex items-center gap-2 w-full sm:w-auto px-4 md:px-6 py-2.5 md:py-3 text-sm md:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium justify-center"
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="w-4 h-4 md:w-5 md:h-5" />
               Etkinliklere Göz At
             </Link>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[800px]">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Etkinlik
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
                     Başvuru Tipi
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Durum
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
                     Ödeme
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
                     Başvuru Tarihi
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     İşlemler
                   </th>
                 </tr>
@@ -186,14 +186,14 @@ export default async function DashboardPage() {
 // Stat Card Component
 function StatCard({ icon, title, value, color }: any) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <div className="flex items-center gap-4">
-        <div className={`${color} w-12 h-12 rounded-lg flex items-center justify-center text-white`}>
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 md:p-4">
+      <div className="flex items-center gap-3 md:gap-4">
+        <div className={`${color} w-10 h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center text-white shrink-0`}>
           {icon}
         </div>
-        <div>
-          <p className="text-gray-600 text-sm">{title}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
+        <div className="min-w-0">
+          <p className="text-gray-600 text-xs md:text-sm truncate">{title}</p>
+          <p className="text-xl md:text-2xl font-bold text-gray-900">{value}</p>
         </div>
       </div>
     </div>
@@ -207,14 +207,14 @@ function QuickEventCard({ event, hasApplied }: { event: any; hasApplied: boolean
   const daysLeft = Math.ceil((sonBasvuru.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
   return (
-    <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between mb-3">
-        <h3 className="font-semibold text-gray-900 line-clamp-2 flex-1">{event.baslik}</h3>
+    <div className="bg-white rounded-lg p-4 md:p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+      <div className="flex items-start justify-between gap-3 md:gap-4 mb-3">
+        <h3 className="font-semibold text-sm md:text-base text-gray-900 line-clamp-2 flex-1">{event.baslik}</h3>
         <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded shrink-0">
           {event.tip}
         </span>
       </div>
-      <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
+      <div className="flex items-center gap-2 text-xs md:text-sm text-gray-600 mb-3">
         <Calendar className="w-4 h-4" />
         <span className="text-xs">
           Son başvuru: {sonBasvuru.toLocaleDateString('tr-TR')}
@@ -227,13 +227,13 @@ function QuickEventCard({ event, hasApplied }: { event: any; hasApplied: boolean
         </div>
       )}
       {hasApplied ? (
-        <div className="text-center py-2 bg-gray-100 text-gray-600 rounded text-sm font-medium">
+        <div className="text-center py-2.5 md:py-3 bg-gray-100 text-gray-600 rounded text-xs md:text-sm font-medium">
           Başvuru Yapıldı
         </div>
       ) : (
         <Link
           href={`/events/${event.slug}`}
-          className="block text-center py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm font-medium"
+          className="block text-center py-2.5 md:py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-xs md:text-sm font-medium"
         >
           Başvur
         </Link>
@@ -265,38 +265,38 @@ function ApplicationRow({ application }: { application: any }) {
 
   return (
     <tr className="hover:bg-gray-50">
-      <td className="px-6 py-4">
+      <td className="px-3 md:px-6 py-4">
         <div className="flex items-start gap-3">
-          <div>
+          <div className="min-w-0">
             <Link
               href={`/events/${application.event.slug}`}
-              className="font-medium text-gray-900 hover:text-blue-600 line-clamp-1"
+              className="font-medium text-sm md:text-base text-gray-900 hover:text-blue-600 line-clamp-1 block"
             >
               {application.event.baslik}
             </Link>
             {application.baslik && (
-              <p className="text-sm text-gray-500 line-clamp-1 mt-1">{application.baslik}</p>
+              <p className="text-xs md:text-sm text-gray-500 line-clamp-1 mt-1">{application.baslik}</p>
             )}
           </div>
         </div>
       </td>
-      <td className="px-6 py-4 whitespace-nowrap">
-        <span className="text-sm text-gray-900">{application.tip.replace('_', ' ')}</span>
+      <td className="px-3 md:px-6 py-4 whitespace-nowrap hidden sm:table-cell">
+        <span className="text-xs md:text-sm text-gray-900">{application.tip.replace('_', ' ')}</span>
       </td>
-      <td className="px-6 py-4 whitespace-nowrap">
+      <td className="px-3 md:px-6 py-4 whitespace-nowrap">
         <span className={`px-2 py-1 text-xs font-medium rounded-full ${status.color}`}>
           {status.label}
         </span>
       </td>
-      <td className="px-6 py-4 whitespace-nowrap">
+      <td className="px-3 md:px-6 py-4 whitespace-nowrap hidden md:table-cell">
         <span className={`px-2 py-1 text-xs font-medium rounded-full ${paymentStatus.color}`}>
           {paymentStatus.label}
         </span>
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+      <td className="px-3 md:px-6 py-4 whitespace-nowrap text-xs md:text-sm text-gray-500 hidden lg:table-cell">
         {new Date(application.created_at).toLocaleDateString('tr-TR')}
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+      <td className="px-3 md:px-6 py-4 whitespace-nowrap text-right text-xs md:text-sm font-medium">
         <Link
           href={`/dashboard/applications/${application.id}`}
           className="text-blue-600 hover:text-blue-800"

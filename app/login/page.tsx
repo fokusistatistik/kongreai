@@ -74,7 +74,7 @@ function LoginForm() {
   };
 
   return (
-    <div className="flex items-center justify-center px-4 py-12">
+    <div className="flex items-center justify-center px-4 py-6 md:py-8">
       <div className="max-w-md w-full">
         {/* Back to Home Button */}
         <div className="mb-6 text-center">
@@ -89,10 +89,10 @@ function LoginForm() {
 
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-full mb-4 shadow-lg">
-            <LogIn className="w-8 h-8" />
+          <div className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-full mb-4 shadow-lg">
+            <LogIn className="w-6 h-6 md:w-8 md:h-8" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
             Kullanıcı Girişi
           </h1>
           <p className="text-gray-600">Kongrelere Başvur ve Takip Et</p>
@@ -105,7 +105,7 @@ function LoginForm() {
         {/* Success Message */}
         {showSuccess && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+            <CheckCircle className="w-5 h-5 md:w-6 md:h-6 text-green-600 flex-shrink-0 mt-0.5" />
             <div>
               <p className="font-medium text-green-900">Kayıt başarılı!</p>
               <p className="text-sm text-green-700">Şimdi giriş yapabilirsiniz.</p>
@@ -114,10 +114,10 @@ function LoginForm() {
         )}
 
         {/* Login Card */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 md:p-8">
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="w-5 h-5 md:w-6 md:h-6 text-red-600 flex-shrink-0 mt-0.5" />
               <p className="text-sm text-red-800">{error}</p>
             </div>
           )}
@@ -139,7 +139,7 @@ function LoginForm() {
                   required
                   autoComplete="email"
                   disabled={loading}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg
+                  className="w-full pl-10 pr-4 py-2.5 md:py-3 text-sm md:text-base border border-gray-300 rounded-lg
                            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
                            transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 />
@@ -170,7 +170,7 @@ function LoginForm() {
                   required
                   autoComplete="current-password"
                   disabled={loading}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg
+                  className="w-full pl-10 pr-4 py-2.5 md:py-3 text-sm md:text-base border border-gray-300 rounded-lg
                            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
                            transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 />
@@ -180,7 +180,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-4 rounded-lg font-semibold
+              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-2.5 md:py-3 px-4 text-sm md:text-base rounded-lg font-semibold
                        hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
                        disabled:opacity-50 disabled:cursor-not-allowed transition-all
                        shadow-lg hover:shadow-xl"
@@ -208,7 +208,7 @@ function LoginForm() {
             <p className="text-gray-600 mb-3">Hesabınız yok mu?</p>
             <Link
               href="/auth/register"
-              className="inline-block w-full py-3 px-4 border-2 border-green-600 text-green-600 rounded-lg font-semibold hover:bg-green-50 transition-colors"
+              className="inline-block w-full py-2.5 md:py-3 px-4 text-sm md:text-base border-2 border-green-600 text-green-600 rounded-lg font-semibold hover:bg-green-50 transition-colors"
             >
               Ücretsiz Üye Ol
             </Link>

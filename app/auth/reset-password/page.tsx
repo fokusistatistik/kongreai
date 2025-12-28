@@ -118,8 +118,8 @@ function ResetPasswordForm() {
   if (!token) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-xl shadow-lg border border-gray-200 p-8 text-center">
-          <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+        <div className="max-w-md w-full bg-white rounded-xl shadow-lg border border-gray-200 p-6 md:p-8 text-center">
+          <AlertCircle className="h-12 w-12 md:h-16 md:w-16 text-red-500 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
             Geçersiz Link
           </h3>
@@ -138,20 +138,20 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center px-4 py-6 md:py-8">
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-4">
+          <div className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 bg-blue-600 rounded-full mb-4">
             {step === 'verified' ? (
-              <Lock className="h-8 w-8 text-white" />
+              <Lock className="h-6 w-6 md:h-8 md:w-8 text-white" />
             ) : step === 'error' ? (
-              <AlertCircle className="h-8 w-8 text-white" />
+              <AlertCircle className="h-6 w-6 md:h-8 md:w-8 text-white" />
             ) : (
-              <Mail className="h-8 w-8 text-white" />
+              <Mail className="h-6 w-6 md:h-8 md:w-8 text-white" />
             )}
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
             {step === 'verified' ? 'Yeni Şifre Belirleyin' :
              step === 'error' ? 'Hata Oluştu' :
              'E-posta Onayı Bekleniyor'}
@@ -164,13 +164,13 @@ function ResetPasswordForm() {
         </div>
 
         {/* Content */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 md:p-8">
           {step === 'waiting' && (
             <div className="text-center py-8">
               <div className="relative inline-block mb-6">
                 <div className="w-20 h-20 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <Clock className="h-8 w-8 text-blue-600" />
+                  <Clock className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
                 </div>
               </div>
 
@@ -186,7 +186,7 @@ function ResetPasswordForm() {
               {/* Countdown */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                 <div className="flex items-center justify-center gap-2 text-blue-900">
-                  <Clock className="h-5 w-5" />
+                  <Clock className="h-5 w-5 md:h-6 md:w-6" />
                   <span className="text-2xl font-bold font-mono">{formatTime(timeLeft)}</span>
                 </div>
                 <p className="text-sm text-blue-700 mt-1">Kalan süre</p>
@@ -207,13 +207,13 @@ function ResetPasswordForm() {
           {step === 'verified' && !success && (
             <form onSubmit={handlePasswordReset} className="space-y-6">
               <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800 mb-6">
-                <CheckCircle className="h-5 w-5 flex-shrink-0" />
+                <CheckCircle className="h-5 w-5 md:h-6 md:w-6 flex-shrink-0" />
                 <span className="text-sm">E-posta doğrulandı! Şimdi yeni şifrenizi belirleyin.</span>
               </div>
 
               {error && (
                 <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
-                  <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                  <AlertCircle className="h-5 w-5 md:h-6 md:w-6 flex-shrink-0" />
                   <span className="text-sm">{error}</span>
                 </div>
               )}
@@ -229,7 +229,7 @@ function ResetPasswordForm() {
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 md:py-3 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="En az 6 karakter"
                   disabled={loading}
                 />
@@ -246,7 +246,7 @@ function ResetPasswordForm() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 md:py-3 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Şifrenizi tekrar girin"
                   disabled={loading}
                 />
@@ -255,7 +255,7 @@ function ResetPasswordForm() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:bg-blue-400 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 px-6 py-2.5 md:py-3 text-sm md:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:bg-blue-400 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <>
@@ -274,7 +274,7 @@ function ResetPasswordForm() {
 
           {success && (
             <div className="text-center py-8">
-              <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+              <CheckCircle className="h-12 w-12 md:h-16 md:w-16 text-green-500 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 Şifreniz Değiştirildi!
               </h3>
@@ -290,7 +290,7 @@ function ResetPasswordForm() {
 
           {step === 'error' && (
             <div className="text-center py-8">
-              <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+              <AlertCircle className="h-12 w-12 md:h-16 md:w-16 text-red-500 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 İşlem Başarısız
               </h3>

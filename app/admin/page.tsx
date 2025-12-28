@@ -81,34 +81,36 @@ export default async function AdminDashboard() {
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8 space-y-8">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex flex-col gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Admin Panel</h1>
-            <p className="text-gray-600 mt-1">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Admin Panel</h1>
+            <p className="text-sm md:text-base text-gray-600 mt-1">
               Hoş geldiniz, {user.name}
               {user.role === 'HAKEM' && ' (Hakem)'}
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
             <Link
               href="/admin/events/create"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-lg hover:shadow-xl"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-lg hover:shadow-xl text-sm md:text-base"
             >
               <Plus className="w-4 h-4" />
-              Yeni Etkinlik
+              <span>Yeni Etkinlik</span>
             </Link>
             <Link
               href="/admin/profile"
-              className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm md:text-base"
             >
               <User className="w-4 h-4" />
-              Profil Ayarları
+              <span className="hidden sm:inline">Profil Ayarları</span>
+              <span className="sm:hidden">Profil</span>
             </Link>
             <Link
               href="/"
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm md:text-base"
             >
-              Ana Siteye Dön
+              <span className="hidden sm:inline">Ana Siteye Dön</span>
+              <span className="sm:hidden">Ana Sayfa</span>
             </Link>
           </div>
         </div>

@@ -70,7 +70,7 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
       </div>
 
       {/* Content */}
-      <div className="container mx-auto px-4 -mt-20 pb-12">
+      <div className="container mx-auto px-4 py-6 md:py-8 -mt-20 pb-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
@@ -93,31 +93,31 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
                 )}
               </div>
 
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{event.baslik}</h1>
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">{event.baslik}</h1>
               {event.alt_baslik && (
                 <p className="text-lg text-gray-600 mb-6">{event.alt_baslik}</p>
               )}
 
               {/* Quick Info Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mb-8">
                 <InfoItem
-                  icon={<Calendar className="w-5 h-5" />}
+                  icon={<Calendar className="w-4 h-4 md:w-5 md:h-5" />}
                   label="Etkinlik Tarihi"
                   value={`${baslangic.toLocaleDateString('tr-TR')} - ${bitis.toLocaleDateString('tr-TR')}`}
                 />
                 <InfoItem
-                  icon={<MapPin className="w-5 h-5" />}
+                  icon={<MapPin className="w-4 h-4 md:w-5 md:h-5" />}
                   label="Mekan"
                   value={event.yer}
                 />
                 <InfoItem
-                  icon={<Clock className="w-5 h-5" />}
+                  icon={<Clock className="w-4 h-4 md:w-5 md:h-5" />}
                   label="Son Başvuru"
                   value={sonBasvuru.toLocaleDateString('tr-TR')}
                   highlight={!isDeadlinePassed}
                 />
                 <InfoItem
-                  icon={<DollarSign className="w-5 h-5" />}
+                  icon={<DollarSign className="w-4 h-4 md:w-5 md:h-5" />}
                   label="Katılım Ücreti"
                   value={event.ucretsiz ? 'Ücretsiz' : `${event.ucret} ₺`}
                 />
@@ -126,7 +126,7 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
               {/* Online Event Info */}
               {event.online && (
                 <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-3">
-                  <Globe className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <Globe className="w-4 h-4 md:w-5 md:h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="font-medium text-blue-900">Online / Hybrid Etkinlik</p>
                     <p className="text-sm text-blue-700 mt-1">
@@ -139,9 +139,9 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
               {/* Description */}
               {event.aciklama && (
                 <div className="prose max-w-none mb-8">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Etkinlik Hakkında</h2>
+                  <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Etkinlik Hakkında</h2>
                   <div
-                    className="text-gray-700 leading-relaxed"
+                    className="text-sm md:text-base text-gray-700 leading-relaxed"
                     dangerouslySetInnerHTML={{ __html: event.aciklama }}
                   />
                 </div>
@@ -150,9 +150,9 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
               {/* Objectives */}
               {event.amaclar_hedefler && (
                 <div className="mb-8">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Amaçlar ve Hedefler</h2>
+                  <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Amaçlar ve Hedefler</h2>
                   <div
-                    className="text-gray-700 leading-relaxed"
+                    className="text-sm md:text-base text-gray-700 leading-relaxed"
                     dangerouslySetInnerHTML={{ __html: event.amaclar_hedefler }}
                   />
                 </div>
@@ -161,9 +161,9 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
               {/* Target Audience */}
               {event.hedef_kitle && (
                 <div className="mb-8">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Hedef Kitle</h2>
+                  <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Hedef Kitle</h2>
                   <div
-                    className="text-gray-700 leading-relaxed"
+                    className="text-sm md:text-base text-gray-700 leading-relaxed"
                     dangerouslySetInnerHTML={{ __html: event.hedef_kitle }}
                   />
                 </div>
@@ -172,7 +172,7 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
               {/* Scientific Program */}
               {event.bilimsel_program && (
                 <div className="mb-8">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Bilimsel Program</h2>
+                  <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Bilimsel Program</h2>
                   <div
                     className="text-gray-700 leading-relaxed"
                     dangerouslySetInnerHTML={{ __html: event.bilimsel_program }}
@@ -193,7 +193,7 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
             <div className="sticky top-6 space-y-6">
               {/* CTA Card */}
               <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Başvuru</h3>
+                <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-4">Başvuru</h3>
 
                 {!session ? (
                   <div className="space-y-3">
@@ -202,20 +202,20 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
                     </p>
                     <Link
                       href="/login"
-                      className="block w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center"
+                      className="block w-full py-2.5 md:py-3 px-4 md:px-6 text-sm md:text-base bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center"
                     >
                       Giriş Yap
                     </Link>
                     <Link
                       href="/auth/register"
-                      className="block w-full py-3 px-4 border-2 border-blue-600 text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-colors text-center"
+                      className="block w-full py-2.5 md:py-3 px-4 md:px-6 text-sm md:text-base border-2 border-blue-600 text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-colors text-center"
                     >
                       Üye Ol
                     </Link>
                   </div>
                 ) : hasApplied ? (
                   <div className="text-center py-4">
-                    <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
+                    <CheckCircle className="w-10 h-10 md:w-12 md:h-12 text-green-500 mx-auto mb-3" />
                     <p className="font-medium text-gray-900 mb-2">Başvurunuz Alındı</p>
                     <p className="text-sm text-gray-600 mb-4">
                       Bu etkinliğe daha önce başvuru yaptınız.
@@ -229,7 +229,7 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
                   </div>
                 ) : isDeadlinePassed ? (
                   <div className="text-center py-4">
-                    <Clock className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                    <Clock className="w-10 h-10 md:w-12 md:h-12 text-gray-400 mx-auto mb-3" />
                     <p className="font-medium text-gray-900 mb-2">Başvuru Süresi Doldu</p>
                     <p className="text-sm text-gray-600">
                       Son başvuru tarihi geçmiştir.
@@ -242,7 +242,7 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
                     </div>
                     <Link
                       href={`/dashboard/apply/${event.id}`}
-                      className="block w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center"
+                      className="block w-full py-2.5 md:py-3 px-4 md:px-6 text-sm md:text-base bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center"
                     >
                       Başvuru Yap
                     </Link>
@@ -256,7 +256,7 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
 
               {/* Important Dates */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Önemli Tarihler</h3>
+                <h3 className="text-base md:text-lg font-bold text-gray-900 mb-4">Önemli Tarihler</h3>
                 <div className="space-y-3 text-sm">
                   <DateItem label="Son Başvuru Tarihi" date={sonBasvuru} />
                   {event.erken_kayit_tarihi && (
@@ -270,7 +270,7 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
               {/* Pricing */}
               {!event.ucretsiz && (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">Ücretlendirme</h3>
+                  <h3 className="text-base md:text-lg font-bold text-gray-900 mb-4">Ücretlendirme</h3>
                   <div className="space-y-2 text-sm">
                     <PriceItem label="Standart Kayıt" price={event.ucret} />
                     {event.erken_kayit_ucret && (

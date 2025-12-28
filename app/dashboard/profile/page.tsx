@@ -131,44 +131,44 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-6 md:py-12 px-4">
       <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <User className="h-8 w-8 text-blue-600" />
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-3">
+            <User className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
             Profil Bilgilerim
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-sm md:text-base text-gray-600 mt-2">
             Hesap bilgilerinizi ve şifrenizi yönetin
           </p>
         </div>
 
         {/* Profile Information Section */}
-        <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-            <User className="h-5 w-5 text-blue-600" />
+        <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 mb-6 md:mb-8">
+          <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-4 md:mb-6 flex items-center gap-2">
+            <User className="h-4 h-4 md:h-5 md:w-5 text-blue-600" />
             Kişisel Bilgiler
           </h2>
 
           {message && (
-            <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${
+            <div className={`mb-4 md:mb-6 p-3 md:p-4 rounded-lg flex items-center gap-3 ${
               message.type === 'success'
                 ? 'bg-green-50 text-green-800 border border-green-200'
                 : 'bg-red-50 text-red-800 border border-red-200'
             }`}>
               {message.type === 'success' ? (
-                <CheckCircle className="h-5 w-5" />
+                <CheckCircle className="h-4 h-4 md:h-5 md:w-5 shrink-0" />
               ) : (
-                <AlertCircle className="h-5 w-5" />
+                <AlertCircle className="h-4 h-4 md:h-5 md:w-5 shrink-0" />
               )}
-              <span>{message.text}</span>
+              <span className="text-xs md:text-sm">{message.text}</span>
             </div>
           )}
 
-          <form onSubmit={handleProfileSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <form onSubmit={handleProfileSubmit} className="space-y-4 md:space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                   Ad <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -176,13 +176,13 @@ export default function ProfilePage() {
                   required
                   value={profileData.ad}
                   onChange={(e) => setProfileData({ ...profileData, ad: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 md:py-3 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Adınız"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                   Soyad <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -190,13 +190,13 @@ export default function ProfilePage() {
                   required
                   value={profileData.soyad}
                   onChange={(e) => setProfileData({ ...profileData, soyad: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 md:py-3 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Soyadınız"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                   E-posta <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -204,7 +204,7 @@ export default function ProfilePage() {
                   required
                   value={profileData.email}
                   onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed"
+                  className="w-full px-4 py-2.5 md:py-3 text-sm md:text-base border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed"
                   placeholder="E-posta adresiniz"
                   disabled
                   title="E-posta adresi değiştirilemez"
@@ -212,40 +212,40 @@ export default function ProfilePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                   Telefon
                 </label>
                 <input
                   type="tel"
                   value={profileData.telefon}
                   onChange={(e) => setProfileData({ ...profileData, telefon: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 md:py-3 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="+90 5XX XXX XX XX"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                   Ünvan
                 </label>
                 <input
                   type="text"
                   value={profileData.unvan}
                   onChange={(e) => setProfileData({ ...profileData, unvan: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 md:py-3 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Örn: Dr., Prof. Dr., Araş. Gör."
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                   Kurum
                 </label>
                 <input
                   type="text"
                   value={profileData.kurum}
                   onChange={(e) => setProfileData({ ...profileData, kurum: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 md:py-3 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Çalıştığınız kurum"
                 />
               </div>
@@ -255,16 +255,16 @@ export default function ProfilePage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 text-white px-4 md:px-6 py-2.5 md:py-3 text-sm md:text-base rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 md:h-5 md:w-5 border-b-2 border-white"></div>
                     Kaydediliyor...
                   </>
                 ) : (
                   <>
-                    <Save className="h-5 w-5" />
+                    <Save className="h-4 h-4 md:h-5 md:w-5" />
                     Değişiklikleri Kaydet
                   </>
                 )}
@@ -274,30 +274,30 @@ export default function ProfilePage() {
         </div>
 
         {/* Password Change Section */}
-        <div className="bg-white rounded-xl shadow-lg p-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-            <Lock className="h-5 w-5 text-blue-600" />
+        <div className="bg-white rounded-xl shadow-lg p-4 md:p-6">
+          <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-4 md:mb-6 flex items-center gap-2">
+            <Lock className="h-4 h-4 md:h-5 md:w-5 text-blue-600" />
             Şifre Değiştir
           </h2>
 
           {passwordMessage && (
-            <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${
+            <div className={`mb-4 md:mb-6 p-3 md:p-4 rounded-lg flex items-center gap-3 ${
               passwordMessage.type === 'success'
                 ? 'bg-green-50 text-green-800 border border-green-200'
                 : 'bg-red-50 text-red-800 border border-red-200'
             }`}>
               {passwordMessage.type === 'success' ? (
-                <CheckCircle className="h-5 w-5" />
+                <CheckCircle className="h-4 h-4 md:h-5 md:w-5 shrink-0" />
               ) : (
-                <AlertCircle className="h-5 w-5" />
+                <AlertCircle className="h-4 h-4 md:h-5 md:w-5 shrink-0" />
               )}
-              <span>{passwordMessage.text}</span>
+              <span className="text-xs md:text-sm">{passwordMessage.text}</span>
             </div>
           )}
 
-          <form onSubmit={handlePasswordSubmit} className="space-y-6">
+          <form onSubmit={handlePasswordSubmit} className="space-y-4 md:space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                 Mevcut Şifre <span className="text-red-500">*</span>
               </label>
               <input
@@ -305,14 +305,14 @@ export default function ProfilePage() {
                 required
                 value={passwordData.currentPassword}
                 onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2.5 md:py-3 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Mevcut şifrenizi girin"
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                   Yeni Şifre <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -320,13 +320,13 @@ export default function ProfilePage() {
                   required
                   value={passwordData.newPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 md:py-3 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Yeni şifre (en az 6 karakter)"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                   Yeni Şifre (Tekrar) <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -334,7 +334,7 @@ export default function ProfilePage() {
                   required
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 md:py-3 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Yeni şifreyi tekrar girin"
                 />
               </div>
@@ -344,16 +344,16 @@ export default function ProfilePage() {
               <button
                 type="submit"
                 disabled={passwordLoading}
-                className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors disabled:bg-indigo-400 disabled:cursor-not-allowed"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-600 text-white px-4 md:px-6 py-2.5 md:py-3 text-sm md:text-base rounded-lg hover:bg-indigo-700 transition-colors disabled:bg-indigo-400 disabled:cursor-not-allowed"
               >
                 {passwordLoading ? (
                   <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 md:h-5 md:w-5 border-b-2 border-white"></div>
                     Değiştiriliyor...
                   </>
                 ) : (
                   <>
-                    <Lock className="h-5 w-5" />
+                    <Lock className="h-4 h-4 md:h-5 md:w-5" />
                     Şifreyi Değiştir
                   </>
                 )}
