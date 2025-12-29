@@ -233,6 +233,16 @@ function ApplicationRow({ application }: { application: any }) {
       </td>
       <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-right">
         <div className="flex items-center justify-end gap-2">
+          {/* Payment Button - Show if no payment or payment is pending/cancelled */}
+          {(!application.payment || application.payment.durum === 'IPTAL' || application.payment.durum === 'BEKLIYOR') && !application.event.ucretsiz && (
+            <Link
+              href={`/applications/${application.id}/payment`}
+              className="inline-flex items-center gap-1 px-2 md:px-3 py-1 md:py-1.5 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
+            >
+              <CheckCircle className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Ödeme Yap</span>
+            </Link>
+          )}
           <Link
             href={`/dashboard/applications/${application.id}`}
             className="inline-flex items-center gap-1 px-2 md:px-3 py-1 md:py-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
