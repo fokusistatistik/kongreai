@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
@@ -23,6 +23,9 @@ export default function SiteHeader() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const profileLinkRef = useRef<HTMLAnchorElement>(null);
+  const logoutButtonRef = useRef<HTMLButtonElement>(null);
 
   // Don't show on auth pages
   if (
@@ -40,6 +43,41 @@ export default function SiteHeader() {
   const confirmLogout = () => {
     signOut({ callbackUrl: '/login' });
   };
+
+  // Keyboard navigation for dropdown
+  useEffect(() => {
+    if (!showUserDropdown) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowUserDropdown(false);
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (document.activeElement === profileLinkRef.current) {
+          logoutButtonRef.current?.focus();
+        } else {
+          profileLinkRef.current?.focus();
+        }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (document.activeElement === logoutButtonRef.current) {
+          profileLinkRef.current?.focus();
+        } else {
+          logoutButtonRef.current?.focus();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showUserDropdown]);
+
+  // Auto-focus first menu item when dropdown opens
+  useEffect(() => {
+    if (showUserDropdown) {
+      profileLinkRef.current?.focus();
+    }
+  }, [showUserDropdown]);
 
   const user = session?.user as any;
   const isLoggedIn = !!session;
@@ -135,10 +173,13 @@ export default function SiteHeader() {
               {isLoggedIn ? (
                 <>
                   {/* User Dropdown (Desktop) */}
-                  <div className="hidden md:flex items-center gap-3 border-l pl-4 relative">
+                  <div className="hidden md:flex items-center gap-3 border-l pl-4 relative" ref={dropdownRef}>
                     <button
                       onClick={() => setShowUserDropdown(!showUserDropdown)}
-                      className="flex items-center gap-3 hover:bg-gray-50 rounded-lg px-3 py-2 transition-colors"
+                      aria-expanded={showUserDropdown}
+                      aria-haspopup="true"
+                      aria-label="Kullanıcı menüsü"
+                      className="flex items-center gap-3 hover:bg-gray-50 rounded-lg px-3 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <div className="text-right">
                         <p className="text-sm font-semibold text-gray-900">
@@ -150,7 +191,7 @@ export default function SiteHeader() {
                            user?.role === 'ORGANIZATOR' ? 'Organizatör' : 'Katılımcı'}
                         </p>
                       </div>
-                      <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${showUserDropdown ? 'rotate-180' : ''}`} />
+                      <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${showUserDropdown ? 'rotate-180' : ''}`} aria-hidden="true" />
                     </button>
 
                     {/* Dropdown Menu */}
@@ -159,28 +200,37 @@ export default function SiteHeader() {
                         <div
                           className="fixed inset-0 z-10"
                           onClick={() => setShowUserDropdown(false)}
+                          aria-hidden="true"
                         />
-                        <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-20">
-                          <div className="px-4 py-2 border-b border-gray-100">
+                        <div
+                          role="menu"
+                          aria-label="Kullanıcı menüsü"
+                          className="absolute right-0 top-full mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-20"
+                        >
+                          <div className="px-4 py-2 border-b border-gray-100" role="presentation">
                             <p className="text-sm font-semibold text-gray-900">{user?.name}</p>
                             <p className="text-xs text-gray-500">{user?.email}</p>
                           </div>
                           <Link
+                            ref={profileLinkRef}
                             href="/dashboard/profile"
                             onClick={() => setShowUserDropdown(false)}
-                            className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
+                            role="menuitem"
+                            className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
                           >
-                            <Settings className="h-4 w-4 text-gray-500" />
+                            <Settings className="h-4 w-4 text-gray-500" aria-hidden="true" />
                             <span className="text-sm text-gray-700">Profil Ayarları</span>
                           </Link>
                           <button
+                            ref={logoutButtonRef}
                             onClick={() => {
                               setShowUserDropdown(false);
                               handleLogout();
                             }}
-                            className="w-full flex items-center gap-3 px-4 py-2 hover:bg-red-50 text-red-600 transition-colors"
+                            role="menuitem"
+                            className="w-full flex items-center gap-3 px-4 py-2 hover:bg-red-50 text-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
                           >
-                            <LogOut className="h-4 w-4" />
+                            <LogOut className="h-4 w-4" aria-hidden="true" />
                             <span className="text-sm font-medium">Çıkış Yap</span>
                           </button>
                         </div>

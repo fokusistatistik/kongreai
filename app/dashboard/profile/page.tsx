@@ -233,11 +233,12 @@ function ProfilePageContent() {
           <form onSubmit={handleProfileSubmit} className="space-y-4 md:space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div>
-                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="profile-ad" className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                   Ad <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
+                  id="profile-ad"
                   required
                   value={profileData.ad}
                   onChange={(e) => setProfileData({ ...profileData, ad: e.target.value })}
@@ -247,11 +248,12 @@ function ProfilePageContent() {
               </div>
 
               <div>
-                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="profile-soyad" className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                   Soyad <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
+                  id="profile-soyad"
                   required
                   value={profileData.soyad}
                   onChange={(e) => setProfileData({ ...profileData, soyad: e.target.value })}
@@ -261,11 +263,12 @@ function ProfilePageContent() {
               </div>
 
               <div>
-                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="profile-email" className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                   E-posta <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="email"
+                  id="profile-email"
                   required
                   value={profileData.email}
                   onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
@@ -277,11 +280,12 @@ function ProfilePageContent() {
               </div>
 
               <div>
-                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="profile-telefon" className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                   Telefon
                 </label>
                 <input
                   type="tel"
+                  id="profile-telefon"
                   value={profileData.telefon}
                   onChange={(e) => setProfileData({ ...profileData, telefon: e.target.value })}
                   className="w-full px-4 py-2.5 md:py-3 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -290,11 +294,12 @@ function ProfilePageContent() {
               </div>
 
               <div>
-                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="profile-unvan" className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                   Ünvan
                 </label>
                 <input
                   type="text"
+                  id="profile-unvan"
                   value={profileData.unvan}
                   onChange={(e) => setProfileData({ ...profileData, unvan: e.target.value })}
                   className="w-full px-4 py-2.5 md:py-3 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -303,11 +308,12 @@ function ProfilePageContent() {
               </div>
 
               <div>
-                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="profile-kurum" className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                   Kurum
                 </label>
                 <input
                   type="text"
+                  id="profile-kurum"
                   value={profileData.kurum}
                   onChange={(e) => setProfileData({ ...profileData, kurum: e.target.value })}
                   className="w-full px-4 py-2.5 md:py-3 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -316,11 +322,12 @@ function ProfilePageContent() {
               </div>
 
               <div>
-                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="profile-ulke" className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                   Ülke
                 </label>
                 <input
                   type="text"
+                  id="profile-ulke"
                   value={profileData.ulke}
                   onChange={(e) => setProfileData({ ...profileData, ulke: e.target.value })}
                   className="w-full px-4 py-2.5 md:py-3 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -329,11 +336,12 @@ function ProfilePageContent() {
               </div>
 
               <div>
-                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="profile-sehir" className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                   Şehir
                 </label>
                 <input
                   type="text"
+                  id="profile-sehir"
                   value={profileData.sehir}
                   onChange={(e) => setProfileData({ ...profileData, sehir: e.target.value })}
                   className="w-full px-4 py-2.5 md:py-3 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -470,11 +478,12 @@ function ProfilePageContent() {
 
           <form onSubmit={handlePasswordSubmit} className="space-y-4 md:space-y-6">
             <div>
-              <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password-current" className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                 Mevcut Şifre <span className="text-red-500">*</span>
               </label>
               <input
                 type="password"
+                id="password-current"
                 required
                 value={passwordData.currentPassword}
                 onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
@@ -485,11 +494,12 @@ function ProfilePageContent() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div>
-                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="password-new" className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                   Yeni Şifre <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="password"
+                  id="password-new"
                   required
                   value={passwordData.newPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
@@ -499,11 +509,12 @@ function ProfilePageContent() {
               </div>
 
               <div>
-                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="password-confirm" className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                   Yeni Şifre (Tekrar) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="password"
+                  id="password-confirm"
                   required
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}

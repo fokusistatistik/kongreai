@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { UserPlus, Mail, Lock, User, Building, Phone, Briefcase, Home } from 'lucide-react';
+import PasswordStrength from '@/components/password-strength';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -243,9 +244,10 @@ export default function RegisterPage() {
                     value={formData.password}
                     onChange={handleChange}
                     className="w-full pl-10 pr-4 py-2.5 md:py-3 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="En az 6 karakter"
+                    placeholder="En az 8 karakter"
                   />
                 </div>
+                <PasswordStrength password={formData.password} />
               </div>
 
               <div>

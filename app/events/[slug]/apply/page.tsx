@@ -348,11 +348,12 @@ export default function EventApplyPage() {
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Bildiri Bilgileri</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="baslik" className="block text-sm font-medium text-gray-700 mb-2">
                     Bildiri Başlığı <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
+                    id="baslik"
                     name="baslik"
                     value={formData.baslik}
                     onChange={handleInputChange}
@@ -363,10 +364,11 @@ export default function EventApplyPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="ozet" className="block text-sm font-medium text-gray-700 mb-2">
                     Özet (Max 300 kelime) <span className="text-red-500">*</span>
                   </label>
                   <textarea
+                    id="ozet"
                     name="ozet"
                     value={formData.ozet}
                     onChange={handleInputChange}
@@ -381,11 +383,12 @@ export default function EventApplyPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="anahtar_kelimeler" className="block text-sm font-medium text-gray-700 mb-2">
                     Anahtar Kelimeler
                   </label>
                   <input
                     type="text"
+                    id="anahtar_kelimeler"
                     name="anahtar_kelimeler"
                     value={formData.anahtar_kelimeler}
                     onChange={handleInputChange}
@@ -395,11 +398,12 @@ export default function EventApplyPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="kategori" className="block text-sm font-medium text-gray-700 mb-2">
                     Kategori
                   </label>
                   <input
                     type="text"
+                    id="kategori"
                     name="kategori"
                     value={formData.kategori}
                     onChange={handleInputChange}
@@ -445,11 +449,12 @@ export default function EventApplyPage() {
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs text-gray-600 mb-1">
+                      <label htmlFor={`author-${index}-ad`} className="block text-xs text-gray-600 mb-1">
                         Ad <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
+                        id={`author-${index}-ad`}
                         value={author.ad}
                         onChange={(e) => handleAuthorChange(index, 'ad', e.target.value)}
                         required
@@ -457,11 +462,12 @@ export default function EventApplyPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-600 mb-1">
+                      <label htmlFor={`author-${index}-soyad`} className="block text-xs text-gray-600 mb-1">
                         Soyad <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
+                        id={`author-${index}-soyad`}
                         value={author.soyad}
                         onChange={(e) => handleAuthorChange(index, 'soyad', e.target.value)}
                         required
@@ -469,11 +475,12 @@ export default function EventApplyPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-600 mb-1">
+                      <label htmlFor={`author-${index}-email`} className="block text-xs text-gray-600 mb-1">
                         E-posta <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="email"
+                        id={`author-${index}-email`}
                         value={author.email}
                         onChange={(e) => handleAuthorChange(index, 'email', e.target.value)}
                         required
@@ -481,9 +488,10 @@ export default function EventApplyPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-600 mb-1">Kurum</label>
+                      <label htmlFor={`author-${index}-kurum`} className="block text-xs text-gray-600 mb-1">Kurum</label>
                       <input
                         type="text"
+                        id={`author-${index}-kurum`}
                         value={author.kurum}
                         onChange={(e) => handleAuthorChange(index, 'kurum', e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
