@@ -47,11 +47,11 @@ export default async function PaymentsPage() {
 
   const stats = {
     total: payments.length,
-    completed: payments.filter(p => p.durum === 'ODENDI').length,
+    completed: payments.filter(p => p.durum === 'TAMAMLANDI').length,
     pending: payments.filter(p => p.durum === 'BEKLIYOR').length,
     failed: payments.filter(p => p.durum === 'RED' || p.durum === 'IPTAL').length,
     totalAmount: payments
-      .filter(p => p.durum === 'ODENDI')
+      .filter(p => p.durum === 'TAMAMLANDI')
       .reduce((sum, p) => sum + p.tutar, 0),
   };
 
@@ -81,8 +81,8 @@ export default async function PaymentsPage() {
         {/* Info Box */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
           <p className="text-sm text-blue-800">
-            <strong>Not:</strong> Ödeme işlemleri n8n webhook üzerinden yönetilmektedir.
-            Bu sayfa sadece kayıtları görüntüleme amaçlıdır.
+            <strong>Not:</strong> Bekleyen ödemeleri onaylamak veya reddetmek için ödemeye tıklayın.
+            Otomatik ödemeler (kredi kartı) webhook ile işlenir, manuel ödemeler (havale/EFT) admin onayı gerektirir.
           </p>
         </div>
 
@@ -151,7 +151,11 @@ export default async function PaymentsPage() {
                   </tr>
                 ) : (
                   payments.map((payment) => (
-                    <tr key={payment.id} className="hover:bg-gray-50 transition-colors">
+                    <tr
+                      key={payment.id}
+                      className="hover:bg-gray-50 transition-colors cursor-pointer"
+                      onClick={() => window.location.href = `/admin/payments/${payment.id}`}
+                    >
                       <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap">
                         <div className="flex items-center gap-1 md:gap-2">
                           <User className="w-3 h-3 md:w-4 md:h-4 text-gray-400 hidden sm:block" />
@@ -180,10 +184,10 @@ export default async function PaymentsPage() {
                         </div>
                       </td>
                       <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap">
-                        {payment.durum === 'ODENDI' && (
+                        {payment.durum === 'TAMAMLANDI' && (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                             <CheckCircle className="w-3 h-3" />
-                            <span className="hidden sm:inline">Ödendi</span>
+                            <span className="hidden sm:inline">Tamamlandı</span>
                           </span>
                         )}
                         {payment.durum === 'BEKLIYOR' && (
@@ -213,7 +217,7 @@ export default async function PaymentsPage() {
                       </td>
                       <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap hidden lg:table-cell">
                         <div className="text-xs font-mono text-gray-500 truncate max-w-[100px]">
-                          {payment.islem_id || '-'}
+                          {payment.islem_kodu || '-'}
                         </div>
                       </td>
                     </tr>

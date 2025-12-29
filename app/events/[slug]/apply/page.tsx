@@ -20,6 +20,7 @@ import {
   getEventViaWebhook,
 } from '@/app/lib/n8n-webhook';
 import { v4 as uuidv4 } from 'uuid';
+import FileUpload, { type UploadedFile } from '@/components/file-upload';
 
 export default function EventApplyPage() {
   const params = useParams();
@@ -49,6 +50,12 @@ export default function EventApplyPage() {
       },
     ],
   });
+
+  // File upload states
+  const [abstractFile, setAbstractFile] = useState<File | null>(null);
+  const [fullPaperFile, setFullPaperFile] = useState<File | null>(null);
+  const [supplementaryFiles, setSupplementaryFiles] = useState<File[]>([]);
+  const [createdApplicationId, setCreatedApplicationId] = useState<string | null>(null);
 
   // Check auth
   useEffect(() => {
@@ -140,6 +147,25 @@ export default function EventApplyPage() {
     }));
   };
 
+  const uploadFile = async (file: File, applicationId: string, fileType: string) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('applicationId', applicationId);
+    formData.append('fileType', fileType);
+
+    const response = await fetch('/api/applications/upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'File upload failed');
+    }
+
+    return await response.json();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!session || !event) return;
@@ -184,58 +210,118 @@ export default function EventApplyPage() {
     }
 
     try {
-      const response = await submitApplicationViaWebhook({
-        metadata: {
-          requestId: uuidv4(),
-          timestamp: new Date().toISOString(),
-          source: 'web-app',
-          environment: process.env.NODE_ENV === 'production' ? 'production' : 'test',
+      // 1. Create application via API
+      const submitResponse = await fetch('/api/applications/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        requestedBy: {
-          userId: session.user.id,
-          userEmail: session.user.email,
-          userName: session.user.name,
-          userRole: session.user.role,
-        },
-        event: {
+        body: JSON.stringify({
           eventId: event.id,
-          eventName: event.baslik,
-          eventSlug: event.slug,
-          eventType: event.tip,
-          eventDates: {
-            baslangicTarihi: event.baslangic_tarihi,
-            bitisTarihi: event.bitis_tarihi,
-            sonBasvuruTarihi: event.son_basvuru_tarihi,
-          },
-        },
-        application: {
-          applicationId: uuidv4(),
           tip: formData.tip,
           baslik: formData.tip !== 'DINLEYICI' ? formData.baslik : undefined,
           ozet: formData.tip !== 'DINLEYICI' ? formData.ozet : undefined,
           anahtarKelimeler: formData.tip !== 'DINLEYICI' ? formData.anahtar_kelimeler : undefined,
           kategori: formData.tip !== 'DINLEYICI' ? formData.kategori : undefined,
-          status: 'GONDERILDI',
-        },
-        applicant: {
-          userId: session.user.id,
-          userName: session.user.name,
-          userEmail: session.user.email,
-        },
-        operationType: 'create',
+          yazarlar: formData.yazarlar,
+        }),
       });
 
-      if (response.success) {
-        setSuccess(true);
-        setTimeout(() => {
-          router.push('/dashboard/applications');
-        }, 2000);
-      } else {
-        setError(response.error || 'Başvuru gönderilemedi');
+      const submitResult = await submitResponse.json();
+
+      if (!submitResponse.ok) {
+        throw new Error(submitResult.error || 'Başvuru oluşturulamadı');
       }
-    } catch (err) {
+
+      const applicationId = submitResult.application.id;
+      setCreatedApplicationId(applicationId);
+
+      // 2. Upload files if any
+      const uploadedFiles = [];
+
+      if (abstractFile && formData.tip !== 'DINLEYICI') {
+        try {
+          const result = await uploadFile(abstractFile, applicationId, 'abstract');
+          uploadedFiles.push(result.file);
+        } catch (uploadError: any) {
+          console.error('Abstract upload failed:', uploadError);
+          // Continue even if file upload fails
+        }
+      }
+
+      if (fullPaperFile && formData.tip !== 'DINLEYICI') {
+        try {
+          const result = await uploadFile(fullPaperFile, applicationId, 'full_paper');
+          uploadedFiles.push(result.file);
+        } catch (uploadError: any) {
+          console.error('Full paper upload failed:', uploadError);
+        }
+      }
+
+      for (const suppFile of supplementaryFiles) {
+        try {
+          const result = await uploadFile(suppFile, applicationId, 'supplementary');
+          uploadedFiles.push(result.file);
+        } catch (uploadError: any) {
+          console.error('Supplementary file upload failed:', uploadError);
+        }
+      }
+
+      // 3. Send webhook notification with complete data
+      try {
+        await submitApplicationViaWebhook({
+          metadata: {
+            requestId: uuidv4(),
+            timestamp: new Date().toISOString(),
+            source: 'web-app',
+            environment: process.env.NODE_ENV === 'production' ? 'production' : 'test',
+          },
+          requestedBy: {
+            userId: session.user.id,
+            userEmail: session.user.email,
+            userName: session.user.name,
+            userRole: session.user.role,
+          },
+          event: {
+            eventId: event.id,
+            eventName: event.baslik,
+            eventSlug: event.slug,
+            eventType: event.tip,
+            eventDates: {
+              baslangicTarihi: event.baslangic_tarihi,
+              bitisTarihi: event.bitis_tarihi,
+              sonBasvuruTarihi: event.son_basvuru_tarihi,
+            },
+          },
+          application: {
+            applicationId,
+            tip: formData.tip,
+            baslik: formData.tip !== 'DINLEYICI' ? formData.baslik : undefined,
+            ozet: formData.tip !== 'DINLEYICI' ? formData.ozet : undefined,
+            anahtarKelimeler: formData.tip !== 'DINLEYICI' ? formData.anahtar_kelimeler : undefined,
+            kategori: formData.tip !== 'DINLEYICI' ? formData.kategori : undefined,
+            status: 'GONDERILDI',
+          },
+          applicant: {
+            userId: session.user.id,
+            userName: session.user.name,
+            userEmail: session.user.email,
+          },
+          operationType: 'create',
+        });
+      } catch (webhookError) {
+        console.error('Webhook notification failed (continuing):', webhookError);
+        // Don't fail submission if webhook fails
+      }
+
+      // 4. Success
+      setSuccess(true);
+      setTimeout(() => {
+        router.push('/dashboard/applications');
+      }, 2000);
+    } catch (err: any) {
       console.error('Application submit error:', err);
-      setError('Başvuru gönderilirken hata oluştu');
+      setError(err.message || 'Başvuru gönderilirken hata oluştu');
     } finally {
       setSubmitting(false);
     }
@@ -411,6 +497,93 @@ export default function EventApplyPage() {
                     placeholder="Bildiri kategorisi"
                   />
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* File Uploads (if not DINLEYICI) */}
+          {formData.tip !== 'DINLEYICI' && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Upload className="w-5 h-5" />
+                Dosya Yüklemeleri
+              </h2>
+              <p className="text-sm text-gray-600 mb-6">
+                Bildiri özetiniz ve tam metninizi yükleyebilirsiniz (PDF, DOC, DOCX formatında, max 10MB)
+              </p>
+
+              <div className="space-y-4">
+                {/* Abstract File */}
+                <div>
+                  <label htmlFor="abstract-file" className="block text-sm font-medium text-gray-700 mb-2">
+                    Özet Dosyası (Abstract)
+                  </label>
+                  <input
+                    type="file"
+                    id="abstract-file"
+                    accept=".pdf,.doc,.docx"
+                    onChange={(e) => setAbstractFile(e.target.files?.[0] || null)}
+                    className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  {abstractFile && (
+                    <p className="mt-2 text-sm text-green-600 flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4" />
+                      {abstractFile.name} ({(abstractFile.size / 1024 / 1024).toFixed(2)} MB)
+                    </p>
+                  )}
+                </div>
+
+                {/* Full Paper File */}
+                <div>
+                  <label htmlFor="full-paper-file" className="block text-sm font-medium text-gray-700 mb-2">
+                    Tam Metin Dosyası (Full Paper)
+                  </label>
+                  <input
+                    type="file"
+                    id="full-paper-file"
+                    accept=".pdf,.doc,.docx"
+                    onChange={(e) => setFullPaperFile(e.target.files?.[0] || null)}
+                    className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  {fullPaperFile && (
+                    <p className="mt-2 text-sm text-green-600 flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4" />
+                      {fullPaperFile.name} ({(fullPaperFile.size / 1024 / 1024).toFixed(2)} MB)
+                    </p>
+                  )}
+                </div>
+
+                {/* Supplementary Files */}
+                <div>
+                  <label htmlFor="supplementary-files" className="block text-sm font-medium text-gray-700 mb-2">
+                    Ek Dosyalar (Supplementary Materials)
+                  </label>
+                  <input
+                    type="file"
+                    id="supplementary-files"
+                    multiple
+                    accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png"
+                    onChange={(e) => setSupplementaryFiles(Array.from(e.target.files || []))}
+                    className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  {supplementaryFiles.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      {supplementaryFiles.map((file, index) => (
+                        <p key={index} className="text-sm text-green-600 flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4" />
+                          {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-xs text-yellow-800">
+                  <strong>Not:</strong> Dosyalar başvurunuzu gönderdikten sonra yüklenecektir.
+                  Desteklenen formatlar: PDF, DOC, DOCX, PPT, PPTX, JPG, PNG (Max 10MB)
+                </p>
               </div>
             </div>
           )}

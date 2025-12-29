@@ -5,6 +5,7 @@ import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import prisma from '@/app/lib/prisma';
 
 // File upload configuration
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -89,7 +90,25 @@ export async function POST(request: NextRequest) {
     // 7. Generate public URL
     const fileUrl = `/uploads/applications/${applicationId}/${uniqueFileName}`;
 
-    // 8. Send to n8n webhook (optional - for backup/processing)
+    // 8. Save file record to database
+    const fileRecord = await prisma.applicationFile.create({
+      data: {
+        id: fileId,
+        application_id: applicationId,
+        file_type: fileType || 'supplementary',
+        file_name: fileName,
+        unique_name: uniqueFileName,
+        file_url: fileUrl,
+        file_size: fileSize,
+        mime_type: fileMimeType,
+        file_extension: fileExtension.replace('.', ''),
+        description: description || null,
+        version: 1,
+        webhook_sent: false,
+      },
+    });
+
+    // 9. Send to n8n webhook (optional - for backup/processing)
     try {
       const webhookUrl = process.env.N8N_WEBHOOK_URL || 'https://n8n.fokusistatistik.com';
       const webhookResponse = await fetch(`${webhookUrl}/webhook-test/application-file-upload`, {
@@ -132,13 +151,22 @@ export async function POST(request: NextRequest) {
 
       if (!webhookResponse.ok) {
         console.warn('Webhook notification failed (continuing):', await webhookResponse.text());
+      } else {
+        // Mark webhook as sent
+        await prisma.applicationFile.update({
+          where: { id: fileId },
+          data: {
+            webhook_sent: true,
+            webhook_response: JSON.stringify(await webhookResponse.json()),
+          },
+        });
       }
     } catch (webhookError) {
       console.error('Webhook error (continuing):', webhookError);
       // Don't fail the upload if webhook fails
     }
 
-    // 9. Return success
+    // 10. Return success
     return NextResponse.json({
       success: true,
       file: {
