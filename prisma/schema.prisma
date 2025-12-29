@@ -257,25 +257,7 @@ model Review {
 }
 
 // ============================================
-// 6. PASSWORD RESET TOKEN
-// ============================================
-model PasswordResetToken {
-  id         String   @id @default(uuid())
-  user_id    String
-  email      String
-  token      String   @unique @default(uuid())
-  expires_at DateTime
-  kullanildi Boolean  @default(false)
-  ip_adresi  String?
-  created_at DateTime @default(now())
-
-  @@index([token])
-  @@index([user_id])
-  @@map("password_reset_tokens")
-}
-
-// ============================================
-// 7. ACTIVITY LOG (Audit Trail)
+// 6. ACTIVITY LOG (Audit Trail)
 // ============================================
 model ActivityLog {
   id String @id @default(uuid())
@@ -300,7 +282,7 @@ model ActivityLog {
 }
 
 // ============================================
-// 8. ACCOMMODATION TABLE (Konaklama)
+// 7. ACCOMMODATION TABLE (Konaklama)
 // ============================================
 model Accommodation {
   id String @id @default(uuid())
@@ -346,7 +328,7 @@ model Accommodation {
 }
 
 // ============================================
-// 9. ANNOUNCEMENT TABLE (Duyurular)
+// 8. ANNOUNCEMENT TABLE (Duyurular)
 // ============================================
 model Announcement {
   id String @id @default(uuid())
@@ -380,7 +362,7 @@ model Announcement {
 }
 
 // ============================================
-// 7. PASSWORD RESET TABLE (Şifre Sıfırlama)
+// 9. PASSWORD RESET (Şifre Sıfırlama - n8n Webhook)
 // ============================================
 model PasswordReset {
   id    String @id @default(uuid())
@@ -406,7 +388,7 @@ model PasswordReset {
 }
 
 // ============================================
-// 8. CONGRESS DOCUMENT TABLE (Kongre Dokümanları)
+// 10. CONGRESS DOCUMENT TABLE (Kongre Dokümanları)
 // ============================================
 model CongressDocument {
   id String @id @default(uuid())
@@ -443,7 +425,7 @@ model CongressDocument {
 }
 
 // ============================================
-// 9. CONGRESS RESULT TABLE (Kongre Sonuçları)
+// 11. CONGRESS RESULT TABLE (Kongre Sonuçları)
 // ============================================
 model CongressResult {
   id String @id @default(uuid())
@@ -481,7 +463,7 @@ model CongressResult {
 }
 
 // ============================================
-// 10. CONGRESS GALLERY TABLE (Kongre Galerisi)
+// 12. CONGRESS GALLERY TABLE (Kongre Galerisi)
 // ============================================
 model CongressGallery {
   id String @id @default(uuid())
@@ -518,7 +500,7 @@ model CongressGallery {
 }
 
 // ============================================
-// 11. CONGRESS SCHEDULE TABLE (Kongre Programı)
+// 13. CONGRESS SCHEDULE TABLE (Kongre Programı)
 // ============================================
 model CongressSchedule {
   id String @id @default(uuid())
@@ -564,7 +546,7 @@ model CongressSchedule {
 }
 
 // ============================================
-// 12. EVENT TIMELINE TABLE (Etkinlik Önemli Tarihleri)
+// 14. EVENT TIMELINE TABLE (Etkinlik Önemli Tarihleri)
 // ============================================
 model EventTimeline {
   id String @id @default(uuid())
@@ -602,7 +584,7 @@ model EventTimeline {
 }
 
 // ============================================
-// 13. EMAIL VERIFICATION TABLE (E-posta Doğrulama)
+// 15. EMAIL VERIFICATION TABLE (E-posta Doğrulama)
 // ============================================
 model EmailVerification {
   id String @id @default(uuid())
