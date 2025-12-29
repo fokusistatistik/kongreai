@@ -88,6 +88,20 @@ export default async function HakemPanel() {
     (assignment) => assignment.reviewStatus?.tamamlandi
   );
 
+  // Count by decision
+  const acceptedReviews = completedReviews.filter(
+    (assignment) => assignment.reviewStatus?.karar === 'KABUL'
+  );
+  const rejectedReviews = completedReviews.filter(
+    (assignment) => assignment.reviewStatus?.karar === 'RED'
+  );
+  const revisionReviews = completedReviews.filter(
+    (assignment) =>
+      assignment.reviewStatus?.karar === 'MINOR_REVISION' ||
+      assignment.reviewStatus?.karar === 'MAJOR_REVISION' ||
+      assignment.reviewStatus?.karar === 'REVIZYON'
+  );
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8 space-y-8">
@@ -118,13 +132,13 @@ export default async function HakemPanel() {
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats Cards - Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <StatCard
-            title="Bekleyen Değerlendirmeler"
-            value={pendingReviews.length}
-            icon={<Clock className="w-6 h-6" />}
-            color="bg-gradient-to-br from-yellow-500 to-orange-500"
+            title="Toplam Atamalar"
+            value={activeAssignments.length}
+            icon={<FileText className="w-6 h-6" />}
+            color="bg-gradient-to-br from-blue-500 to-blue-600"
           />
           <StatCard
             title="Tamamlanan Değerlendirmeler"
@@ -133,12 +147,58 @@ export default async function HakemPanel() {
             color="bg-gradient-to-br from-green-500 to-green-600"
           />
           <StatCard
-            title="Toplam Atamalar"
-            value={activeAssignments.length}
-            icon={<FileText className="w-6 h-6" />}
-            color="bg-gradient-to-br from-blue-500 to-blue-600"
+            title="Bekleyen Değerlendirmeler"
+            value={pendingReviews.length}
+            icon={<Clock className="w-6 h-6" />}
+            color="bg-gradient-to-br from-yellow-500 to-orange-500"
           />
         </div>
+
+        {/* Stats Cards - Detailed Decision Breakdown */}
+        {completedReviews.length > 0 && (
+          <div>
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+              Değerlendirme Sonuçları
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-white rounded-lg shadow-sm border p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Kabul Edilenler</p>
+                    <p className="text-2xl font-bold text-green-600 mt-1">{acceptedReviews.length}</p>
+                  </div>
+                  <div className="p-3 bg-green-100 rounded-lg">
+                    <CheckCircle className="w-6 h-6 text-green-600" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Revizyon Gereken</p>
+                    <p className="text-2xl font-bold text-orange-600 mt-1">{revisionReviews.length}</p>
+                  </div>
+                  <div className="p-3 bg-orange-100 rounded-lg">
+                    <AlertCircle className="w-6 h-6 text-orange-600" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Reddedilenler</p>
+                    <p className="text-2xl font-bold text-red-600 mt-1">{rejectedReviews.length}</p>
+                  </div>
+                  <div className="p-3 bg-red-100 rounded-lg">
+                    <XCircle className="w-6 h-6 text-red-600" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Pending Reviews */}
         {pendingReviews.length > 0 && (
