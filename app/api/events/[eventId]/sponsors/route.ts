@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: { eventId: string } }
 ) {
   try {
     // Fetch sponsors from n8n webhook
@@ -25,7 +25,7 @@ export async function GET(
           environment: process.env.NODE_ENV || 'development',
         },
         event: {
-          eventSlug: params.slug,
+          eventId: params.eventId,
         },
       }),
     });
