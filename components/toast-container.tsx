@@ -55,23 +55,31 @@ export function ToastContainer() {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed top-4 right-4 left-4 md:left-auto z-50 space-y-2 max-w-sm md:w-full mx-auto md:mx-0 pointer-events-none">
+    <div
+      className="fixed top-4 right-4 left-4 md:left-auto z-50 space-y-2 max-w-sm md:w-full mx-auto md:mx-0 pointer-events-none"
+      aria-live="polite"
+      aria-atomic="true"
+    >
       {toasts.map((t) => (
         <div
           key={t.id}
+          role={t.type === 'error' ? 'alert' : 'status'}
+          aria-live={t.type === 'error' ? 'assertive' : 'polite'}
           className={`
             flex items-start gap-2 md:gap-3 p-3 md:p-4 rounded-lg border shadow-lg
             animate-in slide-in-from-top-5 pointer-events-auto
             ${getStyles(t.type)}
           `}
         >
-          <div className="flex-shrink-0 mt-0.5">{getIcon(t.type)}</div>
+          <div className="flex-shrink-0 mt-0.5" aria-hidden="true">{getIcon(t.type)}</div>
           <p className="flex-1 text-xs md:text-sm font-medium break-words">{t.message}</p>
           <button
             onClick={() => removeToast(t.id)}
-            className="flex-shrink-0 hover:opacity-70 transition-opacity"
+            className="flex-shrink-0 hover:opacity-70 transition-opacity focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded"
+            aria-label="Bildirimi kapat"
+            type="button"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
       ))}

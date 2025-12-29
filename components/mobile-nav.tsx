@@ -24,23 +24,18 @@ const navItems: NavItem[] = [
     icon: Home,
   },
   {
-    label: 'Görevler',
-    href: '/gorevler',
+    label: 'Etkinlikler',
+    href: '/',
     icon: ClipboardList,
   },
   {
-    label: 'Yeni',
-    href: '/gorev/yeni',
-    icon: PlusCircle,
-  },
-  {
-    label: 'Bildirimler',
-    href: '/bildirimler',
-    icon: Bell,
+    label: 'Dashboard',
+    href: '/dashboard',
+    icon: User,
   },
   {
     label: 'Profil',
-    href: '/profil',
+    href: '/dashboard/profile',
     icon: User,
   },
 ];

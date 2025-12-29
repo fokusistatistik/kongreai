@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { confirmDialog, ConfirmDialog } from '@/app/lib/confirm-dialog';
 import { AlertTriangle, AlertCircle, Info, X } from 'lucide-react';
 
 export function ConfirmDialogContainer() {
   const [dialog, setDialog] = useState<ConfirmDialog | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const confirmButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const unsubscribe = confirmDialog.subscribe((newDialog) => {
@@ -24,6 +26,27 @@ export function ConfirmDialogContainer() {
   const handleCancel = () => {
     dialog.resolve(false);
   };
+
+  // Focus management: Focus confirm button when dialog opens
+  useEffect(() => {
+    if (dialog && confirmButtonRef.current) {
+      confirmButtonRef.current.focus();
+    }
+  }, [dialog]);
+
+  // ESC key handler
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && dialog) {
+        handleCancel();
+      }
+    };
+
+    if (dialog) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [dialog, handleCancel]);
 
   const getIcon = () => {
     switch (dialog.type) {
@@ -48,42 +71,67 @@ export function ConfirmDialogContainer() {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-lg shadow-2xl max-w-md w-full animate-in zoom-in-95 duration-200">
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4 animate-in fade-in duration-200"
+      role="presentation"
+      onClick={(e) => {
+        // Close on backdrop click
+        if (e.target === e.currentTarget) {
+          handleCancel();
+        }
+      }}
+    >
+      <div
+        ref={dialogRef}
+        role="alertdialog"
+        aria-labelledby="dialog-title"
+        aria-describedby="dialog-description"
+        aria-modal="true"
+        className="bg-white rounded-lg shadow-2xl max-w-md w-full animate-in zoom-in-95 duration-200"
+      >
         {/* Header */}
         <div className="p-6 border-b border-gray-200 flex items-start justify-between">
           <div className="flex items-start gap-3">
-            {getIcon()}
+            <div aria-hidden="true">{getIcon()}</div>
             <div>
               {dialog.title && (
-                <h3 className="text-lg font-semibold text-gray-900">{dialog.title}</h3>
+                <h3 id="dialog-title" className="text-lg font-semibold text-gray-900">
+                  {dialog.title}
+                </h3>
               )}
             </div>
           </div>
           <button
             onClick={handleCancel}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded"
+            aria-label="Dialogu kapat"
+            type="button"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 
         {/* Body */}
         <div className="p-6">
-          <p className="text-gray-700 text-sm leading-relaxed">{dialog.message}</p>
+          <p id="dialog-description" className="text-gray-700 text-sm leading-relaxed">
+            {dialog.message}
+          </p>
         </div>
 
         {/* Footer */}
         <div className="p-6 border-t border-gray-200 flex gap-3 justify-end">
           <button
             onClick={handleCancel}
-            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            type="button"
           >
             {dialog.cancelText}
           </button>
           <button
+            ref={confirmButtonRef}
             onClick={handleConfirm}
-            className={`px-4 py-2 rounded-lg transition-colors text-sm font-medium ${getButtonStyles()}`}
+            className={`px-4 py-2 rounded-lg transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 ${getButtonStyles()}`}
+            type="button"
           >
             {dialog.confirmText}
           </button>
