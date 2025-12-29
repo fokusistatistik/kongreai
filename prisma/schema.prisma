@@ -114,6 +114,7 @@ model Event {
   gallery       CongressGallery[] // Galeri (fotoğraflar, videolar)
   schedule      CongressSchedule[] // Program/Ajanda
   timeline      EventTimeline[] // Önemli tarihler timeline'ı
+  sponsors      EventSponsor[] // Sponsorlar
 
   // ZAMAN DAMGALARI
   created_at    DateTime @default(now())
@@ -173,6 +174,7 @@ model Application {
   // İLİŞKİLER
   payment Payment? // Ödeme bilgisi
   reviews Review[] // Hakem değerlendirmeleri
+  files   ApplicationFile[] // Yüklenen dosyalar
 
   // ZAMAN DAMGALARI
   created_at    DateTime @default(now())
@@ -204,18 +206,28 @@ model Payment {
   // IYZICO BİLGİLERİ
   islem_kodu   String? // Transaction/Payment ID
   iyzico_token String? // Iyzico conversation ID
+  iyzico_payment_id String? // iyzico payment ID
+  iyzico_payment_status String? // iyzico status
 
   // HAVALE BİLGİLERİ
   havale_dekont_url String? // Dekont yükleme
+  banka_adi String? // Hangi banka
+  gonderici_adi String? // Transfer yapan
+  havale_tarihi DateTime? // Transfer tarihi
+
+  // TRANSACTION DETAILS (from webhook)
+  transaction_data String? // JSON - Full transaction details
 
   // DURUM
-  durum            String   @default("BEKLIYOR") // BEKLIYOR, ODENDI, IPTAL, RED
-  odeme_tarihi     DateTime?
-  onaylayan_admin  String? // Admin ID
-  onay_tarihi      DateTime?
+  durum            String   @default("BEKLIYOR") // BEKLIYOR, TAMAMLANDI, IPTAL, RED
+  odeme_tarihi     DateTime? // Ödeme yapıldığı tarih
+  islem_tarihi     DateTime? // Transaction timestamp
+  onaylayan_admin_id  String? // Admin ID
+  onay_tarihi      DateTime? // Admin onay tarihi
 
   // NOTLAR
   aciklama String?
+  red_nedeni String? // Red edilmişse neden
 
   // ZAMAN DAMGALARI
   created_at DateTime @default(now())
@@ -615,4 +627,75 @@ model EmailVerification {
   @@index([user_id])
   @@index([expires_at])
   @@map("email_verifications")
+}
+
+// ============================================
+// 16. APPLICATION FILE (Başvuru Dosyaları)
+// ============================================
+model ApplicationFile {
+  id String @id @default(uuid())
+
+  // İLİŞKİ
+  application_id String
+  application    Application @relation(fields: [application_id], references: [id], onDelete: Cascade)
+
+  // DOSYA TİPİ
+  file_type String // 'abstract', 'full_paper', 'supplementary', 'poster', 'ethics_approval'
+
+  // DOSYA BİLGİLERİ
+  file_name      String // Original filename
+  unique_name    String // Unique filename on server
+  file_url       String // Public URL
+  file_size      Int // in bytes
+  mime_type      String // e.g., application/pdf
+  file_extension String // e.g., pdf, docx
+
+  // AÇIKLAMA
+  description String? // User description
+  version     Int     @default(1) // Version number for revisions
+
+  // WEBHOOK
+  webhook_sent    Boolean   @default(false)
+  webhook_response String? // JSON response
+
+  // ZAMAN DAMGALARI
+  uploaded_at DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@index([application_id])
+  @@index([file_type])
+  @@map("application_files")
+}
+
+// ============================================
+// 17. EVENT SPONSOR (Etkinlik Sponsorları)
+// ============================================
+model EventSponsor {
+  id String @id @default(uuid())
+
+  // İLİŞKİ
+  event_id String
+  event    Event  @relation(fields: [event_id], references: [id], onDelete: Cascade)
+
+  // SPONSOR BİLGİLERİ
+  name        String // Sponsor adı
+  logo_url    String // Logo URL
+  website_url String? // Website
+  tier        String @default("SILVER") // PLATINUM, GOLD, SILVER, BRONZE
+  order       Int    @default(0) // Display order
+
+  // AÇIKLAMA
+  description String? // Kısa açıklama
+
+  // GÖRÜNÜRLÜK
+  active Boolean @default(true)
+
+  // ZAMAN DAMGALARI
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([event_id])
+  @@index([tier])
+  @@index([order])
+  @@map("event_sponsors")
 }
