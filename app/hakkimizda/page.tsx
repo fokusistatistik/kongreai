@@ -1,4 +1,4 @@
-import { GraduationCap, Target, Users, Globe, Award, Shield, CheckCircle, TrendingUp, Zap, Heart, BookOpen, Lightbulb } from 'lucide-react';
+import { GraduationCap, Target, Users, Globe, Award, Shield, CheckCircle, TrendingUp, Zap, Heart, BookOpen, Lightbulb, Calendar } from 'lucide-react';
 
 export default function AboutPage() {
   return (

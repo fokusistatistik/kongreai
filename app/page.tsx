@@ -12,7 +12,13 @@ async function getUpcomingEvents() {
   try {
     // Get all YAYINDA events from webhook
     const response = await listEventsViaWebhook({
-      user: {
+      metadata: {
+        requestId: crypto.randomUUID(),
+        timestamp: new Date().toISOString(),
+        source: 'homepage',
+        environment: process.env.NODE_ENV || 'development',
+      },
+      requestedBy: {
         userId: 'system',
         userEmail: 'system@kongreai.com',
         userName: 'System',
@@ -24,7 +30,7 @@ async function getUpcomingEvents() {
     });
 
     if (!response.success || !response.data) {
-      console.error('Failed to fetch events from webhook:', response.error);
+      console.warn('Failed to fetch events from webhook during build, returning empty array');
       return [];
     }
 
@@ -42,7 +48,7 @@ async function getUpcomingEvents() {
 
     return sortedEvents.slice(0, 6);
   } catch (error) {
-    console.error('Error fetching upcoming events:', error);
+    console.warn('Error fetching upcoming events during build, returning empty array:', error);
     return [];
   }
 }
@@ -54,7 +60,13 @@ async function getPastEvents() {
   try {
     // Get all events from webhook
     const response = await listEventsViaWebhook({
-      user: {
+      metadata: {
+        requestId: crypto.randomUUID(),
+        timestamp: new Date().toISOString(),
+        source: 'homepage',
+        environment: process.env.NODE_ENV || 'development',
+      },
+      requestedBy: {
         userId: 'system',
         userEmail: 'system@kongreai.com',
         userName: 'System',
@@ -64,7 +76,7 @@ async function getPastEvents() {
     });
 
     if (!response.success || !response.data) {
-      console.error('Failed to fetch events from webhook:', response.error);
+      console.warn('Failed to fetch past events from webhook during build, returning empty array');
       return [];
     }
 
@@ -82,7 +94,7 @@ async function getPastEvents() {
 
     return sortedEvents.slice(0, 3);
   } catch (error) {
-    console.error('Error fetching past events:', error);
+    console.warn('Error fetching past events during build, returning empty array:', error);
     return [];
   }
 }
@@ -109,7 +121,7 @@ async function getRecentAnnouncements() {
     });
 
     if (!response.success || !response.data) {
-      console.error('Failed to fetch announcements from webhook:', response.error);
+      console.warn('Failed to fetch announcements from webhook during build, returning empty array');
       return [];
     }
 
@@ -126,7 +138,7 @@ async function getRecentAnnouncements() {
     // Return top 5 announcements
     return sortedAnnouncements.slice(0, 5);
   } catch (error) {
-    console.error('Error fetching announcements:', error);
+    console.warn('Error fetching announcements during build, returning empty array:', error);
     return [];
   }
 }
