@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Bell, X, ExternalLink, Calendar, AlertCircle } from 'lucide-react';
+import { sanitizeHTML } from '@/app/lib/sanitize';
 
 interface Announcement {
   id: string;
@@ -113,7 +114,7 @@ export default function AnnouncementsSection({ announcements }: AnnouncementsSec
 
                 <div
                   className="text-xs md:text-sm text-gray-600 line-clamp-2 mb-3"
-                  dangerouslySetInnerHTML={{ __html: announcement.icerik }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHTML(announcement.icerik) }}
                 />
 
                 {announcement.event && (
@@ -189,7 +190,7 @@ export default function AnnouncementsSection({ announcements }: AnnouncementsSec
             <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
               <div
                 className="prose prose-sm md:prose-base max-w-none text-gray-700"
-                dangerouslySetInnerHTML={{ __html: selectedAnnouncement.icerik }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHTML(selectedAnnouncement.icerik) }}
               />
 
               {selectedAnnouncement.event && (

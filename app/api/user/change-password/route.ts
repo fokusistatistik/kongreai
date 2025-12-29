@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/lib/auth/options';
 import prisma from '@/app/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { checkRateLimit, getIpFromRequest, RATE_LIMITS } from '@/app/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,6 +13,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Oturum açmanız gerekiyor.' },
         { status: 401 }
+      );
+    }
+
+    // Rate limiting check
+    const ip = getIpFromRequest(request);
+    const rateLimitResult = checkRateLimit(ip, 'password-change', RATE_LIMITS.PASSWORD_CHANGE);
+
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { error: `Çok fazla şifre değiştirme denemesi. ${rateLimitResult.retryAfter} saniye sonra tekrar deneyin.` },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(rateLimitResult.retryAfter),
+          }
+        }
       );
     }
 

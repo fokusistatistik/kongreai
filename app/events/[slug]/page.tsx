@@ -7,6 +7,7 @@ import { authOptions } from '@/app/lib/auth/options';
 import EventSubsectionsTabs from '@/components/event-subsections-tabs';
 import EventAnnouncementsBanner from '@/components/event-announcements-banner';
 import EventTimeline from '@/components/event-timeline';
+import { sanitizeHTML } from '@/app/lib/sanitize';
 
 async function getEvent(slug: string) {
   const event = await prisma.event.findUnique({
@@ -153,7 +154,7 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
                   <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Etkinlik Hakkında</h2>
                   <div
                     className="text-sm md:text-base text-gray-700 leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: event.aciklama }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHTML(event.aciklama) }}
                   />
                 </div>
               )}
@@ -164,7 +165,7 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
                   <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Amaçlar ve Hedefler</h2>
                   <div
                     className="text-sm md:text-base text-gray-700 leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: event.amaclar_hedefler }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHTML(event.amaclar_hedefler) }}
                   />
                 </div>
               )}
@@ -175,7 +176,7 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
                   <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Hedef Kitle</h2>
                   <div
                     className="text-sm md:text-base text-gray-700 leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: event.hedef_kitle }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHTML(event.hedef_kitle) }}
                   />
                 </div>
               )}
@@ -186,7 +187,7 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
                   <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Bilimsel Program</h2>
                   <div
                     className="text-gray-700 leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: event.bilimsel_program }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHTML(event.bilimsel_program) }}
                   />
                 </div>
               )}

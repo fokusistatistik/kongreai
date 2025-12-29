@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/lib/auth/options';
 import prisma from '@/app/lib/prisma';
+import { profileUpdateSchema, validateAndSanitize } from '@/app/lib/validation';
 
 export async function PUT(request: NextRequest) {
   try {
@@ -17,23 +18,33 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const { ad, soyad, unvan, kurum, telefon, ogrenci, ulke, sehir } = body;
 
-    // Validation
-    if (!ad || !soyad) {
-      return NextResponse.json(
-        { error: 'Ad ve soyad zorunludur.' },
-        { status: 400 }
-      );
+    // Validate input using Zod schema
+    const validation = validateAndSanitize({
+      ad,
+      soyad,
+      telefon: telefon || '',
+      unvan: unvan || '',
+      kurum: kurum || '',
+    }, profileUpdateSchema);
+
+    if (!validation.success) {
+      return NextResponse.json({
+        error: 'Validasyon hatası',
+        details: validation.errors
+      }, { status: 400 });
     }
+
+    const validatedData = validation.data;
 
     // Update user profile
     const updatedUser = await prisma.user.update({
       where: { email: session.user.email },
       data: {
-        ad,
-        soyad,
-        unvan: unvan || null,
-        kurum: kurum || null,
-        telefon: telefon || null,
+        ad: validatedData.ad,
+        soyad: validatedData.soyad,
+        unvan: validatedData.unvan || null,
+        kurum: validatedData.kurum || null,
+        telefon: validatedData.telefon || null,
         ogrenci: ogrenci !== undefined ? ogrenci : false,
         ulke: ulke || null,
         sehir: sehir || null,

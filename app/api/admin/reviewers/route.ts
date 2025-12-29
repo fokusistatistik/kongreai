@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/lib/auth/options';
 import prisma from '@/app/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { reviewerSchema, validateAndSanitize } from '@/app/lib/validation';
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,21 +20,32 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { ad, soyad, email, telefon, unvan, kurum, password, aktif } = body;
+    const { ad, soyad, email, telefon, unvan, kurum, password, aktif, uzmanlik_alani } = body;
 
-    // Validate required fields
-    if (!ad || !soyad || !email || !password || !unvan || !kurum) {
-      return NextResponse.json({ error: 'Ad, soyad, e-posta, ünvan, kurum ve şifre zorunludur' }, { status: 400 });
+    // Validate input using Zod schema
+    const validation = validateAndSanitize({
+      ad,
+      soyad,
+      email,
+      telefon: telefon || '',
+      unvan,
+      kurum,
+      password,
+      uzmanlik_alani,
+    }, reviewerSchema);
+
+    if (!validation.success) {
+      return NextResponse.json({
+        error: 'Validasyon hatası',
+        details: validation.errors
+      }, { status: 400 });
     }
 
-    // Validate password length
-    if (password.length < 6) {
-      return NextResponse.json({ error: 'Şifre en az 6 karakter olmalıdır' }, { status: 400 });
-    }
+    const validatedData = validation.data;
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() },
+      where: { email: validatedData.email.toLowerCase() },
     });
 
     if (existingUser) {
@@ -41,18 +53,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(validatedData.password, 10);
 
     // Create reviewer (HAKEM)
     const newReviewer = await prisma.user.create({
       data: {
-        ad,
-        soyad,
-        email: email.toLowerCase(),
+        ad: validatedData.ad,
+        soyad: validatedData.soyad,
+        email: validatedData.email.toLowerCase(),
         password: hashedPassword,
-        telefon: telefon || null,
-        unvan,
-        kurum,
+        telefon: validatedData.telefon || null,
+        unvan: validatedData.unvan,
+        kurum: validatedData.kurum,
+        uzmanlik_alani: validatedData.uzmanlik_alani || null,
         role: 'HAKEM',
         aktif: aktif !== undefined ? aktif : true,
         email_verified: false,

@@ -2,9 +2,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import { randomBytes } from 'crypto';
 import prisma from '@/app/lib/prisma';
 import { sendPasswordResetEmail } from '@/app/lib/n8n-webhook';
+import { checkRateLimit, getIpFromRequest, RATE_LIMITS } from '@/app/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting check - strict for password reset
+    const ip = getIpFromRequest(request);
+    const rateLimitResult = checkRateLimit(ip, 'password-reset', RATE_LIMITS.PASSWORD_RESET);
+
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { error: `Çok fazla şifre sıfırlama denemesi. ${rateLimitResult.retryAfter} saniye sonra tekrar deneyin.` },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(rateLimitResult.retryAfter),
+          }
+        }
+      );
+    }
+
     const body = await request.json();
     const { email } = body;
 

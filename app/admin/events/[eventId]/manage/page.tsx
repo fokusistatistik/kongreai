@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { FileText, Award, Calendar, Clock, Plus, Pencil, Trash2, Save, X, Bell, Download, MapPin, Users, DollarSign, Globe } from 'lucide-react';
+import { sanitizeHTML } from '@/app/lib/sanitize';
 
 export default function ManageEventSubsectionsPage() {
   const params = useParams();
@@ -935,7 +936,7 @@ function ResultsTab({ results, newResult, setNewResult, editingResult, setEditin
                     </div>
                     <div
                       className="text-sm text-gray-600 mb-2 line-clamp-3"
-                      dangerouslySetInnerHTML={{ __html: result.icerik }}
+                      dangerouslySetInnerHTML={{ __html: sanitizeHTML(result.icerik) }}
                     />
                     {result.yayin_tarihi && (
                       <p className="text-xs text-gray-500 mt-2">
@@ -1296,7 +1297,7 @@ function EventDetailsTab({ event, eventId }: { event: any; eventId: string }) {
             <p className="text-sm font-medium text-gray-700 mb-2">Açıklama:</p>
             <div
               className="text-sm text-gray-600 prose max-w-none"
-              dangerouslySetInnerHTML={{ __html: event.aciklama }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHTML(event.aciklama) }}
             />
           </div>
         )}
@@ -1408,7 +1409,7 @@ function EventDetailsTab({ event, eventId }: { event: any; eventId: string }) {
                 <p className="text-sm font-medium text-gray-700 mb-2">Amaçlar ve Hedefler:</p>
                 <div
                   className="text-sm text-gray-600 prose max-w-none"
-                  dangerouslySetInnerHTML={{ __html: event.amaclar_hedefler }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHTML(event.amaclar_hedefler) }}
                 />
               </div>
             )}
@@ -1417,7 +1418,7 @@ function EventDetailsTab({ event, eventId }: { event: any; eventId: string }) {
                 <p className="text-sm font-medium text-gray-700 mb-2">Hedef Kitle:</p>
                 <div
                   className="text-sm text-gray-600 prose max-w-none"
-                  dangerouslySetInnerHTML={{ __html: event.hedef_kitle }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHTML(event.hedef_kitle) }}
                 />
               </div>
             )}
@@ -1426,7 +1427,7 @@ function EventDetailsTab({ event, eventId }: { event: any; eventId: string }) {
                 <p className="text-sm font-medium text-gray-700 mb-2">Bilimsel Program:</p>
                 <div
                   className="text-sm text-gray-600 prose max-w-none"
-                  dangerouslySetInnerHTML={{ __html: event.bilimsel_program }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHTML(event.bilimsel_program) }}
                 />
               </div>
             )}
@@ -1770,7 +1771,7 @@ function AnnouncementsTab({ announcements, newAnnouncement, setNewAnnouncement, 
                     </div>
                     <div
                       className="text-sm text-gray-700 mb-2"
-                      dangerouslySetInnerHTML={{ __html: announcement.icerik }}
+                      dangerouslySetInnerHTML={{ __html: sanitizeHTML(announcement.icerik) }}
                     />
                     {(announcement.yayin_baslangic || announcement.yayin_bitis) && (
                       <div className="text-xs text-gray-500 mt-2">

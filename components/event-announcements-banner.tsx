@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Bell, X, AlertCircle, Info, AlertTriangle } from 'lucide-react';
+import { sanitizeHTML } from '@/app/lib/sanitize';
 
 interface EventAnnouncementsBannerProps {
   eventId: string;
@@ -123,7 +124,7 @@ export default function EventAnnouncementsBanner({ eventId }: EventAnnouncements
                 <h3 className={`font-bold ${styles.text} mb-1`}>{announcement.baslik}</h3>
                 <div
                   className={`text-sm ${styles.text} prose prose-sm max-w-none`}
-                  dangerouslySetInnerHTML={{ __html: announcement.icerik }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHTML(announcement.icerik) }}
                 />
                 {announcement.yayin_baslangic && (
                   <p className="text-xs text-gray-500 mt-2">
