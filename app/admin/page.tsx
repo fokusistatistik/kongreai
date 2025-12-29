@@ -116,6 +116,11 @@ export default async function AdminDashboard() {
     redirect('/dashboard');
   }
 
+  // Redirect HAKEM users to their dedicated panel
+  if (user.role === 'HAKEM') {
+    redirect('/hakem/panel');
+  }
+
   const stats = await getAdminStats(
     user.id || '',
     user.email || '',
