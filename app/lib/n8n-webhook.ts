@@ -5,6 +5,17 @@
 import { v4 as uuidv4 } from 'uuid';
 
 const N8N_BASE_URL = process.env.N8N_WEBHOOK_URL || 'https://n8n.fokusistatistik.com';
+const WEBHOOK_API_KEY = process.env.WEBHOOK_API_KEY; // Optional for security
+
+// Webhook Security Check
+if (process.env.NODE_ENV === 'production' && !WEBHOOK_API_KEY) {
+  console.warn(
+    '⚠️  WARNING: WEBHOOK_API_KEY is not set in production!\n' +
+    'For security, set WEBHOOK_API_KEY environment variable.\n' +
+    'Generate one with: openssl rand -hex 32\n' +
+    'Then configure n8n workflows to validate this key in headers.'
+  );
+}
 
 // Webhook paths - TEST MODE
 export const WEBHOOK_PATHS = {
@@ -173,11 +184,19 @@ async function sendWebhookRequest<T = any>(
       metadata: data.metadata || createWebhookMetadata(),
     };
 
+    // Build headers with optional API key authentication
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    // Add API key if configured (for webhook authentication)
+    if (WEBHOOK_API_KEY) {
+      headers['X-Webhook-API-Key'] = WEBHOOK_API_KEY;
+    }
+
     const response = await fetch(`${N8N_BASE_URL}${path}`, {
       method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: method !== 'GET' ? JSON.stringify(requestData) : undefined,
       signal: controller.signal,
     });

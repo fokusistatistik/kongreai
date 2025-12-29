@@ -84,10 +84,11 @@ export const RATE_LIMITS = {
     maxRequests: 1,
   },
 
-  // Login: 15 dakikada 5 istek
+  // Login: 15 dakikada 10 istek (çok sıkı olmayan, makul limit)
+  // Bir kullanıcı 15 dakikada 10 kere yanlış şifre deneyebilir
   LOGIN: {
     windowMs: 15 * 60 * 1000,
-    maxRequests: 5,
+    maxRequests: 10,
   },
 
   // Genel API: 1 dakikada 60 istek

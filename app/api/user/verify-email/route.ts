@@ -4,6 +4,7 @@ import { authOptions } from '@/app/lib/auth/options';
 import prisma from '@/app/lib/prisma';
 import { sendEmailVerification } from '@/app/lib/n8n-webhook';
 import { randomBytes } from 'crypto';
+import { checkRateLimit, getIpFromRequest, RATE_LIMITS } from '@/app/lib/rate-limit';
 
 const VERIFICATION_TIMEOUT = 180000; // 180 seconds (3 minutes)
 
@@ -15,6 +16,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Oturum açmanız gerekiyor.' },
         { status: 401 }
+      );
+    }
+
+    // Rate limiting check
+    const ip = getIpFromRequest(request);
+    const rateLimitResult = checkRateLimit(ip, 'email-verification', RATE_LIMITS.API_GENERAL);
+
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { error: `Çok fazla doğrulama denemesi. ${rateLimitResult.retryAfter} saniye sonra tekrar deneyin.` },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(rateLimitResult.retryAfter),
+          }
+        }
       );
     }
 
@@ -45,7 +62,21 @@ export async function POST(request: NextRequest) {
 
     // Generate verification token
     const verificationToken = randomBytes(32).toString('hex');
-    const verificationUrl = `${process.env.NEXTAUTH_URL}/api/user/verify-email/confirm?token=${verificationToken}&userId=${user.id}`;
+    const expiresAt = new Date();
+    expiresAt.setSeconds(expiresAt.getSeconds() + 180); // 3 minutes
+
+    // Create verification record in database
+    const verification = await prisma.emailVerification.create({
+      data: {
+        user_id: user.id,
+        email: user.email,
+        token: verificationToken,
+        expires_at: expiresAt,
+        webhook_sent: false,
+      },
+    });
+
+    const verificationUrl = `${process.env.NEXTAUTH_URL}/api/user/verify-email/confirm?token=${verificationToken}`;
 
     // Send verification email via webhook with 180s timeout
     const webhookPromise = sendEmailVerification({
@@ -76,35 +107,63 @@ export async function POST(request: NextRequest) {
       setTimeout(() => reject(new Error('Webhook timeout')), VERIFICATION_TIMEOUT)
     );
 
-    // Race between webhook response and timeout
-    const webhookResponse = await Promise.race([
-      webhookPromise,
-      timeoutPromise,
-    ]) as any;
+    try {
+      // Race between webhook response and timeout
+      const webhookResponse = await Promise.race([
+        webhookPromise,
+        timeoutPromise,
+      ]) as any;
 
-    if (webhookResponse.success && webhookResponse.data.sent) {
-      // Store verification token temporarily (you might want to create a verification table)
-      // For now, we'll trust the webhook will handle verification
-
-      return NextResponse.json({
-        message: 'Doğrulama e-postası gönderildi. Lütfen e-postanızı kontrol edin.',
-        sent: true,
+      // Update verification record with webhook status
+      await prisma.emailVerification.update({
+        where: { id: verification.id },
+        data: {
+          webhook_sent: true,
+          webhook_response: JSON.stringify(webhookResponse),
+          webhook_verified: webhookResponse.success && webhookResponse.data?.sent === true,
+          webhook_timestamp: new Date(),
+        },
       });
-    } else {
-      return NextResponse.json(
-        { error: 'E-posta gönderilemedi. Lütfen tekrar deneyin.' },
-        { status: 500 }
-      );
+
+      if (webhookResponse.success && webhookResponse.data?.sent) {
+        return NextResponse.json({
+          message: 'Doğrulama e-postası gönderildi. Lütfen e-postanızı kontrol edin.',
+          sent: true,
+          expiresInSeconds: 180,
+        });
+      } else {
+        // Webhook başarısız ama token database'de
+        return NextResponse.json(
+          {
+            error: 'E-posta gönderilemedi. Webhook yanıt vermedi.',
+            details: webhookResponse.error || 'Unknown error'
+          },
+          { status: 500 }
+        );
+      }
+    } catch (webhookError: any) {
+      // Timeout veya webhook hatası
+      await prisma.emailVerification.update({
+        where: { id: verification.id },
+        data: {
+          webhook_sent: true,
+          webhook_response: JSON.stringify({ error: webhookError.message }),
+          webhook_verified: false,
+          webhook_timestamp: new Date(),
+        },
+      });
+
+      if (webhookError.message === 'Webhook timeout') {
+        return NextResponse.json(
+          { error: 'E-posta gönderme zaman aşımına uğradı (180 saniye). Lütfen tekrar deneyin.' },
+          { status: 408 }
+        );
+      }
+
+      throw webhookError;
     }
   } catch (error: any) {
     console.error('Email verification error:', error);
-
-    if (error.message === 'Webhook timeout') {
-      return NextResponse.json(
-        { error: 'İstek zaman aşımına uğradı. Lütfen tekrar deneyin.' },
-        { status: 408 }
-      );
-    }
 
     return NextResponse.json(
       { error: 'E-posta doğrulama sırasında bir hata oluştu.' },

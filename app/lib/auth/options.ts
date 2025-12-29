@@ -2,6 +2,7 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from '@/app/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { checkRateLimit, RATE_LIMITS } from '@/app/lib/rate-limit';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -17,6 +18,19 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
+          // Login rate limiting (email-based to prevent brute force)
+          const rateLimitResult = checkRateLimit(
+            credentials.email.toLowerCase(), // Email'i IP gibi kullan
+            'login',
+            RATE_LIMITS.LOGIN
+          );
+
+          if (!rateLimitResult.allowed) {
+            throw new Error(
+              `Çok fazla giriş denemesi. ${Math.ceil(rateLimitResult.retryAfter! / 60)} dakika sonra tekrar deneyin.`
+            );
+          }
+
           // Kullanıcıyı veritabanından bul
           const user = await prisma.user.findUnique({
             where: { email: credentials.email.toLowerCase() },
@@ -139,10 +153,55 @@ export const authOptions: NextAuthOptions = {
     signIn: "/login",
     error: "/login",
   },
+  cookies: {
+    sessionToken: {
+      name: `__Secure-next-auth.session-token`,
+      options: {
+        httpOnly: true, // JavaScript tarafından erişilemez (XSS koruması)
+        sameSite: 'lax', // CSRF koruması
+        path: '/',
+        secure: process.env.NODE_ENV === 'production', // Production'da sadece HTTPS
+      }
+    },
+    callbackUrl: {
+      name: `__Secure-next-auth.callback-url`,
+      options: {
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      }
+    },
+    csrfToken: {
+      name: `__Host-next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      }
+    },
+  },
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 7 * 24 * 60 * 60, // 7 days (30 gün yerine - güvenlik artırıldı)
+    updateAge: 24 * 60 * 60, // Session 24 saatte bir güncellenir
   },
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === 'development',
 };
+
+// CRITICAL: Validate NEXTAUTH_SECRET on startup
+if (!process.env.NEXTAUTH_SECRET) {
+  throw new Error(
+    '❌ NEXTAUTH_SECRET environment variable is missing!\n' +
+    'Generate one with: openssl rand -base64 32\n' +
+    'Then add it to your .env file: NEXTAUTH_SECRET="your-secret-here"'
+  );
+}
+
+if (process.env.NEXTAUTH_SECRET.length < 32) {
+  console.warn(
+    '⚠️  WARNING: NEXTAUTH_SECRET is too short! It should be at least 32 characters.\n' +
+    'Generate a secure one with: openssl rand -base64 32'
+  );
+}

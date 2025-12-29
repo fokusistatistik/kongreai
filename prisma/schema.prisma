@@ -600,3 +600,37 @@ model EventTimeline {
   @@index([tarih])
   @@map("event_timeline")
 }
+
+// ============================================
+// 13. EMAIL VERIFICATION TABLE (E-posta Doğrulama)
+// ============================================
+model EmailVerification {
+  id String @id @default(uuid())
+
+  // KULLANICI BİLGİSİ
+  user_id String
+  email   String
+
+  // TOKEN BİLGİSİ
+  token      String   @unique
+  expires_at DateTime // 180 saniye (3 dakika)
+
+  // WEBHOOK DURUMU
+  webhook_sent      Boolean   @default(false) // Webhook'a gönderildi mi?
+  webhook_response  String? // Webhook yanıtı (JSON)
+  webhook_verified  Boolean   @default(false) // Webhook doğruladı mı?
+  webhook_timestamp DateTime? // Webhook yanıt zamanı
+
+  // DOĞRULAMA DURUMU
+  verified    Boolean   @default(false)
+  verified_at DateTime? // Doğrulama zamanı
+
+  // ZAMAN DAMGALARI
+  created_at DateTime @default(now())
+
+  @@index([email])
+  @@index([token])
+  @@index([user_id])
+  @@index([expires_at])
+  @@map("email_verifications")
+}
